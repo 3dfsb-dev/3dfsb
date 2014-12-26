@@ -368,7 +368,7 @@ void play_mpeg()
 void play_avi(GstElement *pipeline)
 {
 	GstElement *videosink;
-	g_object_get (pipeline, "video-sink", &videosink, NULL);
+	g_object_get(pipeline, "video-sink", &videosink, NULL);
 
 	// TODO:
 	// SMPEG_getinfo(TDFSB_MPEG_HANDLE, &TDFSB_MPEG_INFO);
@@ -1833,6 +1833,7 @@ void leodir(void)
 				}
 			} else if (temptype == 5) {
 				printf("AVI file found");
+				uni3 = 31337;	/* becomes texture name */
 			} else if (temptype == 6 || temptype == 4) {
 				uni0 = 0;
 				uni1 = 0;
