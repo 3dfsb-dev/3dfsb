@@ -1,0 +1,62 @@
+0.0.10
+- quick and dirty: make tdfsb work with freeglut
+- quick and dirty: centered view on startup 
+
+0.0.9
+- execute a custom command
+- open a xterm from tdfsb
+- added mousewheel support
+- more machine independent compile script
+- command line option for the startdir
+
+0.0.7
+- MP3/MPEG1 playback via SMPEG added
+- several bugs fixed (one major)
+- several optimizations
+
+0.0.6
+- now uses SDL for window/event management (true fullscreen)
+- now uses SDL_image for image loading (no gdk-pixbuf anymore)
+- still uses glut for stroke fonts
+- compiles on Linux, BeOS and FreeBSD
+- experimental shell script for compiling /* thanks to Benjamin Burke */
+
+0.0.5
+- move multiple directions at once /* by Kyle 'greenfly' Rankin */
+- improved cursor key and mouse handling
+
+0.0.4
+- fixed the compass, sphere ".." is the northpole
+- FPS throttle to leave cpu time for other processes
+- selecting an object by pointing at it
+- sorting the objects alphabetically /* by Kyle 'greenfly' Rankin */
+- find object by first character /* by Kyle 'greenfly' Rankin */
+- approach an selected object
+- config file handling (read, generate, save)
+- changed the navigation (see help)
+- minor speed improvements
+
+0.0.3
+- handling links (displaying and cd'ing)
+
+0.0.2
+- hide . files /* by Marc Berhault */
+- starts in $PWD
+- crosshair & ground cursor
+- automatic filename orientation
+- FPS counting
+- print misc GL info
+- (pseudo) fullscreen mode
+- help display /* by Marc Berhault */
+
+0.0.1
+- releasing the mouspointer
+- command line arguments for window size and position
+- reloading current directory
+- jump to start position
+- 'cd ..' by key
+
+alpha
+- basic system
+- image loading
+- text file loading

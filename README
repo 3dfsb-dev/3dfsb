@@ -1,0 +1,220 @@
+This is the TDFSB version 0.0.10
+
+...should run on GNU/Linux, BeOS and FreeBSD
+
+Homepage: http://www.determinate.net/webdata/seg/tdfsb.html
+E-Mail  : tdfsb@determinate.net
+
+written by Leander Seige, license is the GPL (http://www.gnu.org/copyleft/gpl.html)
+or see the file COPYING
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+
+
+********INSTALL********
+
+(a better installation (autoconf) is planned for future releases)
+
+Needed Libraries:
+
+You may need to install 'devel' packages of these
+libraries in order to get the necessary .h files
+and the sdl-config script.
+
+SDL             (http://www.libsdl.org)
+SDL_image       (http://www.libsdl.org/projects/SDL_image/index.html)
+SMPEG           (http://www.lokigames.com/development/smpeg.php3)
+OpenGL/GLU/glut (       Linux/FreeBSD:  look at your distribution
+                                        if that fails:
+                                        http://www.rpmfind.net/
+                                        http://freshmeat.net/
+                        BeOS:           OpenGL (including GLU) should come 
+                                        with BeOS,
+                                        for glut look at http://www.bebits.com
+                )
+
+There is a small shell script which contains a standard compile
+string for every OS (Linux, BeOS and BSD). So please try
+
+./compile.sh
+
+If something goes wrong error messages will appear. If
+you don't know how to solve them don't hesitate and mail
+the error messages to me: tdfsb@determinate.net
+
+If ./compile.sh was successful you can call the tdfsb
+
+./tdfsb
+
+or copy the tdfsb binary to your path, e.g. /usr/bin/
+
+Once you have a working tdfsb binary you may try to
+edit the compile.sh for a more optimized version.
+You could change the -O2 argument (opimization) to a
+higher value (e.g. -O6) or add machine specific
+optimizations (e.g.  -march=i686 -mcpu=i686).
+Read 'man gcc' for additional arguments.
+
+
+ADDITIONAL NOTES
+
+
+FreeBSD:
+
+If you have problems with SDL_image try:
+cd /usr/ports/graphics/sdl_image/
+make install
+
+
+BeOS:
+
+This package does not contain a BeOS binary, because i don't 
+have BeOS installed on my computer anymore, sorry :/
+The source should compile anyway.
+
+I noticed that the SMPEG library could be hard to find,
+especially the development package so i made that package
+available from my own page:
+http://www.determinate.net/webdata/data/SDLGameLibs-1.2.2-devel-beos.zip
+
+NVidia Cards under Linux (+FreeBSD?):
+
+I often get emails from NVidia users who have problems
+compiling the tdfsb. In most cases they are linking
+against the wrong libraries, especially the libGLU.so.
+In this case please read the instructions that came
+with your drivers.
+The following often helped but of course i can give no
+guarantee, try it on your own risk!
+    There are two libGLU.so's. Move the original libGLU.so
+    to a safe place (libGLU.so.my.original or something).
+    Make a link libGLU.so->libGLU.so.the.right.one.
+    libGLU.so.the.right.one is often >500kByte while
+    the wrong libGLU.so is much smaller.
+
+
+
+
+********CREDITS********
+
+Thanks to:
+
+Marc Berhault for some additional code (see ChangeLog)
+
+Nico 'aMadMan' Toerl for extensive beta testing
+
+Kyle 'greenfly' Rankin for some additional code (see ChangeLog)
+
+Benjamin Burke for help and testing of the compile.sh
+
+Rafal Zawadzki for creating man pages and debian packages
+
+all the people who sent me additional compile strings and new ideas
+
+
+
+
+*********USAGE*********
+
+tdfsb
+  or
+tdfsb -V
+  or
+tdfsb --version
+  or
+tdfsb -D /path/to/dir
+  or
+tdfsb --dir /path/to/dir
+
+- the config file is $HOME/.tdfsb (e.g. /home/user/.tdfsb). if it does not
+  exist tdsfb will generate one with all available options. this is strongly
+  recommended.
+
+- if you start the tdfsb the first time, press 'h' for the help menu
+  (will also be printed to the terminal)
+
+- simply walk into the spheres for cd'ing into another directory
+
+- select an object by pointing at it with the crosshair and press the left
+  mouse button. or hold the left mouse button and press any key to select
+  the first object that begins with that character (case sensitive).
+    -   while an object is selected press the right mouse button simultaneously to
+        automatic approach the object
+        [unfortunately doesn't work on BeOS as well as resizing the window, afaik
+        these are issues of the SDL implementation, use the right CTRL for now].
+    -   if an mp3 or mpeg1 video file is selected press the RETURN key to start
+        the playback
+
+- some of the displays are not visible while the help display is active
+
+- it is possible to execute a custom command from within tdfsb. configure
+  your command in the config file! the command can be called by pressing
+  the tabulator key. put a "%s" in the command line, this will be replaced
+  by the current directory or selected file.
+  for instance if you set the command to
+    xmms "%s" &
+  and press tab from a directory, xmms will be started with the directory
+  given as argument. 
+  if you select an audio file and press the tab key xmms will play the file.
+  the default command is
+    cd "%s"; xterm&
+  it will open a xterm in the current directory.
+  this command is always present by pressing shift+tab!
+  so you have two commands: 
+  - one by configuring your custom command for the tab key
+  - one by pressing shift+tab, it will execute the built in xterm call  
+  but dont forget the quotation marks!
+  you are free to not add "%s" to your custom command if you just
+  want to launch any program. but if you do so, you can customize
+  tdfsb for your needs, choose a certain kind of files and than launch
+  emacs for editing text files, mplayer for playing avis or whatever...
+
+Here is a print out of the default keyboard settings.
+You may change these by editing ~/.tdfsb
+
+=======================================
+Esc           quit   F1/F2    speed +/-
+Mouse move    look   F3/F4      rot +/-
+UP         forward   F5/F6  ball detail
+DOWN      backward   HOME     start pos
+L/R     step aside   LMB  select object
+END    ground zero   +RMB|CTRL appr.obj
+F7/F8  max fps +/-   +ENTER ply mpg/mp3
+"t"      filenames   "g"   ground cross
+"c"      crosshair   "d"        display
+"."      dot files   "p"      print FPS
+"r" rel./get mouse   "f"     fullscreen
+"l"     reload dir   "b"   image bricks
+"u"           cd..   "a"      alphasort
+"m"        shading   " "         flying
+"h"      show help   "i"  print GL info
+"0"      jump home   "o"    classic nav
+"s"    save config   "#"   fps throttle
+ 
+"1|3|q|e"            Up|Down|Left|Right
+"2|w"                  Forward|Backward
+PgUp/Down or MMB+Mouse move up/downward
+=======================================
+
+22/06/2007:
+ps. TDFSB is 6 years old now and I havent done anything on it for a long time.
+Today I would code a lot of things very different - better i hope - than years
+ago. But, so what, it still works and I got very less bug reports on tdfsb.
+Some days ago I installed Gentoo for the first time and I heared that someone
+(thank you!) build a package for Gentoo so I tried emerge tdfsb and it worked :) 
+Besides that it has problems with freeglut which I quickly fixed now.
+So I hope some people, YOU,  still like it. Have fun!
