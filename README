@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-
-********INSTALL********
+Dependencies
+============
 
 (a better installation (autoconf) is planned for future releases)
 
@@ -46,6 +46,15 @@ OpenGL/GLU/glut (       Linux/FreeBSD:  look at your distribution
                                         with BeOS,
                                         for glut look at http://www.bebits.com
                 )
+
+On Ubuntu, you can install all build-time dependencies with:
+
+sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2-dev libsmpeg-dev libxi-dev libxmu-dev
+
+This list of dependencies was made using: apt-rdepends --build-depends --follow=DEPENDS tdfsb
+
+Compilation
+===========
 
 There is a small shell script which contains a standard compile
 string for every OS (Linux, BeOS and BSD). So please try
