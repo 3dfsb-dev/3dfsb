@@ -135,10 +135,12 @@ long TDFSB_US_RUN = 0;
 int TDFSB_CSE_FLAG = 1;
 
 SDL_Surface *TDFSB_MPEG_SURFACE = NULL;
+SDL_Surface *TDFSB_AVI_SURFACE = NULL;
 SMPEG *TDFSB_MPEG_HANDLE = NULL, *TDFSB_MP3_HANDLE = NULL;
 SMPEG_Info TDFSB_MPEG_INFO, TDFSB_MP3_INFO;
-struct tree_entry *TDFSB_MPEG_FILE, *TDFSB_MP3_FILE;
+struct tree_entry *TDFSB_MPEG_FILE, *TDFSB_MP3_FILE, *TDFSB_AVI_FILE;
 unsigned long int TDFSB_MPEG_FRAMENO;
+unsigned long int TDFSB_AVI_FRAMENO;
 
 struct timeval ltime, ttime, rtime, wtime;
 long sec;
@@ -354,6 +356,19 @@ void play_mpeg()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, TDFSB_MPEG_SURFACE->pixels);
 		SDL_UnlockSurface(TDFSB_MPEG_SURFACE);
 	}
+}
+
+void play_avi()
+{
+	// TODO:
+	// SMPEG_getinfo(TDFSB_MPEG_HANDLE, &TDFSB_MPEG_INFO);
+	//if (TDFSB_AVI_FRAMENO != TDFSB_AVI_INFO.current_frame) {
+	//      TDFSB_AVI_FRAMENO = TDFSB_AVI_INFO.current_frame;
+	SDL_LockSurface(TDFSB_AVI_SURFACE);
+	glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, TDFSB_AVI_SURFACE->pixels);
+	SDL_UnlockSurface(TDFSB_AVI_SURFACE);
+	//}
 }
 
 unsigned char *read_mpegframe(char *filename)
@@ -1806,6 +1821,8 @@ void leodir(void)
 					locpy = locsy - 1;
 					TDFSB_TEX_NUM++;
 				}
+			} else if (temptype == 5) {
+				printf("AVI file found");
 			} else if (temptype == 6 || temptype == 4) {
 				uni0 = 0;
 				uni1 = 0;
@@ -2229,6 +2246,11 @@ void display(void)
 			SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 			TDFSB_MPEG_FILE = NULL;
 		}
+	}
+
+	if (TDFSB_AVI_FILE) {
+		play_avi();
+		// TODO: add error handling
 	}
 
 	if (TDFSB_HAVE_MOUSE) {
@@ -3133,6 +3155,33 @@ int speckey(int key)
 					TDFSB_MPEG_FILE = NULL;
 					SMPEG_delete(TDFSB_MPEG_HANDLE);
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
+				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
+					printf("Starting AVI player using GStreamer...\n");
+
+					strcpy(fullpath, TDFSB_CURRENTPATH);
+					if (strlen(fullpath) > 1)
+						strcat(fullpath, "/");
+					strcat(fullpath, TDFSB_OBJECT_SELECTED->name);
+					printf("Starting AVI player using GStreamer of file %s...\n", fullpath);
+
+					// TODO:
+					// TDFSB_AVI_HANDLE = SMPEG_new(fullpath, &TDFSB_MPEG_INFO, 1);
+					TDFSB_AVI_SURFACE = SDL_CreateRGBSurface(SDL_SWSURFACE, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1, 32,
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+										 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
+#else
+										 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+#endif
+					    );
+					TDFSB_AVI_FRAMENO = 1;
+					TDFSB_AVI_FILE = TDFSB_OBJECT_SELECTED;
+
+					// TODO:
+					//SMPEG_setdisplay(TDFSB_AVI_HANDLE, TDFSB_AVI_SURFACE, 0, 0);
+					//SMPEG_scaleXY(TDFSB_AVI_HANDLE, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
+					//SMPEG_renderFrame(TDFSB_AVI_HANDLE, TDFSB_AVI_FRAMENO);
+					//SMPEG_loop(TDFSB_AVI_HANDLE, 1);
+					//SMPEG_play(TDFSB_AVI_HANDLE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 6) {
 					if (TDFSB_MP3_FILE == TDFSB_OBJECT_SELECTED) {
 						SMPEG_stop(TDFSB_MP3_HANDLE);
