@@ -26,7 +26,7 @@ ARGS2=$($SDL_CONFIG --cflags);
 if uname -s | grep -i -c "LINUX" > /dev/null; then 
     echo "GNU/Linux detected.";
     echo "compiling...";    
-    gcc $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -lSDL_image -lGL -lGLU -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -D_THREAD_SAFE -O2 -x c -o tdfsb tdfsb.c;
+    gcc $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -lSDL_image -lGL -lGLU -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -D_THREAD_SAFE -O2 -g -x c -o tdfsb tdfsb.c;
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
     echo "BeOS detected.";
     echo "compiling...";
