@@ -99,6 +99,7 @@ struct stat buf;
 
 char temp_trunc[4096];
 char TDFSB_CURRENTPATH[4096], fullpath[4096], yabuf[4096], fpsbuf[12], cfpsbuf[12], throttlebuf[14], ballbuf[20], home[512], flybuf[12], classicbuf[12];
+char fulluri[4096];
 char TDFSB_CUSTOM_EXECUTE_STRING[4096];
 char TDFSB_CES_TEMP[4096];
 char *alert_kc = "MALFORMED KEYBOARD MAP";
@@ -309,6 +310,9 @@ int speckey(int key);
 int specupkey(int key);
 void stillDisplay(void);
 
+/* GStreamer stuff */
+GstElement *playbin, *videosink, *audiosink;
+
 void ende(int code)
 {
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
@@ -361,8 +365,11 @@ void play_mpeg()
 	}
 }
 
-void play_avi()
+void play_avi(GstElement *pipeline)
 {
+	GstElement *videosink;
+	g_object_get (pipeline, "video-sink", &videosink, NULL);
+
 	// TODO:
 	// SMPEG_getinfo(TDFSB_MPEG_HANDLE, &TDFSB_MPEG_INFO);
 	//if (TDFSB_AVI_FRAMENO != TDFSB_AVI_INFO.current_frame) {
@@ -2252,7 +2259,7 @@ void display(void)
 	}
 
 	if (TDFSB_AVI_FILE) {
-		play_avi();
+		play_avi(playbin);
 		// TODO: add error handling
 	}
 
@@ -2795,6 +2802,32 @@ void display(void)
 		TDFSB_FPS_DISP++;
 }
 
+GstElement *                                                                                                                      
+create_gst_playbin (void)                                                                                                         
+{                                                                                                                                 
+  GstElement *playbin, *videosink, *audiosink;                                                                                    
+                                                                                                                                  
+  playbin = gst_element_factory_make ("playbin", "playbin");                                                                      
+  if (!playbin) fprintf(stderr, "Failed to create playbin!\n");                                                                   
+                                                                                                                                  
+  videosink = gst_element_factory_make ("xvimagesink", "videosink");                                                              
+  if (!videosink) fprintf(stderr, "Failed to create xvimagesink!\n");                                                             
+                                                                                                                                  
+  audiosink = gst_element_factory_make ("alsasink", "audiosink");                                                                 
+                                                                                                                                  
+  g_object_set (videosink,                                                                                                        
+                "force-aspect-ratio", TRUE,                                                                                       
+                NULL);                                                                                                            
+                                                                                                                                  
+  g_object_set (playbin,                                                                                                          
+                "audio-sink", audiosink,                                                                                          
+                "video-sink", videosink,                                                                                          
+                NULL);                                                                                                            
+                                                                                                                                  
+  return playbin;                                                                                                                 
+}
+
+
 void MouseMove(int x, int y)
 {
 	if (!TDFSB_ANIM_STATE) {
@@ -3159,14 +3192,18 @@ int speckey(int key)
 					SMPEG_delete(TDFSB_MPEG_HANDLE);
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
-					strcpy(fullpath, TDFSB_CURRENTPATH);
-					if (strlen(fullpath) > 1)
-						strcat(fullpath, "/");
-					strcat(fullpath, TDFSB_OBJECT_SELECTED->name);
-					printf("Starting AVI player using GStreamer of file %s...\n", fullpath);
+					strcpy(fulluri, "file://");
+					strcat(fulluri, TDFSB_CURRENTPATH);
+					if (strlen(fulluri) > 1)
+						strcat(fulluri, "/");
+					strcat(fulluri, TDFSB_OBJECT_SELECTED->name);
+					printf("Starting AVI player using GStreamer of URI %s\n", fulluri);
 
+
+					playbin = create_gst_playbin();
+					g_object_set(playbin, "uri", fulluri, NULL);
 					// TODO:
-					// TDFSB_AVI_HANDLE = SMPEG_new(fullpath, &TDFSB_MPEG_INFO, 1);
+					// TDFSB_AVI_HANDLE = SMPEG_new(fulluri, &TDFSB_MPEG_INFO, 1);
 					TDFSB_AVI_SURFACE = SDL_CreateRGBSurface(SDL_SWSURFACE, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1, 32,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 										 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
@@ -3176,6 +3213,7 @@ int speckey(int key)
 					    );
 					TDFSB_AVI_FRAMENO = 1;
 					TDFSB_AVI_FILE = TDFSB_OBJECT_SELECTED;
+					gst_element_set_state(playbin, GST_STATE_PLAYING);
 
 					// TODO:
 					//SMPEG_setdisplay(TDFSB_AVI_HANDLE, TDFSB_AVI_SURFACE, 0, 0);
