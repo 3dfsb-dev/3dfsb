@@ -38,6 +38,9 @@
 #include <SDL_image.h>
 #include <smpeg/smpeg.h>
 
+#include <gst/gst.h>                                                                                                              
+//#include <gst/interfaces/xoverlay.h>                  
+
 #ifndef _GLUfuncptr
 #define _GLUfuncptr void*
 #endif
@@ -255,7 +258,7 @@ unsigned char *TDFSB_KEYLIST_NAMES[] = { "KeyFlying", "KeyHelp", "KeyJumpHome",
 
 int TDFSB_KEYLIST_NUM = 26;
 
-char *comment[] = { "detail level of the spheres, must be at least 4",
+char *tdfsb_comment[] = { "detail level of the spheres, must be at least 4",
 	"directory to start, absolute path",
 	"maximum texture size, must be 2^n, 0 for maximum",
 	"width of the window in pixel",
@@ -1208,7 +1211,7 @@ int setup_config(void)
 			fprintf(config, "# TDFSB Example Config File\n\n");
 			for (x = 0; x < paracnt; x++)
 				if (type[x] != 5)
-					fprintf(config, "%-18s = %-6s # %s\n", param[x], pdef[x], comment[x]);
+					fprintf(config, "%-18s = %-6s # %s\n", param[x], pdef[x], tdfsb_comment[x]);
 
 			fprintf(config, "\n# Key bindings\n\n");
 			for (x = 0; x < TDFSB_KEYLIST_NUM; x++)
@@ -1239,13 +1242,13 @@ void save_config(void)
 		fprintf(config, "# TDFSB Saved Config File\n\n");
 		for (x = 0; x < paracnt; x++) {
 			if (type[x] == 1)
-				fprintf(config, "%-18s = %-6d \t# %s\n", param[x], *(int *)value[x], comment[x]);
+				fprintf(config, "%-18s = %-6d \t# %s\n", param[x], *(int *)value[x], tdfsb_comment[x]);
 			else if (type[x] == 2)
-				fprintf(config, "%-18s = %s \t# %s\n", param[x], (char *)value[x], comment[x]);
+				fprintf(config, "%-18s = %s \t# %s\n", param[x], (char *)value[x], tdfsb_comment[x]);
 			else if (type[x] == 3)
-				fprintf(config, "%-18s = %f \t# %s\n", param[x], *(GLfloat *) value[x], comment[x]);
+				fprintf(config, "%-18s = %f \t# %s\n", param[x], *(GLfloat *) value[x], tdfsb_comment[x]);
 			else if (type[x] == 4)
-				fprintf(config, "%-18s = %s \t# %s\n", param[x], *(int *)value[x] ? "yes" : "no", comment[x]);
+				fprintf(config, "%-18s = %s \t# %s\n", param[x], *(int *)value[x] ? "yes" : "no", tdfsb_comment[x]);
 		}
 
 		fprintf(config, "\n# Key bindings\n\n");
@@ -3156,8 +3159,6 @@ int speckey(int key)
 					SMPEG_delete(TDFSB_MPEG_HANDLE);
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
-					printf("Starting AVI player using GStreamer...\n");
-
 					strcpy(fullpath, TDFSB_CURRENTPATH);
 					if (strlen(fullpath) > 1)
 						strcat(fullpath, "/");
@@ -3602,6 +3603,9 @@ int main(int argc, char **argv)
 		printf("SDL ERROR Video initialization failed: %s\n", SDL_GetError());
 		ende(1);
 	}
+
+	// Init GStreamer
+	gst_init (&argc, &argv); 
 
 	info = SDL_GetVideoInfo();
 	if (!info) {

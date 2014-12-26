@@ -7,6 +7,12 @@ How does video get displayed?
 - When you play it by pressing enter, speckey(key=13) enter handling is called which does the setup (and calls SMPEG_play())
 - Then, display() is called continuously, and does play_mpeg() because TDFSB_MPEG_FILE is set, which sets the correct frame
 
+So we have to somehow tell GStreamer to render the video on the SDL_Surface; somehow do the equivalent of this:
+	SMPEG *TDFSB_MPEG_HANDLE = NULL;
+	SDL_Surface *TDFSB_MPEG_SURFACE = NULL;
+	SMPEG_setdisplay(TDFSB_MPEG_HANDLE, TDFSB_MPEG_SURFACE, 0, 0);
+
+
 (gdb) c
 Continuing.
 
