@@ -53,6 +53,14 @@ sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2
 
 This list of dependencies was made using: apt-rdepends --build-depends --follow=DEPENDS tdfsb
 
++ for GStreamer, you need:
+sudo apt-get install libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libgstreamer-plugins-bad0.10-dev
+
+and also perhaps:
+
+sudo apt-get install gstreamer0.10-plugins-*
+sudo apt-get install gstinterfaces
+
 Compilation
 ===========
 
