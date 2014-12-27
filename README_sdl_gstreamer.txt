@@ -12,6 +12,33 @@ So we have to somehow tell GStreamer to render the video on the SDL_Surface; som
 	SDL_Surface *TDFSB_MPEG_SURFACE = NULL;
 	SMPEG_setdisplay(TDFSB_MPEG_HANDLE, TDFSB_MPEG_SURFACE, 0, 0);
 
+Options: http://gstreamer-devel.966125.n4.nabble.com/video-sink-to-update-OpenGL-texture-td972959.html
+
+- Use fakesink, get the data out of it with http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer-plugins/html/gstreamer-plugins-fakesink.html#GstFakeSink-handoff
+- With appsink, which gives you the raw decoded data to do something with it:
+http://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/section-data-spoof.html
+=> good example where they get a PNG image out of a video
+
+- Use http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/gst-plugins-base-plugins-uridecodebin.html
+like http://stackoverflow.com/questions/7594516/gstreamer-video-to-opengl-texture
+which should give you a theGStPixelBuffer somehow...
+
+- The 3 (glfilterapp),
+- and 4 (create a glfilter) are already fully implemented.
+	=> but not flexible: https://github.com/ystreet/gst-plugins-gl/blob/master/tests/examples/generic/recordgraphic/main.cpp
+	then in the drawcallback you have to call src = glGetCurrentContext(), then glCopyContext(src, dst, ...),  just one time.
+	You can also use dst = glGetCurrentContext()  in your gl framework thread, to get the gestination.
+	glXCopyContext(disp, glcontextSrc, glcontextDst, GL_TEXTURE_BIT);
+- The 1 (copyContext), we have to test it.
+- The 2, (use the same context) 
+	get the gl context of the gst pipeline and then copy it (just once, right after the pipeline initialization if I'm not mistaken) to the gl context of my app using wglCopyContext/glXCopyContext. 
+
+Examples of GStreamer and OpenGL:
+http://cgit.freedesktop.org/gstreamer/gst-plugins-bad/tree/tests/examples/gl
+
+Example of GStreamer, SDL and OpenGL:
+http://cgit.freedesktop.org/gstreamer/gst-plugins-bad/tree/tests/examples/gl/sdl/sdlshare.c
+=> 1.0 or more recent material
 
 (gdb) c
 Continuing.
