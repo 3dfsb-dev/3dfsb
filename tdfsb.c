@@ -334,7 +334,7 @@ void stillDisplay(void);
 
 /* GStreamer stuff */
 GstElement *playbin, *videosink, *audiosink;
-#define CAPS "video/x-raw,format=RGB,width=160,pixel-aspect-ratio=1/1"
+#define CAPS "video/x-raw,format=RGB,width=256,pixel-aspect-ratio=1/1"
 static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
 
@@ -624,6 +624,7 @@ GstElement *pipeline, *sink;
 	www = width;
 	hhh = height;
 	p2h = p2w = 256;
+	cglmode = GL_RGBA;
 
   //return buffer;
   return map.data;
