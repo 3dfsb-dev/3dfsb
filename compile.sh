@@ -3,7 +3,7 @@ localprefix=/usr/local/lib/
 
 gtkstuff="-I /usr/include/gtk-3.0/ -I /usr/include/cairo -I /usr/include/pango-1.0 -I /usr/include/gdk-pixbuf-2.0 -I /usr/include/atk-1.0"
 
-/usr/lib/gcc/x86_64-linux-gnu/4.8/cc1 -quiet -v -I /usr/include/SDL -I /usr/local/include -I /usr/include/ -I /usr/X11R6/include -I /usr/include/gstreamer-1.0 -I /usr/include/glib-2.0 -I /usr/lib/x86_64-linux-gnu/glib-2.0/include -I /usr/include/libxml2 $gtkstuff -imultiarch x86_64-linux-gnu -D_REENTRANT -D _GNU_SOURCE=1 -D _REENTRANT -D _THREAD_SAFE tdfsb.c -quiet -dumpbase tdfsb.c -mtune=generic -march=x86-64 -auxbase tdfsb -g -O2 -version -fstack-protector -Wformat -Wformat-security -o ccqdhkBS.s
+/usr/lib/gcc/x86_64-linux-gnu/4.8/cc1 -quiet -v -I /usr/include/SDL -I /usr/local/include -I /usr/include/ -I /usr/X11R6/include -I /usr/include/gstreamer-1.0 -I /usr/include/glib-2.0 -I /usr/lib/x86_64-linux-gnu/glib-2.0/include -I /usr/include/libxml2 $gtkstuff -imultiarch x86_64-linux-gnu -D_REENTRANT -D _GNU_SOURCE=1 -D _REENTRANT -D _THREAD_SAFE tdfsb.c -quiet -dumpbase tdfsb.c -mtune=generic -march=x86-64 -auxbase tdfsb -g -O0 -version -fstack-protector -Wformat -Wformat-security -o ccqdhkBS.s
 
 as -v -I /usr/include/SDL -I /usr/local/include -I /usr/include/ -I /usr/X11R6/include -I /usr/include/gstreamer-1.0 -I /usr/include/glib-2.0 -I /usr/lib/x86_64-linux-gnu/glib-2.0/include -I /usr/include/libxml2 --64 -o ccUyg6CF.o ccqdhkBS.s
 
