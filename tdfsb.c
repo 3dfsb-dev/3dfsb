@@ -61,6 +61,8 @@
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
 
+#include <gtk/gtk.h>
+
 #ifndef _GLUfuncptr
 #define _GLUfuncptr void*
 #endif
@@ -475,6 +477,22 @@ void play_avi()
 
 	// Segfaults, perhaps something wrong with the type (GL_UNSIGNED_BYTE)
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 320, 240, 0, GL_RGBA, GL_UNSIGNED_BYTE, v_frame.data[0]);
+
+        // Try to save the buffer to a file, to see what's in it...
+  GstMapInfo map;
+  gst_buffer_map (videobuffer, &map, GST_MAP_READ);
+    GdkPixbuf* pixbuf = gdk_pixbuf_new_from_data (map.data,
+        GDK_COLORSPACE_RGB, FALSE, 8, 320, 240,		// This is actually RGBA, thanks GDK...
+        GST_ROUND_UP_4 (320 * 3), NULL, NULL);
+
+    /* save the pixbuf */
+    GError *error = NULL;
+    gdk_pixbuf_save (pixbuf, "snapshot.png", "png", &error, NULL);
+	if (error != NULL) {
+		printf("error saving snapshot.png\n");
+	}
+    gst_buffer_unmap (videobuffer, &map);
+
 
 	//SDL_UnlockSurface(TDFSB_AVI_SURFACE);
 
