@@ -71,7 +71,7 @@ main (int argc, char *argv[])
 
   if (duration != -1)
     /* we have a duration, seek to 5% */
-    position = duration * 5 / 100;
+    position = duration * 70 / 100;
   else
     /* no duration, seek to 1 second, this could EOS */
     position = 1 * GST_SECOND;
