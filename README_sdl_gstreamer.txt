@@ -43,6 +43,10 @@ http://cgit.freedesktop.org/gstreamer/gst-plugins-bad/tree/tests/examples/gl/sdl
 Simple example:
 gst-launch-1.0 -v videotestsrc ! glfiltercube ! glimagesink
 
+gst-launch-1.0 uridecodebin uri='file:///home/tom/Stanley Kubrick - Barry Lyndon (1975).avi' ! videoconvert ! videoscale ! ximagesink 
+=> this works, but not in the code...
+I now got the example to work, it's fine, so I suspect a bug in my code...
+
 (gdb) c
 Continuing.
 

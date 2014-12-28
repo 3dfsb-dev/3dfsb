@@ -6,3 +6,6 @@ sdl-gstreamer
 .*.swp
 
 sdl/sdlshare
+
+appsink/main
+appsink/snapshot.png
