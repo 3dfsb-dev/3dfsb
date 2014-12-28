@@ -40,6 +40,9 @@ Example of GStreamer, SDL and OpenGL:
 http://cgit.freedesktop.org/gstreamer/gst-plugins-bad/tree/tests/examples/gl/sdl/sdlshare.c
 => 1.0 or more recent material
 
+Simple example:
+gst-launch-1.0 -v videotestsrc ! glfiltercube ! glimagesink
+
 (gdb) c
 Continuing.
 
