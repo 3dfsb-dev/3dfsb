@@ -334,7 +334,8 @@ void stillDisplay(void);
 
 /* GStreamer stuff */
 GstElement *playbin, *videosink, *audiosink;
-#define CAPS "video/x-raw,format=RGB,width=256,pixel-aspect-ratio=1/1"
+//#define CAPS "video/x-raw,format=RGB,width=256,pixel-aspect-ratio=1/1"
+#define CAPS "video/x-raw,format=RGBA,width=352,pixel-aspect-ratio=1/1"
 static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
 
@@ -487,7 +488,7 @@ void play_avi()
 
     /* save the pixbuf */
     GError *error = NULL;
-    gdk_pixbuf_save (pixbuf, "snapshot.png", "png", &error, NULL);
+    gdk_pixbuf_save (pixbuf, "snapshot.bmp", "bmp", &error, NULL);
 	if (error != NULL) {
 		printf("error saving snapshot.png\n");
 	}
@@ -517,8 +518,8 @@ GstElement *pipeline, *sink;
 
 /* create a new pipeline */
   descr =
-      g_strdup_printf ("uridecodebin uri=file://%s ! videoconvert ! videoscale ! "
-      " appsink name=sink caps=\"" CAPS "\"", filename);
+      g_strdup_printf ("uridecodebin uri=file://%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
+	printf("gst-launch-1.0 %s\n", descr);
   pipeline = gst_parse_launch (descr, &error);
 
   if (error != NULL) {
@@ -558,7 +559,9 @@ GstElement *pipeline, *sink;
 
   if (duration != -1)
     /* we have a duration, seek to 5% */
-    position = duration * 5 / 100;
+    //position = duration * 5 / 100;	// interesting position...
+    //position = duration * 5 / 100;	
+    position = 0;	// take first frame, just like MPEG does
   else
     /* no duration, seek to 1 second, this could EOS */
     position = 1 * GST_SECOND;
@@ -609,9 +612,11 @@ GstElement *pipeline, *sink;
         GST_ROUND_UP_4 (width * 3), NULL, NULL);
 
     /* save the pixbuf */
-    gdk_pixbuf_save (pixbuf, "texture.png", "png", &error, NULL);
-    gst_buffer_unmap (buffer, &map);
-    gst_sample_unref (sample);
+    // This works great... but the texture is not shown, finally...
+    gdk_pixbuf_save (pixbuf, "texture.bmp", "bmp", &error, NULL);
+    // TODO: reactivate the cleanup
+    //gst_buffer_unmap (buffer, &map);
+    //gst_sample_unref (sample);
   } else {
     g_print ("could not make snapshot\n");
   }
@@ -669,6 +674,8 @@ unsigned char *read_mpegframe(char *filename)
 	SMPEG_setdisplay(mpeg, screen, NULL, NULL);
 	SMPEG_setdisplayregion(mpeg, 0, 0, www, hhh);
 	SMPEG_renderFrame(mpeg, 1);
+	// TODO: take a later frame, because first ones are usually black:
+	//SMPEG_renderFrame(mpeg, 420);
 
 	memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
 
@@ -2101,8 +2108,8 @@ void leodir(void)
 					uni0 = p2w;
 					uni1 = p2h;
 					uni2 = cglmode;
-					uni3 = 1;	/* width height colormode texture */
 					uni3 = 31337;	/* becomes texture name? */
+					uni3 = 1;	/* width height colormode texture */
 					printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
 					if (www < hhh) {
 						locsx = locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
