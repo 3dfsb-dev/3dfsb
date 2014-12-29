@@ -108,7 +108,13 @@ struct tree_entry {
 	unsigned char *linkpath;
 	unsigned int mode, regtype, rasterx, rasterz;
 	GLfloat posx, posy, posz, scalex, scaley, scalez;
+	/* uni0 = p2w;
+	uni1 = p2h;
+	uni2 = cglmode;
+	uni3 = 31337;	gets filled in with the texture id */
 	unsigned int uniint0, uniint1, uniint2, uniint3;
+	unsigned int originalwidth;
+	unsigned int originalheight;
 	unsigned char *uniptr;	/* this can point to the contents of a textfile, or to the data of a texture */
 	off_t size;
 	struct tree_entry *next;
@@ -447,6 +453,47 @@ void play_avi()
   GstVideoInfo v_info;
   guint texture;
 
+  GstMapInfo map;
+  gst_buffer_map (videobuffer, &map, GST_MAP_READ);
+
+  /* Scaling, from the video size to the texture size */
+  unsigned int p2w = TDFSB_AVI_FILE->uniint0;
+  unsigned int p2h = TDFSB_AVI_FILE->uniint1;
+  unsigned char * ssi = NULL;
+  unsigned int www = TDFSB_AVI_FILE->originalwidth;
+  unsigned int hhh = TDFSB_AVI_FILE->originalheight;
+
+	unsigned long int memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
+
+	if (!(ssi = (unsigned char *)malloc((size_t) memsize))) {
+		printf("play_avi: cannot malloc\n");
+		exit(3);
+		return;
+	}
+
+	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
+		free(ssi);
+		printf("play_avi: cannot scale image\n");
+		exit(4);
+		return;
+	}
+
+
+
+  // now map.data points to the video frame that we saved in on_gst_...!
+  glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, ssi);
+
+  // UNMAPPING this buffer segfaults!
+  // No idea why...
+  //gst_buffer_unmap (videobuffer, &map);
+
+  //glBindTexture (GL_TEXTURE_2D, 0);	// Is this needed? Is this correct? Seems strange...
+
+  return;
+
+  /*
+
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 320, 240);
 
   // The first time, this gives an error, because this function is called because we've received the GstBuffer from GStreamer
@@ -464,9 +511,9 @@ void play_avi()
 	//      TDFSB_AVI_FRAMENO = TDFSB_AVI_INFO.current_frame;
 	//SDL_LockSurface(TDFSB_AVI_SURFACE);
 
-	//glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
+	glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
 
-	glBindTexture(GL_TEXTURE_2D, texture);
+	//glBindTexture(GL_TEXTURE_2D, texture);
 
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -486,19 +533,19 @@ void play_avi()
         GDK_COLORSPACE_RGB, FALSE, 8, 320, 240,		// This is actually RGBA, thanks GDK...
         GST_ROUND_UP_4 (320 * 3), NULL, NULL);
 
-    /* save the pixbuf */
+    // save the pixbuf
     GError *error = NULL;
     gdk_pixbuf_save (pixbuf, "snapshot.bmp", "bmp", &error, NULL);
 	if (error != NULL) {
 		printf("error saving snapshot.png\n");
 	}
     gst_buffer_unmap (videobuffer, &map);
+	*/
 
 
 	//SDL_UnlockSurface(TDFSB_AVI_SURFACE);
 
 	// TODO?
-	glBindTexture (GL_TEXTURE_2D, 0);
 
 	//}
 }
@@ -1705,7 +1752,7 @@ void reshape(int w, int h)
 	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 }
 
-void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int uni0, unsigned int uni1, unsigned int uni2, unsigned int uni3, unsigned char *locptr, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
+void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int uni0, unsigned int uni1, unsigned int uni2, unsigned int uni3, unsigned int originalwidth, unsigned int originalheight, unsigned char *locptr, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
 {
 	unsigned char *temp;
 
@@ -1731,6 +1778,8 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		root->uniint1 = uni1;
 		root->uniint2 = uni2;
 		root->uniint3 = uni3;
+		root->originalwidth = originalwidth;
+		root->originalheight= originalheight;
 		root->posx = posx;
 		root->posy = posy;
 		root->posz = posz;
@@ -1758,6 +1807,8 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		(help->next)->uniint1 = uni1;
 		(help->next)->uniint2 = uni2;
 		(help->next)->uniint3 = uni3;
+		(help->next)->originalwidth = originalwidth;
+		(help->next)->originalheight= originalheight;
 		(help->next)->posx = posx;
 		(help->next)->posy = posy;
 		(help->next)->posz = posz;
@@ -2127,7 +2178,7 @@ void leodir(void)
 				locptr = read_videoframe(fullpath);
 				if (!locptr) {
 					printf("Reading video frame from %s failed\n", fullpath);
-					locptr = NULL; /* superfluous, because it is NULL here anyway... */
+					locptr = NULL; /* superfluous, because it is NULL here because of the if(!locprt) above anyway... */
 					uni0 = 0;
 					uni1 = 0;
 					uni2 = 0;
@@ -2182,7 +2233,7 @@ void leodir(void)
 				printf(" .. done.\n");
 			}
 
-			insert(entry, linkpath, mode, buf.st_size, temptype, uni0, uni1, uni2, uni3, locptr, locpx, locpy, locpz, locsx, locsy, locsz);
+			insert(entry, linkpath, mode, buf.st_size, temptype, uni0, uni1, uni2, uni3, www, hhh, locptr, locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
 		}
 
