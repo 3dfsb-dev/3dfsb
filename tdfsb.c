@@ -167,12 +167,10 @@ long TDFSB_US_RUN = 0;
 int TDFSB_CSE_FLAG = 1;
 
 SDL_Surface *TDFSB_MPEG_SURFACE = NULL;
-SDL_Surface *TDFSB_AVI_SURFACE = NULL;
 SMPEG *TDFSB_MPEG_HANDLE = NULL, *TDFSB_MP3_HANDLE = NULL;
 SMPEG_Info TDFSB_MPEG_INFO, TDFSB_MP3_INFO;
 struct tree_entry *TDFSB_MPEG_FILE, *TDFSB_MP3_FILE, *TDFSB_AVI_FILE;
 unsigned long int TDFSB_MPEG_FRAMENO;
-unsigned long int TDFSB_AVI_FRAMENO;
 
 struct timeval ltime, ttime, rtime, wtime;
 long sec;
@@ -340,7 +338,6 @@ void stillDisplay(void);
 
 /* GStreamer stuff */
 GstElement *playbin, *videosink, *audiosink;
-//#define CAPS "video/x-raw,format=RGB,width=256,pixel-aspect-ratio=1/1"
 #define CAPS "video/x-raw,format=RGBA,width=352,pixel-aspect-ratio=1/1"
 static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
@@ -381,14 +378,25 @@ static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 /* fakesink handoff callback */
 static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, gpointer data)
 {
-	//printf("on_gst_buffer called\n");
 	// TODO: gst_buffer_ref (buf);
 	videobuffer = buf;
-
 }
 
 void ende(int code)
 {
+/*
+  Cleanup, this is for later:
+
+  // before to deinitialize the gst-gl-opengl context, * no shared context (here the sdl one) must be current
+  glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  gst_object_unref (pipeline);
+
+  glXMakeCurrent (sdl_display, None, 0);
+
+*/
+
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
 		free(TDFSB_TEX_NAMES);
@@ -441,9 +449,6 @@ void play_mpeg()
 
 void play_avi()
 {
-	//GstElement *videosink;
-	//g_object_get(pipeline, "video-sink", &videosink, NULL);
-	//printf("play_avi called\n");
 	GstVideoFrame v_frame;
 	GstVideoInfo v_info;
 	guint texture;
@@ -480,69 +485,6 @@ void play_avi()
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, p2w, p2h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ssi);
 
-	// UNMAPPING this buffer segfaults!
-	// No idea why...
-	//gst_buffer_unmap (videobuffer, &map);
-
-	//glBindTexture (GL_TEXTURE_2D, 0);   // Is this needed? Is this correct? Seems strange...
-
-	return;
-
-	/*
-
-	   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 320, 240);
-
-	   // The first time, this gives an error, because this function is called because we've received the GstBuffer from GStreamer
-	   // ** (tdfsb:7945): CRITICAL **: gst_video_frame_map_id: assertion 'GST_IS_BUFFER (buffer)' failed
-	   if (!gst_video_frame_map (&v_frame, &v_info, videobuffer, GST_MAP_READ | GST_MAP_GL)) {
-	   g_warning ("Failed to map the video buffer");
-	   return;
-	   }
-
-	   texture = *(guint *) v_frame.data[0];
-
-	   // TODO:
-	   // SMPEG_getinfo(TDFSB_MPEG_HANDLE, &TDFSB_MPEG_INFO);
-	   //if (TDFSB_AVI_FRAMENO != TDFSB_AVI_INFO.current_frame) {
-	   //      TDFSB_AVI_FRAMENO = TDFSB_AVI_INFO.current_frame;
-	   //SDL_LockSurface(TDFSB_AVI_SURFACE);
-
-	   glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
-
-	   //glBindTexture(GL_TEXTURE_2D, texture);
-
-	   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-	   //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, TDFSB_AVI_SURFACE->pixels);
-
-	   // Segfaults, perhaps something wrong with the type (GL_UNSIGNED_BYTE)
-	   //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 320, 240, 0, GL_RGBA, GL_UNSIGNED_BYTE, v_frame.data[0]);
-
-	   // Try to save the buffer to a file, to see what's in it...
-	   GstMapInfo map;
-	   gst_buffer_map (videobuffer, &map, GST_MAP_READ);
-	   GdkPixbuf* pixbuf = gdk_pixbuf_new_from_data (map.data,
-	   GDK_COLORSPACE_RGB, FALSE, 8, 320, 240,            // This is actually RGBA, thanks GDK...
-	   GST_ROUND_UP_4 (320 * 3), NULL, NULL);
-
-	   // save the pixbuf
-	   GError *error = NULL;
-	   gdk_pixbuf_save (pixbuf, "snapshot.bmp", "bmp", &error, NULL);
-	   if (error != NULL) {
-	   printf("error saving snapshot.png\n");
-	   }
-	   gst_buffer_unmap (videobuffer, &map);
-	 */
-
-	//SDL_UnlockSurface(TDFSB_AVI_SURFACE);
-
-	// TODO?
-
-	//}
 }
 
 /* Returns a pointer to (not a char but) the buffer that holds the image texture */
@@ -3537,8 +3479,7 @@ int speckey(int key)
 					    );
 					TDFSB_MPEG_FRAMENO = 1;
 					SMPEG_setdisplay(TDFSB_MPEG_HANDLE, TDFSB_MPEG_SURFACE, 0, 0);
-/*                                    SMPEG_setdisplayregion(TDFSB_MPEG_HANDLE,0,0,TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1); 
-*/ SMPEG_scaleXY(TDFSB_MPEG_HANDLE, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
+					SMPEG_scaleXY(TDFSB_MPEG_HANDLE, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
 					SMPEG_renderFrame(TDFSB_MPEG_HANDLE, TDFSB_MPEG_FRAMENO);
 
 					TDFSB_MPEG_FILE = TDFSB_OBJECT_SELECTED;
@@ -3559,35 +3500,16 @@ int speckey(int key)
 					strcat(fulluri, TDFSB_OBJECT_SELECTED->name);
 					printf("Starting AVI player using GStreamer of URI %s\n", fulluri);
 
-					// First try, works, but different window:
-					//playbin = create_gst_playbin();
-					//g_object_set(playbin, "uri", fulluri, NULL);
-					//gst_element_set_state(playbin, GST_STATE_PLAYING);
-
-#ifdef WIN32
-					HGLRC sdl_gl_context = 0;
-					HDC sdl_dc = 0;
-#else
 					SDL_SysWMinfo info;
 					Display *sdl_display = NULL;
 					Window sdl_win = 0;
 					GLXContext sdl_gl_context = NULL;
-#endif
 
-					//GMainLoop *loop = NULL;
 					GstPipeline *pipeline = NULL;
 					GstBus *bus = NULL;
 					GstElement *fakesink = NULL;
 					GstState state;
-					GAsyncQueue *queue_input_buf = NULL;
-					GAsyncQueue *queue_output_buf = NULL;
 					const gchar *platform;
-
-					/* loop = g_main_loop_new (NULL, FALSE);
-					   if (!loop) {
-					   printf("ERROR: could not get g_main_loop\n");
-					   exit(1);
-					   } */
 
 					SDL_VERSION(&info.version);
 					SDL_GetWMInfo(&info);
@@ -3637,62 +3559,11 @@ int speckey(int key)
 					fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "videosink");
 					g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
 					g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
-					queue_input_buf = g_async_queue_new();
-					queue_output_buf = g_async_queue_new();
-					g_object_set_data(G_OBJECT(fakesink), "queue_input_buf", queue_input_buf);
-					g_object_set_data(G_OBJECT(fakesink), "queue_output_buf", queue_output_buf);
-					// Not needed: g_object_set_data (G_OBJECT (fakesink), "loop", loop);
 					gst_object_unref(fakesink);
 
 					gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
-					// Not needed? g_main_loop_run (loop);
-
-/*
-
-	Cleanup, this is for later:
-
-  // before to deinitialize the gst-gl-opengl context, * no shared context (here the sdl one) must be current
-  glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
-
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  gst_object_unref (pipeline);
-
-  glXMakeCurrent (sdl_display, None, 0);
-
-  SDL_Quit ();
-
-  // make sure there is no pending gst gl buffer in the communication queues between sdl and gst-gl
-  while (g_async_queue_length (queue_input_buf) > 0) {
-    GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_input_buf);
-    gst_buffer_unref (buf);
-  }
-
-  while (g_async_queue_length (queue_output_buf) > 0) {
-    GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_output_buf);
-    gst_buffer_unref (buf);
-  }
-
-*/
-
-					// TODO:
-					// TDFSB_AVI_HANDLE = SMPEG_new(fulluri, &TDFSB_MPEG_INFO, 1);
-					TDFSB_AVI_SURFACE = SDL_CreateRGBSurface(SDL_SWSURFACE, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1, 32,
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-										 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
-#else
-										 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
-#endif
-					    );
-					TDFSB_AVI_FRAMENO = 1;
 					TDFSB_AVI_FILE = TDFSB_OBJECT_SELECTED;
-
-					// TODO:
-					//SMPEG_setdisplay(TDFSB_AVI_HANDLE, TDFSB_AVI_SURFACE, 0, 0);
-					//SMPEG_scaleXY(TDFSB_AVI_HANDLE, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
-					//SMPEG_renderFrame(TDFSB_AVI_HANDLE, TDFSB_AVI_FRAMENO);
-					//SMPEG_loop(TDFSB_AVI_HANDLE, 1);
-					//SMPEG_play(TDFSB_AVI_HANDLE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 6) {
 					if (TDFSB_MP3_FILE == TDFSB_OBJECT_SELECTED) {
 						SMPEG_stop(TDFSB_MP3_HANDLE);
