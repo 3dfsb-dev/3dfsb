@@ -3622,10 +3622,18 @@ int speckey(int key)
       gst_gl_context_new_wrapped (sdl_gl_display, (guintptr) sdl_gl_context,
       gst_gl_platform_from_string (platform), GST_GL_API_OPENGL);
 
-  pipeline =
-      GST_PIPELINE (gst_parse_launch
-      ("videotestsrc ! video/x-raw, width=320, height=240, framerate=(fraction)30/1 ! "
-          "gleffects effect=5 ! fakesink sync=1", NULL));
+  /* create a new pipeline */
+  // pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
+  gchar *descr = g_strdup_printf ("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=videosink sync=1", fulluri);
+	printf("gst-launch-1.0 %s\n", descr);
+  GError *error = NULL;
+  pipeline = gst_parse_launch (descr, &error);
+
+  if (error != NULL) {
+    g_print ("could not construct pipeline: %s\n", error->message);
+    g_error_free (error);
+    exit (-1);
+  }
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch (bus);
@@ -3649,7 +3657,7 @@ int speckey(int key)
   glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
 
   /* append a gst-gl texture to this queue when you do not need it no more */
-  fakesink = gst_bin_get_by_name (GST_BIN (pipeline), "fakesink0");
+  fakesink = gst_bin_get_by_name (GST_BIN (pipeline), "videosink");
   g_object_set (G_OBJECT (fakesink), "signal-handoffs", TRUE, NULL);
   g_signal_connect (fakesink, "handoff", G_CALLBACK (on_gst_buffer), NULL);
   queue_input_buf = g_async_queue_new ();
