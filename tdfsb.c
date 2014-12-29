@@ -460,8 +460,11 @@ void play_avi()
   unsigned int p2w = TDFSB_AVI_FILE->uniint0;
   unsigned int p2h = TDFSB_AVI_FILE->uniint1;
   unsigned char * ssi = NULL;
-  unsigned int www = TDFSB_AVI_FILE->originalwidth;
+  unsigned int www = 320;
+  unsigned int hhh = 240;
+  /* TODO unsigned int www = TDFSB_AVI_FILE->originalwidth;
   unsigned int hhh = TDFSB_AVI_FILE->originalheight;
+  unsigned int www = TDFSB_AVI_FILE->originalwidth; */
 
 	unsigned long int memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
 
@@ -482,7 +485,8 @@ void play_avi()
 
   // now map.data points to the video frame that we saved in on_gst_...!
   glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, ssi);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, p2w, p2h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ssi);
 
   // UNMAPPING this buffer segfaults!
   // No idea why...
