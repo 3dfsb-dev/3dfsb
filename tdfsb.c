@@ -631,8 +631,41 @@ GstElement *pipeline, *sink;
 	p2h = p2w = 256;
 	cglmode = GL_RGBA;
 
-  //return buffer;
-  return map.data;
+	/* Scaling, from say 352x193 to 256x256
+
+	Note: this also introduces small relative changes in the RGBA values:
+	\004\004\006\377\003\003\005\377\003\003\003\377\003\003\003\377
+	becomes
+	\003\b\005\377\002\a\003\377\002\a\002\377\002\a\002\377
+
+	*/
+
+	unsigned long int memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
+
+	if (!(ssi = (unsigned char *)malloc((size_t) memsize))) {
+		printf("Cannot read frame %s ! (low mem buffer) \n", filename);
+		www = 0;
+		hhh = 0;
+		ssi = NULL;
+		p2w = 0;
+		p2h = 0;
+		exit(2);
+		return NULL;
+	}
+
+	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
+		free(ssi);
+		printf("Cannot read frame %s ! (scaling) \n", filename);
+		www = 0;
+		hhh = 0;
+		ssi = NULL;
+		p2w = 0;
+		p2h = 0;
+		exit(2);
+		return NULL;
+	}
+
+  return ssi;
 
 }
 
@@ -823,7 +856,7 @@ void tdb_gen_list(void)
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 		} else if (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) {
-			if (((help->regtype == 1) || (help->regtype == 3)) && ((help->mode) & 0x1F) == 0) {
+			if (((help->regtype == 1) || (help->regtype == 3) || (help->regtype == 5)) && ((help->mode) & 0x1F) == 0) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -2108,8 +2141,7 @@ void leodir(void)
 					uni0 = p2w;
 					uni1 = p2h;
 					uni2 = cglmode;
-					uni3 = 31337;	/* becomes texture name? */
-					uni3 = 1;	/* width height colormode texture */
+					uni3 = 31337;	/* this is not used and later gets filled in with the texture id */
 					printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
 					if (www < hhh) {
 						locsx = locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
@@ -2257,7 +2289,7 @@ void leodir(void)
 
 	c1 = 0;
 	for (help = root; help; help = help->next) {
-		if ((((help->regtype) == 3) || ((help->regtype) == 1)) && (((help->mode) & 0x1F) == 0)) {
+		if ((((help->regtype) == 5) || ((help->regtype) == 3) || ((help->regtype) == 1)) && (((help->mode) & 0x1F) == 0)) {
 			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
