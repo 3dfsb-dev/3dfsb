@@ -46,7 +46,7 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 	# Static:
 	# This works fine in the first steps, but then fails in a way very similar to how it fails on pluto
 	#link=$(pkg-config --cflags gstreamer-1.0)" "$(pkg-config --cflags gstreamer-gl-1.0)" "$(pkg-config --cflags gstreamer-video-1.0)" "$(pkg-config --cflags gdk-pixbuf-2.0)
-	#gccopt="-static"
+	#gccopt="-static -static-libgcc"
 
     gcc $gccopt -v $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include $includes -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -D_THREAD_SAFE -O2 -g -x c $link -lSDL_image -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -o tdfsb tdfsb.c
 
