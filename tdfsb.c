@@ -38,7 +38,7 @@
 #include <SDL_image.h>
 #include <smpeg/smpeg.h>
 
-#include <gst/gst.h>                                                                                                              
+#include <gst/gst.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -109,9 +109,9 @@ struct tree_entry {
 	unsigned int mode, regtype, rasterx, rasterz;
 	GLfloat posx, posy, posz, scalex, scaley, scalez;
 	/* uni0 = p2w;
-	uni1 = p2h;
-	uni2 = cglmode;
-	uni3 = 31337;	gets filled in with the texture id */
+	   uni1 = p2h;
+	   uni2 = cglmode;
+	   uni3 = 31337;        gets filled in with the texture id */
 	unsigned int uniint0, uniint1, uniint2, uniint3;
 	unsigned int originalwidth;
 	unsigned int originalheight;
@@ -346,51 +346,46 @@ static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
 
 // GstBuffer with the new frame
-GstBuffer * videobuffer; 
+GstBuffer *videobuffer;
 
-static gboolean
-sync_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
+static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 {
-  switch (GST_MESSAGE_TYPE (msg)) {
-    case GST_MESSAGE_NEED_CONTEXT:
-    {
-      const gchar *context_type;
+	switch (GST_MESSAGE_TYPE(msg)) {
+	case GST_MESSAGE_NEED_CONTEXT:
+		{
+			const gchar *context_type;
 
-      gst_message_parse_context_type (msg, &context_type);
-      g_print ("got need context %s\n", context_type);
+			gst_message_parse_context_type(msg, &context_type);
+			g_print("got need context %s\n", context_type);
 
-      if (g_strcmp0 (context_type, GST_GL_DISPLAY_CONTEXT_TYPE) == 0) {
-        GstContext *display_context =
-            gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
-        gst_context_set_gl_display (display_context, sdl_gl_display);
-        gst_element_set_context (GST_ELEMENT (msg->src), display_context);
-        return TRUE;
-      } else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
-        GstContext *app_context = gst_context_new ("gst.gl.app_context", TRUE);
-        GstStructure *s = gst_context_writable_structure (app_context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, sdl_context,
-            NULL);
-        gst_element_set_context (GST_ELEMENT (msg->src), app_context);
-        return TRUE;
-      }
-      break;
-    }
-    default:
-      break;
-  }
-  return FALSE;
+			if (g_strcmp0(context_type, GST_GL_DISPLAY_CONTEXT_TYPE) == 0) {
+				GstContext *display_context = gst_context_new(GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
+				gst_context_set_gl_display(display_context, sdl_gl_display);
+				gst_element_set_context(GST_ELEMENT(msg->src), display_context);
+				return TRUE;
+			} else if (g_strcmp0(context_type, "gst.gl.app_context") == 0) {
+				GstContext *app_context = gst_context_new("gst.gl.app_context", TRUE);
+				GstStructure *s = gst_context_writable_structure(app_context);
+				gst_structure_set(s, "context", GST_GL_TYPE_CONTEXT, sdl_context, NULL);
+				gst_element_set_context(GST_ELEMENT(msg->src), app_context);
+				return TRUE;
+			}
+			break;
+		}
+	default:
+		break;
+	}
+	return FALSE;
 }
 
 /* fakesink handoff callback */
-static void
-on_gst_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad, gpointer data)
+static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, gpointer data)
 {
-  //printf("on_gst_buffer called\n");
-  // TODO: gst_buffer_ref (buf);
-  videobuffer = buf;
+	//printf("on_gst_buffer called\n");
+	// TODO: gst_buffer_ref (buf);
+	videobuffer = buf;
 
 }
-
 
 void ende(int code)
 {
@@ -448,23 +443,23 @@ void play_avi()
 {
 	//GstElement *videosink;
 	//g_object_get(pipeline, "video-sink", &videosink, NULL);
-  //printf("play_avi called\n");
-  GstVideoFrame v_frame;
-  GstVideoInfo v_info;
-  guint texture;
+	//printf("play_avi called\n");
+	GstVideoFrame v_frame;
+	GstVideoInfo v_info;
+	guint texture;
 
-  GstMapInfo map;
-  gst_buffer_map (videobuffer, &map, GST_MAP_READ);
+	GstMapInfo map;
+	gst_buffer_map(videobuffer, &map, GST_MAP_READ);
 
-  /* Scaling, from the video size to the texture size */
-  unsigned int p2w = TDFSB_AVI_FILE->uniint0;
-  unsigned int p2h = TDFSB_AVI_FILE->uniint1;
-  unsigned char * ssi = NULL;
-  unsigned int www = 320;
-  unsigned int hhh = 240;
-  /* TODO unsigned int www = TDFSB_AVI_FILE->originalwidth;
-  unsigned int hhh = TDFSB_AVI_FILE->originalheight;
-  unsigned int www = TDFSB_AVI_FILE->originalwidth; */
+	/* Scaling, from the video size to the texture size */
+	unsigned int p2w = TDFSB_AVI_FILE->uniint0;
+	unsigned int p2h = TDFSB_AVI_FILE->uniint1;
+	unsigned char *ssi = NULL;
+	unsigned int www = 320;
+	unsigned int hhh = 240;
+	/* TODO unsigned int www = TDFSB_AVI_FILE->originalwidth;
+	   unsigned int hhh = TDFSB_AVI_FILE->originalheight;
+	   unsigned int www = TDFSB_AVI_FILE->originalwidth; */
 
 	unsigned long int memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
 
@@ -480,72 +475,68 @@ void play_avi()
 		exit(4);
 		return;
 	}
-
-
-
-  // now map.data points to the video frame that we saved in on_gst_...!
-  glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, p2w, p2h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ssi);
-
-  // UNMAPPING this buffer segfaults!
-  // No idea why...
-  //gst_buffer_unmap (videobuffer, &map);
-
-  //glBindTexture (GL_TEXTURE_2D, 0);	// Is this needed? Is this correct? Seems strange...
-
-  return;
-
-  /*
-
-  gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 320, 240);
-
-  // The first time, this gives an error, because this function is called because we've received the GstBuffer from GStreamer
-  // ** (tdfsb:7945): CRITICAL **: gst_video_frame_map_id: assertion 'GST_IS_BUFFER (buffer)' failed
-  if (!gst_video_frame_map (&v_frame, &v_info, videobuffer, GST_MAP_READ | GST_MAP_GL)) {
-    g_warning ("Failed to map the video buffer");
-    return;
-  }
-
-  texture = *(guint *) v_frame.data[0];
-
-	// TODO:
-	// SMPEG_getinfo(TDFSB_MPEG_HANDLE, &TDFSB_MPEG_INFO);
-	//if (TDFSB_AVI_FRAMENO != TDFSB_AVI_INFO.current_frame) {
-	//      TDFSB_AVI_FRAMENO = TDFSB_AVI_INFO.current_frame;
-	//SDL_LockSurface(TDFSB_AVI_SURFACE);
-
+	// now map.data points to the video frame that we saved in on_gst_...!
 	glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
 
-	//glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, p2w, p2h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ssi);
 
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	// UNMAPPING this buffer segfaults!
+	// No idea why...
+	//gst_buffer_unmap (videobuffer, &map);
 
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, TDFSB_AVI_SURFACE->pixels);
+	//glBindTexture (GL_TEXTURE_2D, 0);   // Is this needed? Is this correct? Seems strange...
 
-	// Segfaults, perhaps something wrong with the type (GL_UNSIGNED_BYTE)
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 320, 240, 0, GL_RGBA, GL_UNSIGNED_BYTE, v_frame.data[0]);
+	return;
 
-        // Try to save the buffer to a file, to see what's in it...
-  GstMapInfo map;
-  gst_buffer_map (videobuffer, &map, GST_MAP_READ);
-    GdkPixbuf* pixbuf = gdk_pixbuf_new_from_data (map.data,
-        GDK_COLORSPACE_RGB, FALSE, 8, 320, 240,		// This is actually RGBA, thanks GDK...
-        GST_ROUND_UP_4 (320 * 3), NULL, NULL);
+	/*
 
-    // save the pixbuf
-    GError *error = NULL;
-    gdk_pixbuf_save (pixbuf, "snapshot.bmp", "bmp", &error, NULL);
-	if (error != NULL) {
-		printf("error saving snapshot.png\n");
-	}
-    gst_buffer_unmap (videobuffer, &map);
-	*/
+	   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 320, 240);
 
+	   // The first time, this gives an error, because this function is called because we've received the GstBuffer from GStreamer
+	   // ** (tdfsb:7945): CRITICAL **: gst_video_frame_map_id: assertion 'GST_IS_BUFFER (buffer)' failed
+	   if (!gst_video_frame_map (&v_frame, &v_info, videobuffer, GST_MAP_READ | GST_MAP_GL)) {
+	   g_warning ("Failed to map the video buffer");
+	   return;
+	   }
+
+	   texture = *(guint *) v_frame.data[0];
+
+	   // TODO:
+	   // SMPEG_getinfo(TDFSB_MPEG_HANDLE, &TDFSB_MPEG_INFO);
+	   //if (TDFSB_AVI_FRAMENO != TDFSB_AVI_INFO.current_frame) {
+	   //      TDFSB_AVI_FRAMENO = TDFSB_AVI_INFO.current_frame;
+	   //SDL_LockSurface(TDFSB_AVI_SURFACE);
+
+	   glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
+
+	   //glBindTexture(GL_TEXTURE_2D, texture);
+
+	   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+	   //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, TDFSB_AVI_SURFACE->pixels);
+
+	   // Segfaults, perhaps something wrong with the type (GL_UNSIGNED_BYTE)
+	   //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 320, 240, 0, GL_RGBA, GL_UNSIGNED_BYTE, v_frame.data[0]);
+
+	   // Try to save the buffer to a file, to see what's in it...
+	   GstMapInfo map;
+	   gst_buffer_map (videobuffer, &map, GST_MAP_READ);
+	   GdkPixbuf* pixbuf = gdk_pixbuf_new_from_data (map.data,
+	   GDK_COLORSPACE_RGB, FALSE, 8, 320, 240,            // This is actually RGBA, thanks GDK...
+	   GST_ROUND_UP_4 (320 * 3), NULL, NULL);
+
+	   // save the pixbuf
+	   GError *error = NULL;
+	   gdk_pixbuf_save (pixbuf, "snapshot.bmp", "bmp", &error, NULL);
+	   if (error != NULL) {
+	   printf("error saving snapshot.png\n");
+	   }
+	   gst_buffer_unmap (videobuffer, &map);
+	 */
 
 	//SDL_UnlockSurface(TDFSB_AVI_SURFACE);
 
@@ -557,126 +548,124 @@ void play_avi()
 /* Returns a pointer to (not a char but) the buffer that holds the image texture */
 unsigned char *read_videoframe(char *filename)
 {
-GstElement *pipeline, *sink;
-  gint width, height;
-  GstSample *sample;
-  gchar *descr;
-  GError *error = NULL;
-  gint64 duration, position;
-  GstStateChangeReturn ret;
-  gboolean res;
-  GstMapInfo map;
+	GstElement *pipeline, *sink;
+	gint width, height;
+	GstSample *sample;
+	gchar *descr;
+	GError *error = NULL;
+	gint64 duration, position;
+	GstStateChangeReturn ret;
+	gboolean res;
+	GstMapInfo map;
 
 /* create a new pipeline */
-  descr =
-      g_strdup_printf ("uridecodebin uri=file://%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
+	descr = g_strdup_printf("uridecodebin uri=file://%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
 	printf("gst-launch-1.0 %s\n", descr);
-  pipeline = gst_parse_launch (descr, &error);
+	pipeline = gst_parse_launch(descr, &error);
 
-  if (error != NULL) {
-    g_print ("could not construct pipeline: %s\n", error->message);
-    g_error_free (error);
-    exit (-1);
-  }
+	if (error != NULL) {
+		g_print("could not construct pipeline: %s\n", error->message);
+		g_error_free(error);
+		exit(-1);
+	}
 
-  /* get sink */
-  sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+	/* get sink */
+	sink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
 
-  /* set to PAUSED to make the first frame arrive in the sink */
-  ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  switch (ret) {
-    case GST_STATE_CHANGE_FAILURE:
-      g_print ("failed to play the file\n");
-      exit (-1);
-    case GST_STATE_CHANGE_NO_PREROLL:
-      /* for live sources, we need to set the pipeline to PLAYING before we can
-       * receive a buffer. We don't do that yet */
-      g_print ("live sources not supported yet\n");
-      exit (-1);
-    default:
-      break;
-  }
+	/* set to PAUSED to make the first frame arrive in the sink */
+	ret = gst_element_set_state(pipeline, GST_STATE_PAUSED);
+	switch (ret) {
+	case GST_STATE_CHANGE_FAILURE:
+		g_print("failed to play the file\n");
+		exit(-1);
+	case GST_STATE_CHANGE_NO_PREROLL:
+		/* for live sources, we need to set the pipeline to PLAYING before we can
+		 * receive a buffer. We don't do that yet */
+		g_print("live sources not supported yet\n");
+		exit(-1);
+	default:
+		break;
+	}
 /* This can block for up to 5 seconds. If your machine is really overloaded,
    * it might time out before the pipeline prerolled and we generate an error. A
    * better way is to run a mainloop and catch errors there. */
-  ret = gst_element_get_state (pipeline, NULL, NULL, 5 * GST_SECOND);
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-    g_print ("failed to play the file\n");
-    exit (-1);
-  }
+	ret = gst_element_get_state(pipeline, NULL, NULL, 5 * GST_SECOND);
+	if (ret == GST_STATE_CHANGE_FAILURE) {
+		g_print("failed to play the file\n");
+		exit(-1);
+	}
 
-  /* get the duration */
-  gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration);
+	/* get the duration */
+	gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration);
 
-  if (duration != -1)
-    /* we have a duration, seek to 5% */
-    //position = duration * 5 / 100;	// interesting position...
-    //position = duration * 5 / 100;	
-    position = 0;	// take first frame, just like MPEG does
-  else
-    /* no duration, seek to 1 second, this could EOS */
-    position = 1 * GST_SECOND;
+	if (duration != -1)
+		/* we have a duration, seek to 5% */
+		//position = duration * 5 / 100;    // interesting position...
+		//position = duration * 5 / 100;    
+		position = 0;	// take first frame, just like MPEG does
+	else
+		/* no duration, seek to 1 second, this could EOS */
+		position = 1 * GST_SECOND;
 
-  /* seek to the a position in the file. Most files have a black first frame so
-   * by seeking to somewhere else we have a bigger chance of getting something
-   * more interesting. An optimisation would be to detect black images and then
-   * seek a little more */
-  gst_element_seek_simple (pipeline, GST_FORMAT_TIME,
-      GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH, position);
+	/* seek to the a position in the file. Most files have a black first frame so
+	 * by seeking to somewhere else we have a bigger chance of getting something
+	 * more interesting. An optimisation would be to detect black images and then
+	 * seek a little more */
+	gst_element_seek_simple(pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH, position);
 
- /* get the preroll buffer from appsink, this block untils appsink really
-   * prerolls */
-  g_signal_emit_by_name (sink, "pull-preroll", &sample, NULL);
+	/* get the preroll buffer from appsink, this block untils appsink really
+	 * prerolls */
+	g_signal_emit_by_name(sink, "pull-preroll", &sample, NULL);
 
-  /* if we have a buffer now, convert it to a pixbuf. It's possible that we
-   * don't have a buffer because we went EOS right away or had an error. */
-  if (sample) {
-    GstBuffer *buffer;
-    GstCaps *caps;
-    GstStructure *s;
+	/* if we have a buffer now, convert it to a pixbuf. It's possible that we
+	 * don't have a buffer because we went EOS right away or had an error. */
+	if (sample) {
+		GstBuffer *buffer;
+		GstCaps *caps;
+		GstStructure *s;
 
-    /* get the snapshot buffer format now. We set the caps on the appsink so
-     * that it can only be an rgb buffer. The only thing we have not specified
-     * on the caps is the height, which is dependant on the pixel-aspect-ratio
-     * of the source material */
-    caps = gst_sample_get_caps (sample);
-    if (!caps) {
-      g_print ("could not get snapshot format\n");
-      exit (-1);
-    }
-    s = gst_caps_get_structure (caps, 0);
+		/* get the snapshot buffer format now. We set the caps on the appsink so
+		 * that it can only be an rgb buffer. The only thing we have not specified
+		 * on the caps is the height, which is dependant on the pixel-aspect-ratio
+		 * of the source material */
+		caps = gst_sample_get_caps(sample);
+		if (!caps) {
+			g_print("could not get snapshot format\n");
+			exit(-1);
+		}
+		s = gst_caps_get_structure(caps, 0);
 
-    /* we need to get the final caps on the buffer to get the size */
-    res = gst_structure_get_int (s, "width", &width);
-    res |= gst_structure_get_int (s, "height", &height);
-    if (!res) {
-      g_print ("could not get snapshot dimension\n");
-      exit (-1);
-    }
+		/* we need to get the final caps on the buffer to get the size */
+		res = gst_structure_get_int(s, "width", &width);
+		res |= gst_structure_get_int(s, "height", &height);
+		if (!res) {
+			g_print("could not get snapshot dimension\n");
+			exit(-1);
+		}
 
 /* create pixmap from buffer and save, gstreamer video buffers have a stride
      * that is rounded up to the nearest multiple of 4 */
-    buffer = gst_sample_get_buffer (sample);
-    gst_buffer_map (buffer, &map, GST_MAP_READ);
-    GdkPixbuf* pixbuf = gdk_pixbuf_new_from_data (map.data,
-        GDK_COLORSPACE_RGB, FALSE, 8, width, height,
-        GST_ROUND_UP_4 (width * 3), NULL, NULL);
+		buffer = gst_sample_get_buffer(sample);
+		gst_buffer_map(buffer, &map, GST_MAP_READ);
+		GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(map.data,
+							     GDK_COLORSPACE_RGB, FALSE, 8, width, height,
+							     GST_ROUND_UP_4(width * 3), NULL, NULL);
 
-    /* save the pixbuf */
-    // This works great... but the texture is not shown, finally...
-    gdk_pixbuf_save (pixbuf, "texture.bmp", "bmp", &error, NULL);
-    // TODO: reactivate the cleanup
-    //gst_buffer_unmap (buffer, &map);
-    //gst_sample_unref (sample);
-  } else {
-    g_print ("could not make snapshot\n");
-  }
+		/* save the pixbuf */
+		// This works great... but the texture is not shown, finally...
+		gdk_pixbuf_save(pixbuf, "texture.bmp", "bmp", &error, NULL);
+		// TODO: reactivate the cleanup
+		//gst_buffer_unmap (buffer, &map);
+		//gst_sample_unref (sample);
+	} else {
+		g_print("could not make snapshot\n");
+	}
 
-  /* cleanup and exit */
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (pipeline);
+	/* cleanup and exit */
+	gst_element_set_state(pipeline, GST_STATE_NULL);
+	gst_object_unref(pipeline);
 
-  /* Ugly global variables... */
+	/* Ugly global variables... */
 	www = width;
 	hhh = height;
 	p2h = p2w = 256;
@@ -684,12 +673,12 @@ GstElement *pipeline, *sink;
 
 	/* Scaling, from say 352x193 to 256x256
 
-	Note: this also introduces small relative changes in the RGBA values:
-	\004\004\006\377\003\003\005\377\003\003\003\377\003\003\003\377
-	becomes
-	\003\b\005\377\002\a\003\377\002\a\002\377\002\a\002\377
+	   Note: this also introduces small relative changes in the RGBA values:
+	   \004\004\006\377\003\003\005\377\003\003\003\377\003\003\003\377
+	   becomes
+	   \003\b\005\377\002\a\003\377\002\a\002\377\002\a\002\377
 
-	*/
+	 */
 
 	unsigned long int memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
 
@@ -716,10 +705,9 @@ GstElement *pipeline, *sink;
 		return NULL;
 	}
 
-  return ssi;
+	return ssi;
 
 }
-
 
 unsigned char *read_mpegframe(char *filename)
 {
@@ -1783,7 +1771,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		root->uniint2 = uni2;
 		root->uniint3 = uni3;
 		root->originalwidth = originalwidth;
-		root->originalheight= originalheight;
+		root->originalheight = originalheight;
 		root->posx = posx;
 		root->posy = posy;
 		root->posz = posz;
@@ -1812,7 +1800,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		(help->next)->uniint2 = uni2;
 		(help->next)->uniint3 = uni3;
 		(help->next)->originalwidth = originalwidth;
-		(help->next)->originalheight= originalheight;
+		(help->next)->originalheight = originalheight;
 		(help->next)->posx = posx;
 		(help->next)->posy = posy;
 		(help->next)->posz = posz;
@@ -2182,7 +2170,7 @@ void leodir(void)
 				locptr = read_videoframe(fullpath);
 				if (!locptr) {
 					printf("Reading video frame from %s failed\n", fullpath);
-					locptr = NULL; /* superfluous, because it is NULL here because of the if(!locprt) above anyway... */
+					locptr = NULL;	/* superfluous, because it is NULL here because of the if(!locprt) above anyway... */
 					uni0 = 0;
 					uni1 = 0;
 					uni2 = 0;
@@ -3179,31 +3167,26 @@ void display(void)
 		TDFSB_FPS_DISP++;
 }
 
-GstElement *                                                                                                                      
-create_gst_playbin (void)                                                                                                         
-{                                                                                                                                 
-  GstElement *playbin, *videosink, *audiosink;                                                                                    
-                                                                                                                                  
-  playbin = gst_element_factory_make ("playbin", "playbin");                                                                      
-  if (!playbin) fprintf(stderr, "Failed to create playbin!\n");                                                                   
-                                                                                                                                  
-  videosink = gst_element_factory_make ("xvimagesink", "videosink");                                                              
-  if (!videosink) fprintf(stderr, "Failed to create xvimagesink!\n");                                                             
-                                                                                                                                  
-  audiosink = gst_element_factory_make ("alsasink", "audiosink");                                                                 
-                                                                                                                                  
-  g_object_set (videosink,                                                                                                        
-                "force-aspect-ratio", TRUE,                                                                                       
-                NULL);                                                                                                            
-                                                                                                                                  
-  g_object_set (playbin,                                                                                                          
-                "audio-sink", audiosink,                                                                                          
-                "video-sink", videosink,                                                                                          
-                NULL);                                                                                                            
-                                                                                                                                  
-  return playbin;                                                                                                                 
-}
+GstElement *create_gst_playbin(void)
+{
+	GstElement *playbin, *videosink, *audiosink;
 
+	playbin = gst_element_factory_make("playbin", "playbin");
+	if (!playbin)
+		fprintf(stderr, "Failed to create playbin!\n");
+
+	videosink = gst_element_factory_make("xvimagesink", "videosink");
+	if (!videosink)
+		fprintf(stderr, "Failed to create xvimagesink!\n");
+
+	audiosink = gst_element_factory_make("alsasink", "audiosink");
+
+	g_object_set(videosink, "force-aspect-ratio", TRUE, NULL);
+
+	g_object_set(playbin, "audio-sink", audiosink, "video-sink", videosink, NULL);
+
+	return playbin;
+}
 
 void MouseMove(int x, int y)
 {
@@ -3576,100 +3559,94 @@ int speckey(int key)
 					strcat(fulluri, TDFSB_OBJECT_SELECTED->name);
 					printf("Starting AVI player using GStreamer of URI %s\n", fulluri);
 
-
 					// First try, works, but different window:
 					//playbin = create_gst_playbin();
 					//g_object_set(playbin, "uri", fulluri, NULL);
 					//gst_element_set_state(playbin, GST_STATE_PLAYING);
 
+#ifdef WIN32
+					HGLRC sdl_gl_context = 0;
+					HDC sdl_dc = 0;
+#else
+					SDL_SysWMinfo info;
+					Display *sdl_display = NULL;
+					Window sdl_win = 0;
+					GLXContext sdl_gl_context = NULL;
+#endif
 
-	#ifdef WIN32
-	  HGLRC sdl_gl_context = 0;
-	  HDC sdl_dc = 0;
-	#else
-	  SDL_SysWMinfo info;
-	  Display *sdl_display = NULL;
-	  Window sdl_win = 0;
-	  GLXContext sdl_gl_context = NULL;
-	#endif
+					//GMainLoop *loop = NULL;
+					GstPipeline *pipeline = NULL;
+					GstBus *bus = NULL;
+					GstElement *fakesink = NULL;
+					GstState state;
+					GAsyncQueue *queue_input_buf = NULL;
+					GAsyncQueue *queue_output_buf = NULL;
+					const gchar *platform;
 
-	  //GMainLoop *loop = NULL;
-	  GstPipeline *pipeline = NULL;
-	  GstBus *bus = NULL;
-	  GstElement *fakesink = NULL;
-	  GstState state;
-	  GAsyncQueue *queue_input_buf = NULL;
-	  GAsyncQueue *queue_output_buf = NULL;
-	  const gchar *platform;
+					/* loop = g_main_loop_new (NULL, FALSE);
+					   if (!loop) {
+					   printf("ERROR: could not get g_main_loop\n");
+					   exit(1);
+					   } */
 
-	/* loop = g_main_loop_new (NULL, FALSE);
-	if (!loop) {
-		printf("ERROR: could not get g_main_loop\n");
-		exit(1);
-	} */
+					SDL_VERSION(&info.version);
+					SDL_GetWMInfo(&info);
+					sdl_display = info.info.x11.gfxdisplay;
+					sdl_win = info.info.x11.window;
+					sdl_gl_context = glXGetCurrentContext();
+					glXMakeCurrent(sdl_display, None, 0);
+					platform = "glx";
+					sdl_gl_display = (GstGLDisplay *) gst_gl_display_x11_new_with_display(sdl_display);
 
-  SDL_VERSION (&info.version);
-  SDL_GetWMInfo (&info);
-  sdl_display = info.info.x11.gfxdisplay;
-  sdl_win = info.info.x11.window;
-  sdl_gl_context = glXGetCurrentContext ();
-  glXMakeCurrent (sdl_display, None, 0);
-  platform = "glx";
-  sdl_gl_display =
-      (GstGLDisplay *) gst_gl_display_x11_new_with_display (sdl_display);
+					sdl_context = gst_gl_context_new_wrapped(sdl_gl_display, (guintptr) sdl_gl_context, gst_gl_platform_from_string(platform), GST_GL_API_OPENGL);
 
- sdl_context =
-      gst_gl_context_new_wrapped (sdl_gl_display, (guintptr) sdl_gl_context,
-      gst_gl_platform_from_string (platform), GST_GL_API_OPENGL);
+					/* create a new pipeline */
+					// pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
+					gchar *descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=videosink sync=1", fulluri);
+					printf("gst-launch-1.0 %s\n", descr);
+					GError *error = NULL;
+					pipeline = gst_parse_launch(descr, &error);
 
-  /* create a new pipeline */
-  // pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
-  gchar *descr = g_strdup_printf ("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=videosink sync=1", fulluri);
-	printf("gst-launch-1.0 %s\n", descr);
-  GError *error = NULL;
-  pipeline = gst_parse_launch (descr, &error);
+					if (error != NULL) {
+						g_print("could not construct pipeline: %s\n", error->message);
+						g_error_free(error);
+						exit(-1);
+					}
 
-  if (error != NULL) {
-    g_print ("could not construct pipeline: %s\n", error->message);
-    g_error_free (error);
-    exit (-1);
-  }
+					bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
+					gst_bus_add_signal_watch(bus);
+					/* For later: g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), loop);
+					   g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
+					   g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop); */
+					gst_bus_enable_sync_message_emission(bus);
+					g_signal_connect(bus, "sync-message", G_CALLBACK(sync_bus_call), NULL);
+					gst_object_unref(bus);
 
-  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_add_signal_watch (bus);
-  /* For later: g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), loop);
-  g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
-  g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop); */
-  gst_bus_enable_sync_message_emission (bus);
-  g_signal_connect (bus, "sync-message", G_CALLBACK (sync_bus_call), NULL);
-  gst_object_unref (bus);
+					/* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
+					 * shared with the sdl one */
+					gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
+					state = GST_STATE_PAUSED;
+					if (gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
+						g_debug("failed to pause pipeline\n");
+						return -1;
+					}
 
- /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
-   * shared with the sdl one */
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
-  state = GST_STATE_PAUSED;
-  if (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
-          GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
-    g_debug ("failed to pause pipeline\n");
-    return -1;
-  }
+					glXMakeCurrent(sdl_display, sdl_win, sdl_gl_context);
 
-  glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
+					/* append a gst-gl texture to this queue when you do not need it no more */
+					fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "videosink");
+					g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
+					g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
+					queue_input_buf = g_async_queue_new();
+					queue_output_buf = g_async_queue_new();
+					g_object_set_data(G_OBJECT(fakesink), "queue_input_buf", queue_input_buf);
+					g_object_set_data(G_OBJECT(fakesink), "queue_output_buf", queue_output_buf);
+					// Not needed: g_object_set_data (G_OBJECT (fakesink), "loop", loop);
+					gst_object_unref(fakesink);
 
-  /* append a gst-gl texture to this queue when you do not need it no more */
-  fakesink = gst_bin_get_by_name (GST_BIN (pipeline), "videosink");
-  g_object_set (G_OBJECT (fakesink), "signal-handoffs", TRUE, NULL);
-  g_signal_connect (fakesink, "handoff", G_CALLBACK (on_gst_buffer), NULL);
-  queue_input_buf = g_async_queue_new ();
-  queue_output_buf = g_async_queue_new ();
-  g_object_set_data (G_OBJECT (fakesink), "queue_input_buf", queue_input_buf);
-  g_object_set_data (G_OBJECT (fakesink), "queue_output_buf", queue_output_buf);
-  // Not needed: g_object_set_data (G_OBJECT (fakesink), "loop", loop);
-  gst_object_unref (fakesink);
+					gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-
- // Not needed? g_main_loop_run (loop);
+					// Not needed? g_main_loop_run (loop);
 
 /*
 
@@ -3697,7 +3674,6 @@ int speckey(int key)
   }
 
 */
-
 
 					// TODO:
 					// TDFSB_AVI_HANDLE = SMPEG_new(fulluri, &TDFSB_MPEG_INFO, 1);
@@ -4137,9 +4113,8 @@ int main(int argc, char **argv)
 		printf("SDL ERROR Video initialization failed: %s\n", SDL_GetError());
 		ende(1);
 	}
-
 	// Init GStreamer
-	gst_init (&argc, &argv); 
+	gst_init(&argc, &argv);
 
 	info = SDL_GetVideoInfo();
 	if (!info) {
