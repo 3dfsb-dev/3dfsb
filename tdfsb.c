@@ -449,10 +449,6 @@ void play_mpeg()
 
 void play_avi()
 {
-	GstVideoFrame v_frame;
-	GstVideoInfo v_info;
-	guint texture;
-
 	GstMapInfo map;
 	gst_buffer_map(videobuffer, &map, GST_MAP_READ);
 
@@ -2541,7 +2537,6 @@ void display(void)
 {
 	double odist, vlen, senx, seny, senz, find_dist;
 	struct tree_entry *find_entry;
-	GLenum errCode;
 
 	find_entry = NULL;
 	find_dist = 10000000;
@@ -3264,8 +3259,6 @@ void mouse(int button, int state, int x, int y)
 
 int speckey(int key)
 {
-	int i;
-
 	if (!TDFSB_ANIM_STATE) {
 		switch (key) {
 
