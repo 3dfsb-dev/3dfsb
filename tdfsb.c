@@ -103,9 +103,9 @@ unsigned int DRNratio;
 GLdouble mx, my, mz, r, u, v;
 
 struct tree_entry {
-	unsigned char *name;
+	char *name;
 	unsigned long int namelen;
-	unsigned char *linkpath;
+	char *linkpath;
 	unsigned int mode, regtype, rasterx, rasterz;
 	GLfloat posx, posy, posz, scalex, scaley, scalez;
 	/* uni0 = p2w;
@@ -121,7 +121,7 @@ struct tree_entry {
 };
 
 struct tree_entry *root, *help, *FMptr, *TDFSB_OBJECT_SELECTED = NULL, *TDFSB_OA = NULL;
-unsigned char *FCptr;
+char *FCptr;
 
 struct stat buf;
 
@@ -272,7 +272,7 @@ unsigned char *TDFSB_KEYLIST[] = { &TDFSB_KC_FLY, &TDFSB_KC_HELP, &TDFSB_KC_HOME
 	&TDFSB_KC_RIGHT, &TDFSB_KC_SAVE, &TDFSB_KC_FTH
 };
 
-unsigned char *TDFSB_KEYLIST_NAMES[] = { "KeyFlying", "KeyHelp", "KeyJumpHome",
+const char *TDFSB_KEYLIST_NAMES[] = { "KeyFlying", "KeyHelp", "KeyJumpHome",
 	"KeyFullScreen", "KeyDotFilter", "KeyMouseRelease",
 	"KeyReload", "KeyCDup", "KeyImageBricks",
 	"KeyGLInfo", "KeyDisplay", "KeyCrossHair",
@@ -418,7 +418,7 @@ void ende(int code)
 			FCptr = help->name;
 			free(FCptr);
 			if (help->uniptr != NULL) {
-				FCptr = help->uniptr;
+				FCptr = (char*) help->uniptr;
 				free(FCptr);
 			}
 			if (help->linkpath != NULL) {
@@ -1684,9 +1684,9 @@ void reshape(int w, int h)
 
 void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int uni0, unsigned int uni1, unsigned int uni2, unsigned int uni3, unsigned int originalwidth, unsigned int originalheight, unsigned char *locptr, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
 {
-	unsigned char *temp;
+	char *temp;
 
-	temp = (unsigned char *)malloc(strlen(value) + 1);
+	temp = (char *)malloc(strlen(value) + 1);
 	if (temp == NULL) {
 		printf("low mem while inserting object!\n");
 		ende(1);
@@ -1838,7 +1838,8 @@ char **leoscan(char *ls_path)
 void leodir(void)
 {
 	unsigned int mode = 0, temptype = 0, uni0 = 0, uni1 = 0, uni2 = 0, uni3 = 0;
-	unsigned char *locptr, *temptr, *linkpath;
+	unsigned char *locptr, *temptr;
+	char *linkpath;
 	GLfloat locpx, locpy, locpz, locsx, locsy, locsz, maxz, momx, momz, nextz;
 	FILE *fileptr;
 	char **entry_list, *entry;
@@ -1873,7 +1874,7 @@ void leodir(void)
 			FCptr = help->name;
 			free(FCptr);
 			if (help->uniptr != NULL) {
-				FCptr = help->uniptr;
+				FCptr = (char*) help->uniptr;
 				free(FCptr);
 			}
 			if (help->linkpath != NULL) {
@@ -1918,7 +1919,7 @@ void leodir(void)
 			else if (S_ISLNK(buf.st_mode) != 0) {
 				cc = readlink(fullpath, yabuf, 4095);
 				yabuf[cc] = '\0';
-				linkpath = (unsigned char *)malloc(sizeof(char) * (strlen(yabuf) + 1));
+				linkpath = (char *)malloc(sizeof(char) * (strlen(yabuf) + 1));
 				if (linkpath == NULL) {
 					printf("low mem while detecting link\n");
 					ende(1);
@@ -2741,7 +2742,7 @@ void display(void)
 				cc = c1 = 1;
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
-			c3 = (int)strlen(help->uniptr);
+			c3 = (int)strlen((char*)help->uniptr);
 			c2 = 0;
 			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((help->uniint2) = (help->uniint2) + (help->uniint0))))), (200 * mz) * cc);
 			u = mx - vposx;
@@ -2861,7 +2862,7 @@ void display(void)
 	if (TDFSB_SHOW_DISPLAY) {
 		strcpy(fullpath, TDFSB_CURRENTPATH);
 		c3 = (int)strlen(fullpath);
-		cc = (GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, fullpath) * 0.14;
+		cc = (GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char*)fullpath) * 0.14;
 		if (cc < (SWX / 10))
 			cc = SWX / 10;
 		glPushMatrix();
@@ -3032,10 +3033,10 @@ void display(void)
 		glVertex3f(SWX - 5, 5, 1);
 		glVertex3f(SWX - 5 - 4 * (10 * headspeed), 5, 1);
 		glEnd();
-		glTranslatef(SWX - 95 - (GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, "W") * 0.14, 32, 0);
+		glTranslatef(SWX - 95 - (GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char*)"W") * 0.14, 32, 0);
 		glScalef(0.14, 0.14, 1);
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'W');
-		glTranslatef(-(GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, "H"), -25 * (1 / 0.14), 0);
+		glTranslatef(-(GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char*)"H"), -25 * (1 / 0.14), 0);
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'H');
 		glPopMatrix();
 		TDFSB_SPEED_DISPLAY--;
@@ -3520,7 +3521,7 @@ int speckey(int key)
 					gchar *descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=videosink sync=1", fulluri);
 					printf("gst-launch-1.0 %s\n", descr);
 					GError *error = NULL;
-					pipeline = gst_parse_launch(descr, &error);
+					pipeline = (GstPipeline *)gst_parse_launch(descr, &error);
 
 					if (error != NULL) {
 						g_print("could not construct pipeline: %s\n", error->message);
@@ -3768,7 +3769,7 @@ int keyboard(unsigned char key)
 				strcpy(TDFSB_CURRENTPATH, temp_trunc);
 				TDFSB_FUNC_IDLE = nullDisplay;
 				TDFSB_FUNC_DISP = noDisplay;
-				return;
+				return 0;
 			}
 			TDFSB_FUNC_IDLE = nullDisplay;
 			TDFSB_FUNC_DISP = noDisplay;

@@ -39,6 +39,8 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
     echo "compiling...";    
 	gtkstuff="-I /usr/include/gtk-3.0/ -I /usr/include/cairo -I /usr/include/pango-1.0 -I /usr/include/gdk-pixbuf-2.0 -I /usr/include/atk-1.0"
 	includes="-I/usr/local/include/gstreamer-1.0 $gtkstuff"
+	#warnings="-std=c99 -pedantic -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes"
+	warnings="-Wall"
 
 	# Dynamic:
 	link=$(pkg-config --libs --cflags gstreamer-1.0)" "$(pkg-config --libs --cflags gstreamer-gl-1.0)" "$(pkg-config --libs --cflags gstreamer-video-1.0)" "$(pkg-config --libs --cflags gdk-pixbuf-2.0)"-lGL -lGLU"
@@ -48,7 +50,7 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 	#link=$(pkg-config --cflags gstreamer-1.0)" "$(pkg-config --cflags gstreamer-gl-1.0)" "$(pkg-config --cflags gstreamer-video-1.0)" "$(pkg-config --cflags gdk-pixbuf-2.0)
 	#gccopt="-static -static-libgcc"
 
-    gcc $gccopt -v $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include $includes -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -D_THREAD_SAFE -O2 -g -x c $link -lSDL_image -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -o tdfsb tdfsb.c
+    gcc $warnings $gccopt -v $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include $includes -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -D_THREAD_SAFE -g -x c $link -lSDL_image -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -o tdfsb tdfsb.c
 
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
     echo "BeOS detected.";
