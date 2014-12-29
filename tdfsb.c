@@ -127,7 +127,6 @@ struct stat buf;
 
 char temp_trunc[4096];
 char TDFSB_CURRENTPATH[4096], fullpath[4096], yabuf[4096], fpsbuf[12], cfpsbuf[12], throttlebuf[14], ballbuf[20], home[512], flybuf[12], classicbuf[12];
-char fulluri[4096];
 char TDFSB_CUSTOM_EXECUTE_STRING[4096];
 char TDFSB_CES_TEMP[4096];
 char *alert_kc = "MALFORMED KEYBOARD MAP";
@@ -418,7 +417,7 @@ void ende(int code)
 			FCptr = help->name;
 			free(FCptr);
 			if (help->uniptr != NULL) {
-				FCptr = (char*) help->uniptr;
+				FCptr = (char *)help->uniptr;
 				free(FCptr);
 			}
 			if (help->linkpath != NULL) {
@@ -496,8 +495,15 @@ unsigned char *read_videoframe(char *filename)
 	gboolean res;
 	GstMapInfo map;
 
-/* create a new pipeline */
-	descr = g_strdup_printf("uridecodebin uri=file://%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
+	// create a new pipeline
+	gchar *uri = gst_filename_to_uri(filename, &error);
+	if (error != NULL) {
+		g_print("Could not convert filename %s to URI: %s\n", filename, error->message);
+		g_error_free(error);
+		exit(1);
+	}
+
+	descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
 	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = gst_parse_launch(descr, &error);
 
@@ -1874,7 +1880,7 @@ void leodir(void)
 			FCptr = help->name;
 			free(FCptr);
 			if (help->uniptr != NULL) {
-				FCptr = (char*) help->uniptr;
+				FCptr = (char *)help->uniptr;
 				free(FCptr);
 			}
 			if (help->linkpath != NULL) {
@@ -2742,7 +2748,7 @@ void display(void)
 				cc = c1 = 1;
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
-			c3 = (int)strlen((char*)help->uniptr);
+			c3 = (int)strlen((char *)help->uniptr);
 			c2 = 0;
 			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((help->uniint2) = (help->uniint2) + (help->uniint0))))), (200 * mz) * cc);
 			u = mx - vposx;
@@ -2862,7 +2868,7 @@ void display(void)
 	if (TDFSB_SHOW_DISPLAY) {
 		strcpy(fullpath, TDFSB_CURRENTPATH);
 		c3 = (int)strlen(fullpath);
-		cc = (GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char*)fullpath) * 0.14;
+		cc = (GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)fullpath) * 0.14;
 		if (cc < (SWX / 10))
 			cc = SWX / 10;
 		glPushMatrix();
@@ -3033,10 +3039,10 @@ void display(void)
 		glVertex3f(SWX - 5, 5, 1);
 		glVertex3f(SWX - 5 - 4 * (10 * headspeed), 5, 1);
 		glEnd();
-		glTranslatef(SWX - 95 - (GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char*)"W") * 0.14, 32, 0);
+		glTranslatef(SWX - 95 - (GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)"W") * 0.14, 32, 0);
 		glScalef(0.14, 0.14, 1);
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'W');
-		glTranslatef(-(GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char*)"H"), -25 * (1 / 0.14), 0);
+		glTranslatef(-(GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)"H"), -25 * (1 / 0.14), 0);
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, 'H');
 		glPopMatrix();
 		TDFSB_SPEED_DISPLAY--;
@@ -3261,14 +3267,18 @@ void mouse(int button, int state, int x, int y)
 int speckey(int key)
 {
 	if (!TDFSB_ANIM_STATE) {
+
+		// Update the fullpath variable
+		strcpy(fullpath, TDFSB_CURRENTPATH);
+		if (strlen(fullpath) > 1)
+			strcat(fullpath, "/");
+		if (TDFSB_OBJECT_SELECTED)
+			strcat(fullpath, TDFSB_OBJECT_SELECTED->name);
+
 		switch (key) {
 
 		case SDLK_TAB:
-			strcpy(fullpath, TDFSB_CURRENTPATH);
 			if (TDFSB_OBJECT_SELECTED) {
-				if (strlen(fullpath) > 1)
-					strcat(fullpath, "/");
-				strcat(fullpath, TDFSB_OBJECT_SELECTED->name);
 				TDFSB_OBJECT_SELECTED = NULL;
 				TDFSB_OBJECT_SEARCH = 0;
 				TDFSB_KEY_FINDER = 0;
@@ -3437,10 +3447,6 @@ int speckey(int key)
 						SMPEG_delete(TDFSB_MPEG_HANDLE);
 						SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 					}
-					strcpy(fullpath, TDFSB_CURRENTPATH);
-					if (strlen(fullpath) > 1)
-						strcat(fullpath, "/");
-					strcat(fullpath, TDFSB_OBJECT_SELECTED->name);
 					printf("MPEG Start %s\n", fullpath);
 
 					TDFSB_MPEG_HANDLE = SMPEG_new(fullpath, &TDFSB_MPEG_INFO, 1);
@@ -3487,12 +3493,7 @@ int speckey(int key)
 					SMPEG_delete(TDFSB_MPEG_HANDLE);
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
-					strcpy(fulluri, "file://");
-					strcat(fulluri, TDFSB_CURRENTPATH);
-					if (strlen(fulluri) > 1)
-						strcat(fulluri, "/");
-					strcat(fulluri, TDFSB_OBJECT_SELECTED->name);
-					printf("Starting AVI player using GStreamer of URI %s\n", fulluri);
+					printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
 
 					SDL_SysWMinfo info;
 					Display *sdl_display = NULL;
@@ -3516,12 +3517,18 @@ int speckey(int key)
 
 					sdl_context = gst_gl_context_new_wrapped(sdl_gl_display, (guintptr) sdl_gl_context, gst_gl_platform_from_string(platform), GST_GL_API_OPENGL);
 
-					/* create a new pipeline */
-					// pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
-					gchar *descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=videosink sync=1", fulluri);
-					printf("gst-launch-1.0 %s\n", descr);
+					// create a new pipeline
 					GError *error = NULL;
-					pipeline = (GstPipeline *)gst_parse_launch(descr, &error);
+					gchar *uri = gst_filename_to_uri(fullpath, &error);
+					if (error != NULL) {
+						g_print("Could not convert filename %s to URI: %s\n", fullpath, error->message);
+						g_error_free(error);
+						exit(1);
+					}
+					// pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
+					gchar *descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=videosink sync=1", uri);
+					printf("gst-launch-1.0 %s\n", descr);
+					pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
 
 					if (error != NULL) {
 						g_print("could not construct pipeline: %s\n", error->message);
@@ -3578,10 +3585,6 @@ int speckey(int key)
 							TDFSB_MP3_FILE = NULL;
 						}
 
-						strcpy(fullpath, TDFSB_CURRENTPATH);
-						if (strlen(fullpath) > 1)
-							strcat(fullpath, "/");
-						strcat(fullpath, TDFSB_OBJECT_SELECTED->name);
 						printf("MP3 Start %s\n", fullpath);
 						TDFSB_MP3_HANDLE = SMPEG_new(fullpath, &TDFSB_MPEG_INFO, 1);
 						if (SMPEG_error(TDFSB_MP3_HANDLE)) {
