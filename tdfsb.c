@@ -3493,78 +3493,84 @@ int speckey(int key)
 					SMPEG_delete(TDFSB_MPEG_HANDLE);
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
-					printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
+					if (TDFSB_AVI_FILE = TDFSB_OBJECT_SELECTED) {
+						// TODO: We are already playing the selected videofile, so stop it
+					} else {
+						// TODO: stop any previous videofile that was playing
 
-					SDL_SysWMinfo info;
-					Display *sdl_display = NULL;
-					Window sdl_win = 0;
-					GLXContext sdl_gl_context = NULL;
+						printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
 
-					GstPipeline *pipeline = NULL;
-					GstBus *bus = NULL;
-					GstElement *fakesink = NULL;
-					GstState state;
-					const gchar *platform;
+						SDL_SysWMinfo info;
+						Display *sdl_display = NULL;
+						Window sdl_win = 0;
+						GLXContext sdl_gl_context = NULL;
 
-					SDL_VERSION(&info.version);
-					SDL_GetWMInfo(&info);
-					sdl_display = info.info.x11.gfxdisplay;
-					sdl_win = info.info.x11.window;
-					sdl_gl_context = glXGetCurrentContext();
-					glXMakeCurrent(sdl_display, None, 0);
-					platform = "glx";
-					sdl_gl_display = (GstGLDisplay *) gst_gl_display_x11_new_with_display(sdl_display);
+						GstPipeline *pipeline = NULL;
+						GstBus *bus = NULL;
+						GstElement *fakesink = NULL;
+						GstState state;
+						const gchar *platform;
 
-					sdl_context = gst_gl_context_new_wrapped(sdl_gl_display, (guintptr) sdl_gl_context, gst_gl_platform_from_string(platform), GST_GL_API_OPENGL);
+						SDL_VERSION(&info.version);
+						SDL_GetWMInfo(&info);
+						sdl_display = info.info.x11.gfxdisplay;
+						sdl_win = info.info.x11.window;
+						sdl_gl_context = glXGetCurrentContext();
+						glXMakeCurrent(sdl_display, None, 0);
+						platform = "glx";
+						sdl_gl_display = (GstGLDisplay *) gst_gl_display_x11_new_with_display(sdl_display);
 
-					// create a new pipeline
-					GError *error = NULL;
-					gchar *uri = gst_filename_to_uri(fullpath, &error);
-					if (error != NULL) {
-						g_print("Could not convert filename %s to URI: %s\n", fullpath, error->message);
-						g_error_free(error);
-						exit(1);
+						sdl_context = gst_gl_context_new_wrapped(sdl_gl_display, (guintptr) sdl_gl_context, gst_gl_platform_from_string(platform), GST_GL_API_OPENGL);
+
+						// create a new pipeline
+						GError *error = NULL;
+						gchar *uri = gst_filename_to_uri(fullpath, &error);
+						if (error != NULL) {
+							g_print("Could not convert filename %s to URI: %s\n", fullpath, error->message);
+							g_error_free(error);
+							exit(1);
+						}
+						// pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
+						gchar *descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=videosink sync=1", uri);
+						printf("gst-launch-1.0 %s\n", descr);
+						pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
+
+						if (error != NULL) {
+							g_print("could not construct pipeline: %s\n", error->message);
+							g_error_free(error);
+							exit(-1);
+						}
+
+						bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
+						gst_bus_add_signal_watch(bus);
+						/* For later: g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), loop);
+						   g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
+						   g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop); */
+						gst_bus_enable_sync_message_emission(bus);
+						g_signal_connect(bus, "sync-message", G_CALLBACK(sync_bus_call), NULL);
+						gst_object_unref(bus);
+
+						/* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
+						 * shared with the sdl one */
+						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
+						state = GST_STATE_PAUSED;
+						if (gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
+							g_debug("failed to pause pipeline\n");
+							return -1;
+						}
+
+						glXMakeCurrent(sdl_display, sdl_win, sdl_gl_context);
+
+						/* append a gst-gl texture to this queue when you do not need it no more */
+						fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "videosink");
+						g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
+						g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
+						gst_object_unref(fakesink);
+
+						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
+
+						TDFSB_AVI_FILE = TDFSB_OBJECT_SELECTED;
 					}
-					// pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
-					gchar *descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=videosink sync=1", uri);
-					printf("gst-launch-1.0 %s\n", descr);
-					pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
-
-					if (error != NULL) {
-						g_print("could not construct pipeline: %s\n", error->message);
-						g_error_free(error);
-						exit(-1);
-					}
-
-					bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-					gst_bus_add_signal_watch(bus);
-					/* For later: g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), loop);
-					   g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
-					   g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop); */
-					gst_bus_enable_sync_message_emission(bus);
-					g_signal_connect(bus, "sync-message", G_CALLBACK(sync_bus_call), NULL);
-					gst_object_unref(bus);
-
-					/* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
-					 * shared with the sdl one */
-					gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
-					state = GST_STATE_PAUSED;
-					if (gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
-						g_debug("failed to pause pipeline\n");
-						return -1;
-					}
-
-					glXMakeCurrent(sdl_display, sdl_win, sdl_gl_context);
-
-					/* append a gst-gl texture to this queue when you do not need it no more */
-					fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "videosink");
-					g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
-					g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
-					gst_object_unref(fakesink);
-
-					gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
-
-					TDFSB_AVI_FILE = TDFSB_OBJECT_SELECTED;
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 6) {
 					if (TDFSB_MP3_FILE == TDFSB_OBJECT_SELECTED) {
 						SMPEG_stop(TDFSB_MP3_HANDLE);
