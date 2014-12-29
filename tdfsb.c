@@ -3493,7 +3493,7 @@ int speckey(int key)
 					SMPEG_delete(TDFSB_MPEG_HANDLE);
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
-					if (TDFSB_AVI_FILE = TDFSB_OBJECT_SELECTED) {
+					if (TDFSB_AVI_FILE == TDFSB_OBJECT_SELECTED) {
 						// TODO: We are already playing the selected videofile, so stop it
 					} else {
 						// TODO: stop any previous videofile that was playing
