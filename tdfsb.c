@@ -451,6 +451,8 @@ void play_avi()
 	GstMapInfo map;
 	gst_buffer_map(videobuffer, &map, GST_MAP_READ);
 
+	if (map.data == NULL) return;	// No video frame received yet
+
 	/* Scaling, from the video size to the texture size */
 	unsigned int p2w = TDFSB_AVI_FILE->uniint0;
 	unsigned int p2h = TDFSB_AVI_FILE->uniint1;
