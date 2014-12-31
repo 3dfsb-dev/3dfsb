@@ -3475,7 +3475,7 @@ int speckey(int key)
 					SMPEG_delete(TDFSB_MPEG_HANDLE);
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
-					if (TDFSB_OBJECT_SELECTED == AVI_FILE) {
+					if (TDFSB_OBJECT_SELECTED == TDFSB_AVI_FILE) {
 						GstState state;	
 						gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
 
