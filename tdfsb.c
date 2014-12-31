@@ -336,7 +336,7 @@ int specupkey(int key);
 void stillDisplay(void);
 
 /* GStreamer stuff */
-GstElement *playbin, *videosink, *audiosink;
+GstPipeline *pipeline = NULL;
 #define CAPS "video/x-raw,format=RGBA,width=352,pixel-aspect-ratio=1/1"
 static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
@@ -632,7 +632,7 @@ unsigned char *read_videoframe(char *filename)
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(map.data,
 						     GDK_COLORSPACE_RGB, FALSE, 8, width, height,
 						     GST_ROUND_UP_4(width * 3), NULL, NULL);
-	gdk_pixbuf_save(pixbuf, "texture.png", "png", &error, NULL);
+	gdk_pixbuf_save(pixbuf, "videopreview.png", "png", &error, NULL);
 
 	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
 		free(ssi);
@@ -3114,27 +3114,6 @@ void display(void)
 		TDFSB_FPS_DISP++;
 }
 
-GstElement *create_gst_playbin(void)
-{
-	GstElement *playbin, *videosink, *audiosink;
-
-	playbin = gst_element_factory_make("playbin", "playbin");
-	if (!playbin)
-		fprintf(stderr, "Failed to create playbin!\n");
-
-	videosink = gst_element_factory_make("xvimagesink", "videosink");
-	if (!videosink)
-		fprintf(stderr, "Failed to create xvimagesink!\n");
-
-	audiosink = gst_element_factory_make("alsasink", "audiosink");
-
-	g_object_set(videosink, "force-aspect-ratio", TRUE, NULL);
-
-	g_object_set(playbin, "audio-sink", audiosink, "video-sink", videosink, NULL);
-
-	return playbin;
-}
-
 void MouseMove(int x, int y)
 {
 	if (!TDFSB_ANIM_STATE) {
@@ -3497,7 +3476,8 @@ int speckey(int key)
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
 					if (TDFSB_AVI_FILE == TDFSB_OBJECT_SELECTED) {
-						// TODO: We are already playing the selected videofile, so stop it
+						// TODO: We are already playing the selected videofile, so pause it
+						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
 					} else {
 						// TODO: stop any previous videofile that was playing
 
@@ -3508,7 +3488,6 @@ int speckey(int key)
 						Window sdl_win = 0;
 						GLXContext sdl_gl_context = NULL;
 
-						GstPipeline *pipeline = NULL;
 						GstBus *bus = NULL;
 						GstElement *fakesink = NULL;
 						GstState state;
