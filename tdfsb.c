@@ -3476,8 +3476,18 @@ int speckey(int key)
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
 					if (TDFSB_AVI_FILE == TDFSB_OBJECT_SELECTED) {
-						// TODO: We are already playing the selected videofile, so pause it
+						// We are already playing the selected videofile, so pause it
 						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
+						// We are already playing this file, so just toggle it between playing and not playing
+						GstState state;	
+						//gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);L
+						if (gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
+                                                        g_debug("failed to pause pipeline\n");
+                                                } else printf("pause ok!\n");	// this is always ok, even if it was already paused...
+
+						//printf("pipeline state = %x" . state);
+						//if (gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE) = GST_STATE_) {
+						//GstState state = gst_element_get_state(GST_ELEMENT(pipeline));
 					} else {
 						// TODO: stop any previous videofile that was playing
 
