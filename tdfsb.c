@@ -377,7 +377,6 @@ static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 /* fakesink handoff callback */
 static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, gpointer data)
 {
-	// TODO: gst_buffer_ref (buf);
 	videobuffer = buf;
 }
 
@@ -449,6 +448,7 @@ void play_mpeg()
 void play_avi()
 {
 	GstMapInfo map;
+
 	gst_buffer_map(videobuffer, &map, GST_MAP_READ);
 
 	if (map.data == NULL) return;	// No video frame received yet
