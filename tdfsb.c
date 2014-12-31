@@ -566,7 +566,6 @@ unsigned char *read_videoframe(char *filename)
 	/* if we have a buffer now, convert it to a pixbuf. It's possible that we
 	 * don't have a buffer because we went EOS right away or had an error. */
 	if (sample) {
-		GstBuffer *buffer;
 		GstCaps *caps;
 		GstStructure *s;
 
@@ -589,27 +588,9 @@ unsigned char *read_videoframe(char *filename)
 			exit(-1);
 		}
 
-/* create pixmap from buffer and save, gstreamer video buffers have a stride
-     * that is rounded up to the nearest multiple of 4 */
-		buffer = gst_sample_get_buffer(sample);
-		gst_buffer_map(buffer, &map, GST_MAP_READ);
-		GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(map.data,
-							     GDK_COLORSPACE_RGB, FALSE, 8, width, height,
-							     GST_ROUND_UP_4(width * 3), NULL, NULL);
-
-		/* save the pixbuf */
-		// This works great... but the texture is not shown, finally...
-		gdk_pixbuf_save(pixbuf, "texture.bmp", "bmp", &error, NULL);
-		// TODO: reactivate the cleanup
-		//gst_buffer_unmap (buffer, &map);
-		//gst_sample_unref (sample);
 	} else {
 		g_print("could not make snapshot\n");
 	}
-
-	/* cleanup and exit */
-	gst_element_set_state(pipeline, GST_STATE_NULL);
-	gst_object_unref(pipeline);
 
 	/* Ugly global variables... */
 	www = width;
@@ -639,6 +620,18 @@ unsigned char *read_videoframe(char *filename)
 		return NULL;
 	}
 
+	GstBuffer *buffer = gst_sample_get_buffer(sample);
+	gst_buffer_map(buffer, &map, GST_MAP_READ);
+
+	/*
+	// Save the preview for debugging (or caching?) purposes
+	// Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
+	*/
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(map.data,
+						     GDK_COLORSPACE_RGB, FALSE, 8, width, height,
+						     GST_ROUND_UP_4(width * 3), NULL, NULL);
+	gdk_pixbuf_save(pixbuf, "texture.png", "png", &error, NULL);
+
 	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
 		free(ssi);
 		printf("Cannot read frame %s ! (scaling) \n", filename);
@@ -651,8 +644,14 @@ unsigned char *read_videoframe(char *filename)
 		return NULL;
 	}
 
-	return ssi;
+	gst_buffer_unmap (buffer, &map);
+	gst_sample_unref (sample);
 
+	/* cleanup and exit */
+	gst_element_set_state(pipeline, GST_STATE_NULL);
+	gst_object_unref(pipeline);
+
+	return ssi;
 }
 
 unsigned char *read_mpegframe(char *filename)
