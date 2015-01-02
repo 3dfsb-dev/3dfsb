@@ -430,42 +430,15 @@ void play_mpeg()
 void play_avi()
 {
 	GstMapInfo map;
-
 	gst_buffer_map(videobuffer, &map, GST_MAP_READ);
-
 	if (map.data == NULL) return;	// No video frame received yet
 
-	/* Scaling, from the video size to the texture size */
-	unsigned int p2w = TDFSB_AVI_FILE->uniint0;
-	unsigned int p2h = TDFSB_AVI_FILE->uniint1;
-	unsigned char *ssi = NULL;
-	unsigned int www = 320;
-	unsigned int hhh = 240;
-	/* TODO unsigned int www = TDFSB_AVI_FILE->originalwidth;
-	   unsigned int hhh = TDFSB_AVI_FILE->originalheight;
-	   unsigned int www = TDFSB_AVI_FILE->originalwidth; */
-
-	unsigned long int memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
-
-	if (!(ssi = (unsigned char *)malloc((size_t) memsize))) {
-		printf("play_avi: cannot malloc\n");
-		exit(3);
-		return;
-	}
-
-	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
-		free(ssi);
-		printf("play_avi: cannot scale image\n");
-		exit(4);
-		return;
-	}
-	// now map.data points to the video frame that we saved in on_gst_...!
+	// now map.data points to the video frame that we saved in on_gst_buffer()
 	glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, p2w, p2h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ssi);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TDFSB_AVI_FILE->uniint0, TDFSB_AVI_FILE->uniint1, 0, GL_RGBA, GL_UNSIGNED_BYTE, map.data);
 
 	// Free up memory again
-	free(ssi);
 	gst_buffer_unmap(videobuffer, &map);
 
 }
@@ -3492,8 +3465,7 @@ int speckey(int key)
 							g_error_free(error);
 							exit(1);
 						}
-						// pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
-						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri);
+						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=256,height=256 ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri);
 						printf("gst-launch-1.0 %s\n", descr);
 						pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
 
