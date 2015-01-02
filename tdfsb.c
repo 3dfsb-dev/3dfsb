@@ -3522,6 +3522,10 @@ int speckey(int key)
 						}
 
 						fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "fakesink0");
+						if (!fakesink || !GST_IS_ELEMENT(pipeline)) {
+							printf("Could not get fakesink from stream, something's wrong!\n");
+							exit(7);
+						}
 						g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
 						g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
 						gst_object_unref(fakesink);
