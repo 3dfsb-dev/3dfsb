@@ -352,20 +352,9 @@ static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 			const gchar *context_type;
 
 			gst_message_parse_context_type(msg, &context_type);
-			g_print("got need context %s\n", context_type);
+			g_print("got need context %s, this usually never gets called and stuff related to this was removed...\n", context_type);
+			exit(6);
 
-			if (g_strcmp0(context_type, GST_GL_DISPLAY_CONTEXT_TYPE) == 0) {
-				GstContext *display_context = gst_context_new(GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
-				gst_context_set_gl_display(display_context, sdl_gl_display);
-				gst_element_set_context(GST_ELEMENT(msg->src), display_context);
-				return TRUE;
-			} else if (g_strcmp0(context_type, "gst.gl.app_context") == 0) {
-				GstContext *app_context = gst_context_new("gst.gl.app_context", TRUE);
-				GstStructure *s = gst_context_writable_structure(app_context);
-				gst_structure_set(s, "context", GST_GL_TYPE_CONTEXT, sdl_context, NULL);
-				gst_element_set_context(GST_ELEMENT(msg->src), app_context);
-				return TRUE;
-			}
 			break;
 		}
 	default:
@@ -382,18 +371,11 @@ static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, 
 
 void ende(int code)
 {
-/*
-  Cleanup, this is for later:
-
-  // before to deinitialize the gst-gl-opengl context, * no shared context (here the sdl one) must be current
-  glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
-
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  gst_object_unref (pipeline);
-
-  glXMakeCurrent (sdl_display, None, 0);
-
-*/
+	// Cleanup GStreamer stuff
+	if (pipeline && GST_IS_ELEMENT(pipeline)) {
+		gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+		gst_object_unref(pipeline);
+	}
 
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
@@ -3493,26 +3475,10 @@ int speckey(int key)
 
 						printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
 
-						SDL_SysWMinfo info;
-						Display *sdl_display = NULL;
-						Window sdl_win = 0;
-						GLXContext sdl_gl_context = NULL;
-
 						GstBus *bus = NULL;
 						GstElement *fakesink = NULL;
 						GstState state;
 						const gchar *platform;
-
-						SDL_VERSION(&info.version);
-						SDL_GetWMInfo(&info);
-						sdl_display = info.info.x11.gfxdisplay;
-						sdl_win = info.info.x11.window;
-						sdl_gl_context = glXGetCurrentContext();
-						glXMakeCurrent(sdl_display, None, 0);
-						platform = "glx";
-						sdl_gl_display = (GstGLDisplay *) gst_gl_display_x11_new_with_display(sdl_display);
-
-						sdl_context = gst_gl_context_new_wrapped(sdl_gl_display, (guintptr) sdl_gl_context, gst_gl_platform_from_string(platform), GST_GL_API_OPENGL);
 
 						// create a new pipeline
 						GError *error = NULL;
@@ -3551,9 +3517,6 @@ int speckey(int key)
 							return -1;
 						}
 
-						glXMakeCurrent(sdl_display, sdl_win, sdl_gl_context);
-
-						/* append a gst-gl texture to this queue when you do not need it no more */
 						fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "videosink");
 						g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
 						g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
