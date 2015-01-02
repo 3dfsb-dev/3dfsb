@@ -436,7 +436,7 @@ void play_avi()
 	// now map.data points to the video frame that we saved in on_gst_buffer()
 	glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TDFSB_AVI_FILE->uniint0, TDFSB_AVI_FILE->uniint1, 0, GL_RGBA, GL_UNSIGNED_BYTE, map.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TDFSB_AVI_FILE->uniint0, TDFSB_AVI_FILE->uniint1, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
 
 	// Free up memory again
 	gst_buffer_unmap(videobuffer, &map);
@@ -3465,7 +3465,8 @@ int speckey(int key)
 							g_error_free(error);
 							exit(1);
 						}
-						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=256,height=256 ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri);
+						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri);
+
 						printf("gst-launch-1.0 %s\n", descr);
 						pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
 
@@ -3474,6 +3475,8 @@ int speckey(int key)
 							g_error_free(error);
 							exit(-1);
 						}
+						// Debugging:
+						GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
 
 						bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
 						gst_bus_add_signal_watch(bus);
