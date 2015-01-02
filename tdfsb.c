@@ -3493,7 +3493,7 @@ int speckey(int key)
 							exit(1);
 						}
 						// pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
-						gchar *descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=videosink sync=1", uri);
+						gchar *descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=fakesink0 sync=1", uri);
 						printf("gst-launch-1.0 %s\n", descr);
 						pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
 
@@ -3521,7 +3521,7 @@ int speckey(int key)
 							return -1;
 						}
 
-						fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "videosink");
+						fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "fakesink0");
 						g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
 						g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
 						gst_object_unref(fakesink);
