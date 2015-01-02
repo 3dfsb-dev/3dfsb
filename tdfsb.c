@@ -3493,7 +3493,7 @@ int speckey(int key)
 							exit(1);
 						}
 						// pixel-aspect-ratio=1/1 would be less hard-coded but the later code assumes it is 240px high, which it is not, and then segfaults...
-						gchar *descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=fakesink0 sync=1", uri);
+						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! video/x-raw,width=320,height=240 ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri);
 						printf("gst-launch-1.0 %s\n", descr);
 						pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
 
