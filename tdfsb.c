@@ -464,6 +464,10 @@ void play_avi()
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, p2w, p2h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ssi);
 
+	// Free up memory again
+	free(ssi);
+	gst_buffer_unmap(videobuffer, &map);
+
 }
 
 /* Returns a pointer to (not a char but) the buffer that holds the image texture */
