@@ -1084,8 +1084,8 @@ void set_filetypes(void)
 	nsuff[2] = "TEXT";
 	nsuff[3] = "UNUSED FILETYPE";
 	nsuff[4] = "AUDIO-WAV";
-	nsuff[5] = "VIDEO";
-	nsuff[6] = "AUDIO-MP3";
+	nsuff[VIDOEFILE] = "VIDEO";
+	nsuff[AUDIOFILE] = "AUDIO-MP3";
 }
 
 void setup_kc(void)
