@@ -446,7 +446,7 @@ int get_file_type(char *fullpath)
 	unsigned int temptype, cc;
 	const char *mime = magic_file(magic, fullpath);
 
-	printf("Got mimetype: %s\n", mime);
+	//printf("Got mimetype: %s\n", mime);
 	if (!strncmp(mime, MIME_TEXT, 5)) {
 		temptype = TEXTFILE;
 	} else if (!strncmp(mime, MIME_IMAGE, 6)) {
@@ -458,7 +458,7 @@ int get_file_type(char *fullpath)
 	} else if (!strncmp(mime, MIME_PDF, 15)) {
 		temptype = PDFFILE;
 	} else {
-		// Some files are not identified by magic_file(), so we fallback to extension-based identification here...
+		// Some files are not identified by magic_file(), so we fallback to extension-based identification here
 		for (cc = 1; cc < lsuff; cc++) {
 			char * xsuff_upper = uppercase(xsuff[cc]);
 			char * ext_upper = uppercase(&(fullpath[strlen(fullpath) - strlen(xsuff[cc])]));
@@ -467,6 +467,7 @@ int get_file_type(char *fullpath)
 				break;
 			}
 		}
+		// As a last resort, we consider it an unknown file
 		if (!temptype)
 			temptype = UNKNOWNFILE;
 	}
