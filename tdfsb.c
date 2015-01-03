@@ -338,7 +338,7 @@ void stillDisplay(void);
 
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
-#define CAPS "video/x-raw,format=RGBA,width=352,pixel-aspect-ratio=1/1"
+#define CAPS "video/x-raw,format=RGB,width=352,pixel-aspect-ratio=1/1"
 static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
 
@@ -466,7 +466,7 @@ unsigned char *read_videoframe(char *filename)
 		exit(1);
 	}
 
-	descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! video/x-raw,format=RGBA ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
+	descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
 	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = gst_parse_launch(descr, &error);
 
@@ -555,7 +555,7 @@ unsigned char *read_videoframe(char *filename)
 	www = width;
 	hhh = height;
 	p2h = p2w = 256;
-	cglmode = GL_RGBA;
+	cglmode = GL_RGB;	// We set this globally here, and it is used somewhere later in the code that calls read_videoframe()
 
 	/* Scaling, from say 352x193 to 256x256
 
@@ -589,11 +589,11 @@ unsigned char *read_videoframe(char *filename)
 	   // Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
 	 */
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(map.data,
-						     GDK_COLORSPACE_RGB, FALSE, 8, width, height,
+						     GDK_COLORSPACE_RGB, FALSE, 8, width, height,	// parameter 3 means "has alpha"
 						     GST_ROUND_UP_4(width * 3), NULL, NULL);
 	gdk_pixbuf_save(pixbuf, "videopreview.png", "png", &error, NULL);
 
-	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
+	if (gluScaleImage(GL_RGB, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
 		free(ssi);
 		printf("Cannot read frame %s ! (scaling) \n", filename);
 		www = 0;
