@@ -381,7 +381,7 @@ void cleanup_media_player()
 
 void ende(int code)
 {
-	cleanupMediaPlayer();
+	cleanup_media_player();
 
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
