@@ -505,9 +505,7 @@ unsigned char *read_videoframe(char *filename)
 
 	if (duration != -1)
 		/* we have a duration, seek to 5% */
-		//position = duration * 5 / 100;    // interesting position...
-		//position = duration * 5 / 100;    
-		position = 0;	// take first frame, just like MPEG does
+		position = duration * 5 / 100;
 	else
 		/* no duration, seek to 1 second, this could EOS */
 		position = 1 * GST_SECOND;
