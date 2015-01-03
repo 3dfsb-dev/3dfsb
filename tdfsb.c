@@ -370,13 +370,18 @@ static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, 
 	videobuffer = buf;
 }
 
-void ende(int code)
+void cleanup_media_player()
 {
-	// Cleanup GStreamer stuff
+	TDFSB_MEDIA_FILE = NULL;	// Set this to NULL, because the later functions check it to know what they should display
 	if (pipeline && GST_IS_ELEMENT(pipeline)) {
 		gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
 		gst_object_unref(pipeline);
 	}
+}
+
+void ende(int code)
+{
+	cleanupMediaPlayer();
 
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
@@ -598,9 +603,7 @@ unsigned char *read_videoframe(char *filename)
 	gst_buffer_unmap(buffer, &map);
 	gst_sample_unref(sample);
 
-	/* cleanup and exit */
-	gst_element_set_state(pipeline, GST_STATE_NULL);
-	gst_object_unref(pipeline);
+	cleanup_media_player();
 
 	return ssi;
 }
@@ -1744,7 +1747,7 @@ void leodir(void)
 	TDFSB_TEX_NUM = 0;
 	TDFSB_TEX_NAMES = NULL;
 
-	// TODO: stop any playing media file?
+	cleanup_media_player();	// stop any playing media
 
 	if (DRN != 0) {
 		help = root;
@@ -3248,11 +3251,7 @@ int speckey(int key)
 					}
 
 				} else {
-					// If a media pipeline was already constructed, then stop it and cleanup
-					if (pipeline && GST_IS_ELEMENT(pipeline)) {
-						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
-						gst_object_unref(pipeline);
-					}
+					cleanup_media_player();	// Stop all other playing media
 
 					printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
 
