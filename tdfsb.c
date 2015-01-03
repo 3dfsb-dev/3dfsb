@@ -74,6 +74,9 @@
 #define PI  3.14159
 #define SQF 0.70710
 
+#define	VIDEOFILE	5
+#define	AUDIOFILE	6
+
 const SDL_VideoInfo *info = NULL;
 SDL_Event event;
 SDL_Surface *window;
@@ -716,7 +719,7 @@ void tdb_gen_list(void)
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 		} else if (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) {
-			if (((help->regtype == 1) || (help->regtype == 3) || (help->regtype == 5)) && ((help->mode) & 0x1F) == 0) {
+			if (((help->regtype == 1) || (help->regtype == VIDEOFILE)) && ((help->mode) & 0x1F) == 0) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -747,7 +750,7 @@ void tdb_gen_list(void)
 				}
 				glEnd();
 				glDisable(GL_TEXTURE_2D);
-			} else if (help->regtype == 0 || help->regtype == 5) {
+			} else if (help->regtype == 0 || help->regtype == VIDEOFILE) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -835,7 +838,7 @@ void tdb_gen_list(void)
 		mz = help->posz;
 		my = help->posy;
 
-		if (((((help->regtype) == 6) || ((help->regtype) == 4)) && ((help->mode) & 0x1F) == 0)) {
+		if (((((help->regtype) == AUDIOFILE) || ((help->regtype) == 4)) && ((help->mode) & 0x1F) == 0)) {
 			if (!mat_state) {
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_grn);
 				glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_grn);
@@ -1044,37 +1047,37 @@ void set_filetypes(void)
 	xsuff[54] = ".TGA";
 	tsuff[54] = 1;
 	xsuff[55] = ".mpg";
-	tsuff[55] = 5;
+	tsuff[55] = VIDEOFILE;
 	xsuff[56] = ".MPG";
-	tsuff[56] = 5;
+	tsuff[56] = VIDEOFILE;
 	xsuff[57] = ".mpe";
-	tsuff[57] = 5;
+	tsuff[57] = VIDEOFILE;
 	xsuff[58] = ".MPE";
-	tsuff[58] = 5;
+	tsuff[58] = VIDEOFILE;
 	xsuff[59] = ".mpeg";
-	tsuff[59] = 5;
+	tsuff[59] = VIDEOFILE;
 	xsuff[60] = ".MPEG";
-	tsuff[60] = 5;
+	tsuff[60] = VIDEOFILE;
 	xsuff[61] = ".avi";
-	tsuff[61] = 5;
+	tsuff[61] = VIDEOFILE;
 	xsuff[62] = ".AVI";
-	tsuff[62] = 5;
+	tsuff[62] = VIDEOFILE;
 	xsuff[63] = ".wav";
 	tsuff[63] = 4;
 	xsuff[64] = ".WAV";
 	tsuff[64] = 4;
 	xsuff[65] = ".mp3";
-	tsuff[65] = 6;
+	tsuff[65] = AUDIOFILE;
 	xsuff[66] = ".MP3";
-	tsuff[66] = 6;
+	tsuff[66] = AUDIOFILE;
 	xsuff[67] = ".mkv";
-	tsuff[67] = 5;
+	tsuff[67] = VIDEOFILE;
 	xsuff[68] = ".MKV";
-	tsuff[68] = 5;
+	tsuff[68] = VIDEOFILE;
 	xsuff[69] = ".mp4";
-	tsuff[69] = 5;
+	tsuff[69] = VIDEOFILE;
 	xsuff[70] = ".MP4";
-	tsuff[70] = 5;
+	tsuff[70] = VIDEOFILE;
 
 	nsuff[0] = "UNKNOWN";
 	nsuff[1] = "PICTURE";
@@ -1954,7 +1957,7 @@ void leodir(void)
 				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				locpx = locpz = 0;
 				locpy = locsy - 1;
-			} else if (temptype == 5) {
+			} else if (temptype == VIDEOFILE) {
 				locptr = read_videoframe(fullpath);
 				if (!locptr) {
 					printf("Reading video frame from %s failed\n", fullpath);
@@ -1986,7 +1989,7 @@ void leodir(void)
 					locpy = locsy - 1;
 					TDFSB_TEX_NUM++;
 				}
-			} else if (temptype == 6 || temptype == 4) {
+			} else if (temptype == AUDIOFILE || temptype == 4) {
 				uni0 = 0;
 				uni1 = 0;
 				uni2 = 0;
@@ -2120,7 +2123,7 @@ void leodir(void)
 
 	c1 = 0;
 	for (help = root; help; help = help->next) {
-		if ((((help->regtype) == 5) || ((help->regtype) == 3) || ((help->regtype) == 1)) && (((help->mode) & 0x1F) == 0)) {
+		if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == 1)) && (((help->mode) & 0x1F) == 0)) {
 			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -2251,6 +2254,7 @@ void ground(void)
 	TDFSB_FUNC_DISP();
 }
 
+/* Fly to an object */
 void approach(void)
 {
 	switch (TDFSB_ANIM_STATE) {
@@ -2268,7 +2272,7 @@ void approach(void)
 		break;
 
 	case 2:
-		if ((TDFSB_OA->regtype == 1) || (TDFSB_OA->regtype == 3)) {
+		if ((TDFSB_OA->regtype == 1) || (TDFSB_OA->regtype == VIDEOFILE)) {
 			if (TDFSB_ANIM_COUNT) {
 				smoox += TDFSB_OA_DX;
 				tposx = smoox;
@@ -2603,7 +2607,7 @@ void display(void)
 	}
 
 /* animate audio file */
-	if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == 6) {
+	if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == AUDIOFILE) {
 		glPushMatrix();
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_grn);
 		glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_grn);
@@ -3236,7 +3240,7 @@ int speckey(int key)
 			}
 			break;
 		case SDLK_RETURN:
-			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == 5 || TDFSB_OBJECT_SELECTED->regtype == 6)) {
+			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE || TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE)) {
 				if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
 					GstState state;
 					gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
