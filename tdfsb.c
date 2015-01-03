@@ -338,7 +338,7 @@ void stillDisplay(void);
 
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
-#define CAPS "video/x-raw,format=RGB,width=352,pixel-aspect-ratio=1/1"
+#define CAPS "video/x-raw,format=RGB"
 static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
 
@@ -416,6 +416,14 @@ void ende(int code)
 	exit(code);
 }
 
+/* Limit the texture size (used for video textures) */
+int limit_texture_size(int bigvalue) {
+	// Note: playing video on texture sizes of 2048x2048 and up is bad for performance
+	// and causes segfaults when doing the gst_buffer_map() of the videobuffer
+	// So we limit it to 1024x1024, which is quite enough
+	return (bigvalue > 1024 ? 1024 : bigvalue);
+}
+
 void play_mpeg()
 {
 	SMPEG_getinfo(TDFSB_MPEG_HANDLE, &TDFSB_MPEG_INFO);
@@ -431,6 +439,10 @@ void play_mpeg()
 void play_avi()
 {
 	GstMapInfo map;
+
+	if (!videobuffer)
+		return;
+
 	gst_buffer_map(videobuffer, &map, GST_MAP_READ);
 	if (map.data == NULL)
 		return;		// No video frame received yet
@@ -438,7 +450,8 @@ void play_avi()
 	// now map.data points to the video frame that we saved in on_gst_buffer()
 	glBindTexture(GL_TEXTURE_2D, TDFSB_MEDIA_FILE->uniint3);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TDFSB_MEDIA_FILE->uniint0, TDFSB_MEDIA_FILE->uniint1, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
+	int texsize = limit_texture_size(TDFSB_MEDIA_FILE->uniint0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texsize, texsize, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
 
 	// Free up memory again
 	gst_buffer_unmap(videobuffer, &map);
@@ -554,7 +567,10 @@ unsigned char *read_videoframe(char *filename)
 	/* Ugly global variables... */
 	www = width;
 	hhh = height;
-	p2h = p2w = 256;
+	// find the smallest square texture size that's a power of two and fits around the image width/height
+	// Example: image is 350x220 => texture size will be 512x512
+	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
+	p2h = p2w = cc;
 	cglmode = GL_RGB;	// We set this globally here, and it is used somewhere later in the code that calls read_videoframe()
 
 	/* Scaling, from say 352x193 to 256x256
@@ -3477,7 +3493,10 @@ int speckey(int key)
 							g_error_free(error);
 							exit(1);
 						}
-						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri);
+
+						int texsize = limit_texture_size(TDFSB_OBJECT_SELECTED->uniint0);
+
+						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, texsize, texsize);
 						// Use this for pulseaudio:
 						// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=tdfsb", uri);
 
