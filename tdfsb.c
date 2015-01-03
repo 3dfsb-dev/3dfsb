@@ -373,7 +373,7 @@ void ende(int code)
 {
 	// Cleanup GStreamer stuff
 	if (pipeline && GST_IS_ELEMENT(pipeline)) {
-		gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+		gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
 		gst_object_unref(pipeline);
 	}
 
@@ -431,7 +431,8 @@ void play_avi()
 {
 	GstMapInfo map;
 	gst_buffer_map(videobuffer, &map, GST_MAP_READ);
-	if (map.data == NULL) return;	// No video frame received yet
+	if (map.data == NULL)
+		return;		// No video frame received yet
 
 	// now map.data points to the video frame that we saved in on_gst_buffer()
 	glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
@@ -581,11 +582,11 @@ unsigned char *read_videoframe(char *filename)
 	gst_buffer_map(buffer, &map, GST_MAP_READ);
 
 	/*
-	// Save the preview for debugging (or caching?) purposes
-	// Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
-	// Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
-	// Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
-	*/
+	   // Save the preview for debugging (or caching?) purposes
+	   // Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
+	   // Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
+	   // Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
+	 */
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(map.data,
 						     GDK_COLORSPACE_RGB, FALSE, 8, width, height,
 						     GST_ROUND_UP_4(width * 3), NULL, NULL);
@@ -603,8 +604,8 @@ unsigned char *read_videoframe(char *filename)
 		return NULL;
 	}
 
-	gst_buffer_unmap (buffer, &map);
-	gst_sample_unref (sample);
+	gst_buffer_unmap(buffer, &map);
+	gst_sample_unref(sample);
 
 	/* cleanup and exit */
 	gst_element_set_state(pipeline, GST_STATE_NULL);
@@ -3433,7 +3434,7 @@ int speckey(int key)
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
 					if (TDFSB_OBJECT_SELECTED == TDFSB_AVI_FILE) {
-						GstState state;	
+						GstState state;
 						gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
 
 						if (state != GST_STATE_PAUSED) {
