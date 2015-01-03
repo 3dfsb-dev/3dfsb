@@ -3456,7 +3456,11 @@ int speckey(int key)
 						}
 
 					} else {
-						// TODO: stop any previous videofile that was playing
+						// If a media pipeline was already constructed, then stop it and cleanup
+						if (pipeline && GST_IS_ELEMENT(pipeline)) {
+							gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
+							gst_object_unref(pipeline);
+						}
 
 						printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
 
