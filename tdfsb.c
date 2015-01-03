@@ -3466,6 +3466,8 @@ int speckey(int key)
 							exit(1);
 						}
 						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri);
+						// Use this for pulseaudio:
+						// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=tdfsb", uri);
 
 						printf("gst-launch-1.0 %s\n", descr);
 						pipeline = (GstPipeline *) gst_parse_launch(descr, &error);

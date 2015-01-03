@@ -61,6 +61,10 @@ and also perhaps:
 sudo apt-get install gstreamer0.10-plugins-*
 sudo apt-get install gstinterfaces
 
+and for pulseaudio:
+
+sudo apt-get install gstreamer1.0-pulseaudio
+
 Compilation
 ===========
 
