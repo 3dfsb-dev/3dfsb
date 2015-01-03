@@ -146,10 +146,11 @@ int downkeybuf = 0;
 
 GLdouble prevlen;
 
-const int lsuff = 66;
+// Number of suffixes
+const int lsuff = 70;
 
-char *xsuff[67];
-unsigned int tsuff[67];
+char *xsuff[71];		// why is this lsuff + 1?
+unsigned int tsuff[71];		// why is this lsuff + 1?
 char *nsuff[7];
 
 GLfloat fh, fh2, mono;
@@ -1151,6 +1152,14 @@ void set_filetypes(void)
 	tsuff[65] = 6;
 	xsuff[66] = ".MP3";
 	tsuff[66] = 6;
+	xsuff[67] = ".mkv";
+	tsuff[67] = 5;
+	xsuff[68] = ".MKV";
+	tsuff[68] = 5;
+	xsuff[69] = ".mp4";
+	tsuff[69] = 5;
+	xsuff[70] = ".MP4";
+	tsuff[70] = 5;
 
 	nsuff[0] = "UNKNOWN";
 	nsuff[1] = "PICTURE";
