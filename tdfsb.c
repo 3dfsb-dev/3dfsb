@@ -172,6 +172,10 @@ SMPEG_Info TDFSB_MPEG_INFO, TDFSB_MP3_INFO;
 struct tree_entry *TDFSB_MPEG_FILE, *TDFSB_MP3_FILE, *TDFSB_MEDIA_FILE;
 unsigned long int TDFSB_MPEG_FRAMENO;
 
+// Used to limit the number of video texture changes for performance
+unsigned int framecounter;
+unsigned int displayedframenumber;
+
 struct timeval ltime, ttime, rtime, wtime;
 long sec;
 
@@ -367,6 +371,7 @@ static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 /* fakesink handoff callback */
 static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, gpointer data)
 {
+	framecounter++;
 	videobuffer = buf;
 }
 
@@ -416,14 +421,6 @@ void ende(int code)
 	exit(code);
 }
 
-/* Limit the texture size (used for video textures) */
-int limit_texture_size(int bigvalue) {
-	// Note: playing video on texture sizes of 2048x2048 and up is bad for performance
-	// and causes segfaults when doing the gst_buffer_map() of the videobuffer
-	// So we limit it to 1024x1024, which is quite enough
-	return (bigvalue > 1024 ? 1024 : bigvalue);
-}
-
 void play_mpeg()
 {
 	SMPEG_getinfo(TDFSB_MPEG_HANDLE, &TDFSB_MPEG_INFO);
@@ -438,6 +435,12 @@ void play_mpeg()
 
 void play_avi()
 {
+	// Ensure we don't refresh the texture if nothing changed
+	if (framecounter == displayedframenumber) {
+		// printf("Already displaying frame %d, skipping...\n", framecounter);
+		return;
+	}
+	displayedframenumber = framecounter;
 	GstMapInfo map;
 
 	if (!videobuffer)
@@ -450,8 +453,7 @@ void play_avi()
 	// now map.data points to the video frame that we saved in on_gst_buffer()
 	glBindTexture(GL_TEXTURE_2D, TDFSB_MEDIA_FILE->uniint3);
 
-	int texsize = limit_texture_size(TDFSB_MEDIA_FILE->uniint0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texsize, texsize, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TDFSB_MEDIA_FILE->uniint0, TDFSB_MEDIA_FILE->uniint1, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
 
 	// Free up memory again
 	gst_buffer_unmap(videobuffer, &map);
@@ -603,10 +605,10 @@ unsigned char *read_videoframe(char *filename)
 	   // Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
 	   // Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
 	   // Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
-	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(map.data,
-						     GDK_COLORSPACE_RGB, FALSE, 8, width, height,	// parameter 3 means "has alpha"
-						     GST_ROUND_UP_4(width * 3), NULL, NULL);
-	gdk_pixbuf_save(pixbuf, "videopreview.png", "png", &error, NULL);
+	   GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(map.data,
+	   GDK_COLORSPACE_RGB, FALSE, 8, width, height, // parameter 3 means "has alpha"
+	   GST_ROUND_UP_4(width * 3), NULL, NULL);
+	   gdk_pixbuf_save(pixbuf, "videopreview.png", "png", &error, NULL);
 	 */
 
 	if (gluScaleImage(GL_RGB, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
@@ -3494,9 +3496,7 @@ int speckey(int key)
 							exit(1);
 						}
 
-						int texsize = limit_texture_size(TDFSB_OBJECT_SELECTED->uniint0);
-
-						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, texsize, texsize);
+						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
 						// Use this for pulseaudio:
 						// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=tdfsb", uri);
 
@@ -3538,6 +3538,7 @@ int speckey(int key)
 						g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
 						gst_object_unref(fakesink);
 
+						framecounter = 0;
 						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
 						TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
