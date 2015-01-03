@@ -77,8 +77,20 @@
 #define PI  3.14159
 #define SQF 0.70710
 
+#define	UNKNOWNFILE	0
+#define	IMAGEFILE	1
+#define	TEXTFILE	2
+#define	PDFFILE		3
+#define	ZIPFILE		4
 #define	VIDEOFILE	5
 #define	AUDIOFILE	6
+
+#define	MIME_AUDIO	"audio/"
+#define	MIME_IMAGE	"image/"
+#define	MIME_PDF	"application/pdf"
+#define	MIME_TEXT	"text/"
+#define	MIME_VIDEO	"video/"
+#define	MIME_ZIP	"application/zip"
 
 const SDL_VideoInfo *info = NULL;
 SDL_Event event;
@@ -421,6 +433,36 @@ void ende(int code)
 	exit(code);
 }
 
+int get_file_type(char *fullpath)
+{
+	unsigned int temptype, cc;
+	const char *mime = magic_file(magic, fullpath);
+
+	printf("Got mimetype: %s\n", mime);
+	if (!strncmp(mime, MIME_TEXT, 5)) {
+		temptype = TEXTFILE;
+	} else if (!strncmp(mime, MIME_IMAGE, 6)) {
+		temptype = IMAGEFILE;
+	} else if (!strncmp(mime, MIME_VIDEO, 6)) {
+		temptype = VIDEOFILE;
+	} else if (!strncmp(mime, MIME_AUDIO, 6)) {
+		temptype = AUDIOFILE;
+	} else if (!strncmp(mime, MIME_PDF, 15)) {
+		temptype = PDFFILE;
+	} else {
+		// Some files are not identified by magic_file(), so we fallback to extension-based identification here...
+		for (cc = 1; cc <= lsuff; cc++) {
+			if (!strncmp(xsuff[cc], &(fullpath[strlen(fullpath) - strlen(xsuff[cc])]), strlen(xsuff[cc]))) {
+				temptype = tsuff[cc];
+				break;
+			}
+		}
+		if (!temptype)
+			temptype = UNKNOWNFILE;
+	}
+	return temptype;
+}
+
 void play_media()
 {
 	// Ensure we don't refresh the texture if nothing changed
@@ -727,7 +769,7 @@ void tdb_gen_list(void)
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 		} else if (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) {
-			if (((help->regtype == 1) || (help->regtype == VIDEOFILE)) && ((help->mode) & 0x1F) == 0) {
+			if (((help->regtype == IMAGEFILE) || (help->regtype == VIDEOFILE)) && ((help->mode) & 0x1F) == 0) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -758,7 +800,7 @@ void tdb_gen_list(void)
 				}
 				glEnd();
 				glDisable(GL_TEXTURE_2D);
-			} else if (help->regtype == 0 || help->regtype == VIDEOFILE) {
+			} else if (help->regtype == UNKNOWNFILE || help->regtype == VIDEOFILE) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -814,7 +856,7 @@ void tdb_gen_list(void)
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
-		if (((help->regtype == 2) && ((help->mode) & 0x1F) == 0)) {
+		if (((help->regtype == TEXTFILE) && ((help->mode) & 0x1F) == 0)) {
 			if (!mat_state) {
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_yel);
 				glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_yel);
@@ -846,7 +888,7 @@ void tdb_gen_list(void)
 		mz = help->posz;
 		my = help->posy;
 
-		if (((((help->regtype) == AUDIOFILE) || ((help->regtype) == 4)) && ((help->mode) & 0x1F) == 0)) {
+		if ((((help->regtype) == AUDIOFILE) && ((help->mode) & 0x1F) == 0)) {
 			if (!mat_state) {
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_grn);
 				glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_grn);
@@ -945,7 +987,7 @@ void tdb_gen_list(void)
 void set_filetypes(void)
 {
 	xsuff[0] = "ERROR";
-	tsuff[0] = 0;
+	tsuff[0] = UNKNOWNFILE;
 	xsuff[1] = ".jpeg";
 	tsuff[1] = 1;
 	xsuff[2] = ".JPEG";
@@ -1071,9 +1113,9 @@ void set_filetypes(void)
 	xsuff[62] = ".AVI";
 	tsuff[62] = VIDEOFILE;
 	xsuff[63] = ".wav";
-	tsuff[63] = 4;
+	tsuff[63] = AUDIOFILE;
 	xsuff[64] = ".WAV";
-	tsuff[64] = 4;
+	tsuff[64] = AUDIOFILE;
 	xsuff[65] = ".mp3";
 	tsuff[65] = AUDIOFILE;
 	xsuff[66] = ".MP3";
@@ -1087,11 +1129,11 @@ void set_filetypes(void)
 	xsuff[70] = ".MP4";
 	tsuff[70] = VIDEOFILE;
 
-	nsuff[0] = "UNKNOWN";
-	nsuff[1] = "PICTURE";
-	nsuff[2] = "TEXT";
-	nsuff[3] = "UNUSED FILETYPE";
-	nsuff[4] = "AUDIO-WAV";
+	nsuff[UNKNOWNFILE] = "UNKNOWN";
+	nsuff[IMAGEFILE] = "PICTURE";
+	nsuff[TEXTFILE] = "TEXT";
+	nsuff[PDFFILE] = "PDF";
+	nsuff[ZIPFILE] = "ZIPFILE";
 	nsuff[VIDEOFILE] = "VIDEO";
 	nsuff[AUDIOFILE] = "AUDIO-MP3";
 }
@@ -1859,17 +1901,8 @@ void leodir(void)
 
 /* Data File Identifizierung */
 			if ((mode & 0x1F) == 0) {
-				for (cc = 1; cc <= lsuff; cc++) {
-					if (!strncmp(xsuff[cc], &(fullpath[strlen(fullpath) - strlen(xsuff[cc])]), strlen(xsuff[cc]))) {
-						temptype = tsuff[cc];
-						break;
-					}
-				}
+				temptype = get_file_type(fullpath);
 			}
-
-// TODO: use contents-based mimetype instead of extension-based "identifizierung"
-			const char *mime = magic_file(magic, fullpath); 
-			printf("Got mimetype: %s\n", mime);
 
 /* Data File Loading + Setting Parameters */
 			if ((mode & 0x1F) == 1 || (mode & 0x1F) == 11) {
@@ -1881,7 +1914,7 @@ void leodir(void)
 				uni1 = 0;
 				uni2 = 0;
 				printf(" .. DIR done.\n");
-			} else if (temptype == 1) {
+			} else if (temptype == IMAGEFILE) {
 				locptr = read_imagefile(fullpath);
 				if (!locptr) {
 					printf("IMAGE FAILED: %s\n", fullpath);
@@ -1913,7 +1946,7 @@ void leodir(void)
 					locpy = locsy - 1;
 					TDFSB_TEX_NUM++;
 				}
-			} else if (temptype == 2) {
+			} else if (temptype == TEXTFILE) {
 				uni0 = 0;
 				uni1 = 0;
 				uni2 = 0;
@@ -2001,7 +2034,7 @@ void leodir(void)
 					locpy = locsy - 1;
 					TDFSB_TEX_NUM++;
 				}
-			} else if (temptype == AUDIOFILE || temptype == 4) {
+			} else if (temptype == AUDIOFILE) {
 				uni0 = 0;
 				uni1 = 0;
 				uni2 = 0;
@@ -2135,7 +2168,7 @@ void leodir(void)
 
 	c1 = 0;
 	for (help = root; help; help = help->next) {
-		if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == 1)) && (((help->mode) & 0x1F) == 0)) {
+		if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == IMAGEFILE)) && (((help->mode) & 0x1F) == 0)) {
 			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -2284,7 +2317,7 @@ void approach(void)
 		break;
 
 	case 2:
-		if ((TDFSB_OA->regtype == 1) || (TDFSB_OA->regtype == VIDEOFILE)) {
+		if ((TDFSB_OA->regtype == IMAGEFILE) || (TDFSB_OA->regtype == VIDEOFILE)) {
 			if (TDFSB_ANIM_COUNT) {
 				smoox += TDFSB_OA_DX;
 				tposx = smoox;
@@ -2304,7 +2337,7 @@ void approach(void)
 				TDFSB_OA_DX = (TDFSB_OA->posx + TDFSB_OA->scalex + 6 - vposx) / 50;
 			}
 		} else {
-			if (TDFSB_OA->regtype == 2) {
+			if (TDFSB_OA->regtype == TEXTFILE) {
 				TDFSB_ANIM_COUNT = 50;
 				TDFSB_ANIM_STATE = 3;
 				TDFSB_OA_DZ = (TDFSB_OA->posz + TDFSB_OA->scalez + 4 - vposz) / 50;
@@ -2474,7 +2507,7 @@ void display(void)
 					if (!((help->mode) & 0x20)) {
 						if ((senx > help->posx - help->scalex) && (senx < help->posx + help->scalex))
 							if ((seny > help->posy - help->scaley) && (seny < help->posy + help->scaley))
-								if (((senz > help->posz - help->scalez) && (senz < help->posz + help->scalez)) || ((help->regtype == 1 || help->regtype == 3) && ((senz > help->posz - help->scalez - 1) && (senz < help->posz + help->scalez + 1)))) {
+								if (((senz > help->posz - help->scalez) && (senz < help->posz + help->scalez)) || ((help->regtype == IMAGEFILE || help->regtype == VIDEOFILE) && ((senz > help->posz - help->scalez - 1) && (senz < help->posz + help->scalez + 1)))) {
 									find_entry = help;
 									find_dist = odist;
 								}
@@ -2521,7 +2554,7 @@ void display(void)
 				} else {
 					glRotated(fmod(315 - asin(u / r) * (180 / PI), 360), 0, 1, 0);
 				}
-				if (((help->mode) == 0x00) && ((help->regtype) == 1))
+				if (((help->mode) == 0x00) && ((help->regtype) == IMAGEFILE))
 					glRotatef(-45, 0, 1, 0);
 				if (!((help->mode) & 0x20)) {
 					glTranslatef((help->scalex) + 1, 1.5, (help->scalez) + 1);
@@ -2578,7 +2611,7 @@ void display(void)
 			}
 		}
 /* animate text files */
-		if ((help->regtype == 2) && ((help->mode) & 0x1F) == 0) {
+		if ((help->regtype == TEXTFILE) && ((help->mode) & 0x1F) == 0) {
 			glPushMatrix();
 			if (((help->mode) & 0x20)) {
 				cc = 16;
@@ -3286,7 +3319,7 @@ int speckey(int key)
 					}
 
 					gchar *descr;
-					if (TDFSB_OBJECT_SELECTED->regtype == 5) {
+					if (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE) {
 						descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
 					} else {
 						descr = g_strdup_printf("uridecodebin uri=%s ! audioconvert ! playsink", uri);
@@ -3720,7 +3753,7 @@ int main(int argc, char **argv)
 	gst_init(&argc, &argv);
 
 	// Init mimetype database
-	magic = magic_open(MAGIC_MIME_TYPE); 
+	magic = magic_open(MAGIC_MIME_TYPE);
 	magic_load(magic, NULL);
 
 	info = SDL_GetVideoInfo();
