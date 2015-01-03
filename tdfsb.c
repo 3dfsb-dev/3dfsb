@@ -164,10 +164,10 @@ int downkeybuf = 0;
 GLdouble prevlen;
 
 // Number of suffixes
-const int lsuff = 70;
+const int lsuff = 3;
 
-char *xsuff[71];		// why is this lsuff + 1?
-unsigned int tsuff[71];		// why is this lsuff + 1?
+char *xsuff[3];
+unsigned int tsuff[3];
 char *nsuff[7];
 
 GLfloat fh, fh2, mono;
@@ -433,6 +433,14 @@ void ende(int code)
 	exit(code);
 }
 
+char *uppercase(char *str){
+    char *newstr, *p;
+    p = newstr = strdup(str);
+    while(*p++=toupper(*p));
+
+    return newstr;
+}
+
 int get_file_type(char *fullpath)
 {
 	unsigned int temptype, cc;
@@ -451,8 +459,10 @@ int get_file_type(char *fullpath)
 		temptype = PDFFILE;
 	} else {
 		// Some files are not identified by magic_file(), so we fallback to extension-based identification here...
-		for (cc = 1; cc <= lsuff; cc++) {
-			if (!strncmp(xsuff[cc], &(fullpath[strlen(fullpath) - strlen(xsuff[cc])]), strlen(xsuff[cc]))) {
+		for (cc = 1; cc < lsuff; cc++) {
+			char * xsuff_upper = uppercase(xsuff[cc]);
+			char * ext_upper = uppercase(&(fullpath[strlen(fullpath) - strlen(xsuff[cc])]));
+			if (!strncmp(xsuff_upper, ext_upper, strlen(xsuff[cc]))) {
 				temptype = tsuff[cc];
 				break;
 			}
@@ -986,148 +996,13 @@ void tdb_gen_list(void)
 
 void set_filetypes(void)
 {
+	/* These filetypes are known to be mis- or non-identified by libmagic, so we fallback to extensions for those */
 	xsuff[0] = "ERROR";
 	tsuff[0] = UNKNOWNFILE;
-	xsuff[1] = ".jpeg";
-	tsuff[1] = 1;
-	xsuff[2] = ".JPEG";
-	tsuff[2] = 1;
-	xsuff[3] = ".jpg";
-	tsuff[3] = 1;
-	xsuff[4] = ".JPG";
-	tsuff[4] = 1;
-	xsuff[5] = ".jpe";
-	tsuff[5] = 1;
-	xsuff[6] = ".JPE";
-	tsuff[6] = 1;
-	xsuff[7] = ".gif";
-	tsuff[7] = 1;
-	xsuff[8] = ".GIF";
-	tsuff[8] = 1;
-	xsuff[9] = ".tif";
-	tsuff[9] = 1;
-	xsuff[10] = ".TIF";
-	tsuff[10] = 1;
-	xsuff[11] = ".tiff";
-	tsuff[11] = 1;
-	xsuff[12] = ".TIFF";
-	tsuff[12] = 1;
-	xsuff[13] = ".png";
-	tsuff[13] = 1;
-	xsuff[14] = ".PNG";
-	tsuff[14] = 1;
-	xsuff[15] = ".pnm";
-	tsuff[15] = 1;
-	xsuff[16] = ".PNM";
-	tsuff[16] = 1;
-	xsuff[17] = ".xpm";
-	tsuff[17] = 1;
-	xsuff[18] = ".XPM";
-	tsuff[18] = 1;
-	xsuff[19] = ".lbm";
-	tsuff[19] = 1;
-	xsuff[20] = ".LBM";
-	tsuff[20] = 1;
-	xsuff[21] = ".bmp";
-	tsuff[21] = 1;
-	xsuff[22] = ".BMP";
-	tsuff[22] = 1;
-	xsuff[23] = ".txt";
-	tsuff[23] = 2;
-	xsuff[24] = ".TXT";
-	tsuff[24] = 2;
-	xsuff[25] = ".c";
-	tsuff[25] = 2;
-	xsuff[26] = ".C";
-	tsuff[26] = 2;
-	xsuff[27] = ".h";
-	tsuff[27] = 2;
-	xsuff[28] = ".htm";
-	tsuff[28] = 2;
-	xsuff[29] = ".html";
-	tsuff[29] = 2;
-	xsuff[30] = ".HTM";
-	tsuff[30] = 2;
-	xsuff[31] = ".HTML";
-	tsuff[31] = 2;
-	xsuff[32] = ".pl";
-	tsuff[32] = 2;
-	xsuff[33] = "README";
-	tsuff[33] = 2;
-	xsuff[34] = "LICENSE";
-	tsuff[34] = 2;
-	xsuff[35] = "LICENSE-GPL";
-	tsuff[35] = 2;
-	xsuff[36] = "LICENSE-LGPL";
-	tsuff[36] = 2;
-	xsuff[37] = ".src";
-	tsuff[37] = 2;
-	xsuff[38] = ".SRC";
-	tsuff[38] = 2;
-	xsuff[39] = ".asc";
-	tsuff[39] = 2;
-	xsuff[40] = ".ascii";
-	tsuff[40] = 2;
-	xsuff[41] = ".ASCII";
-	tsuff[41] = 2;
-	xsuff[42] = ".ASC";
-	tsuff[42] = 2;
-	xsuff[43] = ".sgml";
-	tsuff[43] = 2;
-	xsuff[44] = ".SGML";
-	tsuff[44] = 2;
-	xsuff[45] = ".java";
-	tsuff[45] = 2;
-	xsuff[46] = ".JAVA";
-	tsuff[46] = 2;
-	xsuff[47] = ".tdfsb";
-	tsuff[47] = 2;
-	xsuff[48] = "COPYING";
-	tsuff[48] = 2;
-	xsuff[49] = ".xawtv";
-	tsuff[49] = 2;
-	xsuff[50] = ".bash_history";
-	tsuff[50] = 2;
-	xsuff[51] = ".pcx";
-	tsuff[51] = 1;
-	xsuff[52] = ".PCX";
-	tsuff[52] = 1;
-	xsuff[53] = ".tga";
-	tsuff[53] = 1;
-	xsuff[54] = ".TGA";
-	tsuff[54] = 1;
-	xsuff[55] = ".mpg";
-	tsuff[55] = VIDEOFILE;
-	xsuff[56] = ".MPG";
-	tsuff[56] = VIDEOFILE;
-	xsuff[57] = ".mpe";
-	tsuff[57] = VIDEOFILE;
-	xsuff[58] = ".MPE";
-	tsuff[58] = VIDEOFILE;
-	xsuff[59] = ".mpeg";
-	tsuff[59] = VIDEOFILE;
-	xsuff[60] = ".MPEG";
-	tsuff[60] = VIDEOFILE;
-	xsuff[61] = ".avi";
-	tsuff[61] = VIDEOFILE;
-	xsuff[62] = ".AVI";
-	tsuff[62] = VIDEOFILE;
-	xsuff[63] = ".wav";
-	tsuff[63] = AUDIOFILE;
-	xsuff[64] = ".WAV";
-	tsuff[64] = AUDIOFILE;
-	xsuff[65] = ".mp3";
-	tsuff[65] = AUDIOFILE;
-	xsuff[66] = ".MP3";
-	tsuff[66] = AUDIOFILE;
-	xsuff[67] = ".mkv";
-	tsuff[67] = VIDEOFILE;
-	xsuff[68] = ".MKV";
-	tsuff[68] = VIDEOFILE;
-	xsuff[69] = ".mp4";
-	tsuff[69] = VIDEOFILE;
-	xsuff[70] = ".MP4";
-	tsuff[70] = VIDEOFILE;
+	xsuff[1] = ".mp3";	// Some .mp3's are misidentified, they seem to be part of a stream or something...
+	tsuff[1] = AUDIOFILE;
+	xsuff[2] = ".txt";	// Some .txt's are identified as "application/data"
+	tsuff[2] = TEXTFILE;
 
 	nsuff[UNKNOWNFILE] = "UNKNOWN";
 	nsuff[IMAGEFILE] = "PICTURE";
