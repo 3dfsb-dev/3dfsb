@@ -1084,7 +1084,7 @@ void set_filetypes(void)
 	nsuff[2] = "TEXT";
 	nsuff[3] = "UNUSED FILETYPE";
 	nsuff[4] = "AUDIO-WAV";
-	nsuff[VIDOEFILE] = "VIDEO";
+	nsuff[VIDEOFILE] = "VIDEO";
 	nsuff[AUDIOFILE] = "AUDIO-MP3";
 }
 
