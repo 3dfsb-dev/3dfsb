@@ -168,7 +168,7 @@ int TDFSB_CSE_FLAG = 1;
 SDL_Surface *TDFSB_MPEG_SURFACE = NULL;
 SMPEG *TDFSB_MPEG_HANDLE = NULL, *TDFSB_MP3_HANDLE = NULL;
 SMPEG_Info TDFSB_MPEG_INFO, TDFSB_MP3_INFO;
-struct tree_entry *TDFSB_MPEG_FILE, *TDFSB_MP3_FILE, *TDFSB_AVI_FILE;
+struct tree_entry *TDFSB_MPEG_FILE, *TDFSB_MP3_FILE, *TDFSB_MEDIA_FILE;
 unsigned long int TDFSB_MPEG_FRAMENO;
 
 struct timeval ltime, ttime, rtime, wtime;
@@ -435,9 +435,9 @@ void play_avi()
 		return;		// No video frame received yet
 
 	// now map.data points to the video frame that we saved in on_gst_buffer()
-	glBindTexture(GL_TEXTURE_2D, TDFSB_AVI_FILE->uniint3);
+	glBindTexture(GL_TEXTURE_2D, TDFSB_MEDIA_FILE->uniint3);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TDFSB_AVI_FILE->uniint0, TDFSB_AVI_FILE->uniint1, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TDFSB_MEDIA_FILE->uniint0, TDFSB_MEDIA_FILE->uniint1, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
 
 	// Free up memory again
 	gst_buffer_unmap(videobuffer, &map);
@@ -2528,7 +2528,7 @@ void display(void)
 		}
 	}
 
-	if (TDFSB_AVI_FILE) {
+	if (TDFSB_MEDIA_FILE) {
 		play_avi();
 		// TODO: add error handling
 	}
@@ -3433,7 +3433,7 @@ int speckey(int key)
 					SMPEG_delete(TDFSB_MPEG_HANDLE);
 					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
-					if (TDFSB_OBJECT_SELECTED == TDFSB_AVI_FILE) {
+					if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
 						GstState state;
 						gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
 
@@ -3508,7 +3508,7 @@ int speckey(int key)
 
 						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
-						TDFSB_AVI_FILE = TDFSB_OBJECT_SELECTED;
+						TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 					}
 				} else if (TDFSB_OBJECT_SELECTED->regtype == 6) {
 					if (TDFSB_MP3_FILE == TDFSB_OBJECT_SELECTED) {
