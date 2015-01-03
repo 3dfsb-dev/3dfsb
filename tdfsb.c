@@ -587,11 +587,11 @@ unsigned char *read_videoframe(char *filename)
 	   // Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
 	   // Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
 	   // Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
-	 */
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(map.data,
 						     GDK_COLORSPACE_RGB, FALSE, 8, width, height,	// parameter 3 means "has alpha"
 						     GST_ROUND_UP_4(width * 3), NULL, NULL);
 	gdk_pixbuf_save(pixbuf, "videopreview.png", "png", &error, NULL);
+	 */
 
 	if (gluScaleImage(GL_RGB, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
 		free(ssi);
