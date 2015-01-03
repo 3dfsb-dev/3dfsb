@@ -166,11 +166,9 @@ int TDFSB_MW_STEPS = 1;
 long TDFSB_US_RUN = 0;
 int TDFSB_CSE_FLAG = 1;
 
-SDL_Surface *TDFSB_MPEG_SURFACE = NULL;
-SMPEG *TDFSB_MPEG_HANDLE = NULL, *TDFSB_MP3_HANDLE = NULL;
-SMPEG_Info TDFSB_MPEG_INFO, TDFSB_MP3_INFO;
-struct tree_entry *TDFSB_MPEG_FILE, *TDFSB_MP3_FILE, *TDFSB_MEDIA_FILE;
-unsigned long int TDFSB_MPEG_FRAMENO;
+SMPEG *TDFSB_MP3_HANDLE = NULL;
+SMPEG_Info TDFSB_MP3_INFO;
+struct tree_entry *TDFSB_MP3_FILE, *TDFSB_MEDIA_FILE;
 
 // Used to limit the number of video texture changes for performance
 unsigned int framecounter;
@@ -386,17 +384,11 @@ void ende(int code)
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
 		free(TDFSB_TEX_NAMES);
-	if (TDFSB_MPEG_FILE) {
-		SMPEG_stop(TDFSB_MPEG_HANDLE);
-		SMPEG_delete(TDFSB_MPEG_HANDLE);
-		SDL_FreeSurface(TDFSB_MPEG_SURFACE);
-	}
 	if (TDFSB_MP3_FILE) {
 		SMPEG_stop(TDFSB_MP3_HANDLE);
 		SMPEG_delete(TDFSB_MP3_HANDLE);
 	}
 	TDFSB_MP3_FILE = NULL;
-	TDFSB_MPEG_FILE = NULL;
 	if (DRN != 0) {
 		help = root;
 		while (help) {
@@ -419,18 +411,6 @@ void ende(int code)
 	}
 	SDL_Quit();
 	exit(code);
-}
-
-void play_mpeg()
-{
-	SMPEG_getinfo(TDFSB_MPEG_HANDLE, &TDFSB_MPEG_INFO);
-	if (TDFSB_MPEG_FRAMENO != TDFSB_MPEG_INFO.current_frame) {
-		TDFSB_MPEG_FRAMENO = TDFSB_MPEG_INFO.current_frame;
-		SDL_LockSurface(TDFSB_MPEG_SURFACE);
-		glBindTexture(GL_TEXTURE_2D, TDFSB_MPEG_FILE->uniint3);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, TDFSB_MPEG_SURFACE->pixels);
-		SDL_UnlockSurface(TDFSB_MPEG_SURFACE);
-	}
 }
 
 void play_avi()
@@ -631,84 +611,6 @@ unsigned char *read_videoframe(char *filename)
 	gst_object_unref(pipeline);
 
 	return ssi;
-}
-
-unsigned char *read_mpegframe(char *filename)
-{
-	SDL_Surface *screen;
-	SMPEG *mpeg;
-	SMPEG_Info info;
-	unsigned long int memsize;
-
-	mpeg = SMPEG_new(filename, &info, 0);
-	if (SMPEG_error(mpeg)) {
-		printf("Error opening mpeg file (frame open).\n");
-		SMPEG_delete(mpeg);
-		return NULL;
-	}
-	SMPEG_enableaudio(mpeg, 0);
-	SMPEG_enablevideo(mpeg, 1);
-
-	if (!(info.has_video)) {
-		printf("Error opening mpeg file (frame info).\n");
-		SMPEG_delete(mpeg);
-		return NULL;
-	}
-	www = info.width;
-	hhh = info.height;
-	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
-	p2h = p2w = cc;
-
-	screen = SDL_CreateRGBSurface(SDL_SWSURFACE, www, hhh, 32,
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-				      0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
-#else
-				      0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
-#endif
-	    );
-
-	SMPEG_setdisplay(mpeg, screen, NULL, NULL);
-	SMPEG_setdisplayregion(mpeg, 0, 0, www, hhh);
-	SMPEG_renderFrame(mpeg, 1);
-	// TODO: take a later frame, because first ones are usually black:
-	//SMPEG_renderFrame(mpeg, 420);
-
-	memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
-
-	if (!(ssi = (unsigned char *)malloc((size_t) memsize))) {
-		SDL_FreeSurface(screen);
-		printf("Cannot read frame %s ! (low mem buffer) \n", filename);
-		www = 0;
-		hhh = 0;
-		ssi = NULL;
-		p2w = 0;
-		p2h = 0;
-		return NULL;
-	}
-
-	SDL_LockSurface(screen);
-
-	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, screen->pixels, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
-		SDL_UnlockSurface(screen);
-		SDL_FreeSurface(screen);
-		free(ssi);
-		printf("Cannot read frame %s ! (scaling) \n", filename);
-		www = 0;
-		hhh = 0;
-		ssi = NULL;
-		p2w = 0;
-		p2h = 0;
-		return NULL;
-	}
-
-	SDL_UnlockSurface(screen);
-	SDL_FreeSurface(screen);
-
-	SMPEG_delete(mpeg);
-
-	cglmode = GL_RGBA;
-	return ssi;
-
 }
 
 unsigned char *read_imagefile(char *filename)
@@ -1147,17 +1049,17 @@ void set_filetypes(void)
 	xsuff[54] = ".TGA";
 	tsuff[54] = 1;
 	xsuff[55] = ".mpg";
-	tsuff[55] = 3;
+	tsuff[55] = 5;
 	xsuff[56] = ".MPG";
-	tsuff[56] = 3;
+	tsuff[56] = 5;
 	xsuff[57] = ".mpe";
-	tsuff[57] = 3;
+	tsuff[57] = 5;
 	xsuff[58] = ".MPE";
-	tsuff[58] = 3;
+	tsuff[58] = 5;
 	xsuff[59] = ".mpeg";
-	tsuff[59] = 3;
+	tsuff[59] = 5;
 	xsuff[60] = ".MPEG";
-	tsuff[60] = 3;
+	tsuff[60] = 5;
 	xsuff[61] = ".avi";
 	tsuff[61] = 5;
 	xsuff[62] = ".AVI";
@@ -1182,9 +1084,9 @@ void set_filetypes(void)
 	nsuff[0] = "UNKNOWN";
 	nsuff[1] = "PICTURE";
 	nsuff[2] = "TEXT";
-	nsuff[3] = "VIDEO-MPEG1";
+	nsuff[3] = "UNUSED FILETYPE";
 	nsuff[4] = "AUDIO-WAV";
-	nsuff[5] = "VIDEO-AVI";
+	nsuff[5] = "VIDEO";
 	nsuff[6] = "AUDIO-MP3";
 }
 
@@ -1849,12 +1751,6 @@ void leodir(void)
 	TDFSB_WAS_NOREAD = 0;
 	TDFSB_TEX_NUM = 0;
 	TDFSB_TEX_NAMES = NULL;
-	if (TDFSB_MPEG_FILE) {
-		SMPEG_stop(TDFSB_MPEG_HANDLE);
-		SMPEG_delete(TDFSB_MPEG_HANDLE);
-		SDL_FreeSurface(TDFSB_MPEG_SURFACE);
-	}
-	TDFSB_MPEG_FILE = NULL;
 	if (TDFSB_MP3_FILE) {
 		SMPEG_stop(TDFSB_MP3_HANDLE);
 		SMPEG_delete(TDFSB_MP3_HANDLE);
@@ -2066,40 +1962,7 @@ void leodir(void)
 				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				locpx = locpz = 0;
 				locpy = locsy - 1;
-			} else if (temptype == 3) {
-				locptr = read_mpegframe(fullpath);
-				if (!locptr) {
-					printf("MPEG FAILED: %s\n", fullpath);
-					locptr = NULL;
-					uni0 = 0;
-					uni1 = 0;
-					uni2 = 0;
-					uni3 = 0;
-					temptype = 0;
-					locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-					locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-					locpx = locpz = 0;
-					locpy = locsy - 1;
-				} else {
-					uni0 = p2w;
-					uni1 = p2h;
-					uni2 = cglmode;
-					uni3 = 1;	/* width height colormode texture */
-					printf("MPEG: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
-					if (www < hhh) {
-						locsx = locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
-						locsy = (hhh * (locsx)) / www;
-					} else {
-						locsy = ((GLfloat) log(((double)hhh / 128) + 1)) + 1;
-						locsx = locsz = (www * (locsy)) / hhh;
-					}
-					locsz = (2 * 2.88) / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
-					locpx = locpz = 0;
-					locpy = locsy - 1;
-					TDFSB_TEX_NUM++;
-				}
 			} else if (temptype == 5) {
-				printf("AVI file found");
 				locptr = read_videoframe(fullpath);
 				if (!locptr) {
 					printf("Reading video frame from %s failed\n", fullpath);
@@ -2544,20 +2407,10 @@ void display(void)
 			TDFSB_MP3_FILE = NULL;
 		}
 	}
-	if (TDFSB_MPEG_FILE) {
-		play_mpeg();
-		if (SMPEG_status(TDFSB_MPEG_HANDLE) == SMPEG_ERROR) {
-			printf("MPEG ERROR stopping %s\n", TDFSB_MPEG_FILE->name);
-			SMPEG_stop(TDFSB_MPEG_HANDLE);
-			SMPEG_delete(TDFSB_MPEG_HANDLE);
-			SDL_FreeSurface(TDFSB_MPEG_SURFACE);
-			TDFSB_MPEG_FILE = NULL;
-		}
-	}
 
 	if (TDFSB_MEDIA_FILE) {
 		play_avi();
-		// TODO: add error handling
+		// TODO: add error handling + what if the video is finished?
 	}
 
 	if (TDFSB_HAVE_MOUSE) {
@@ -3401,65 +3254,13 @@ int speckey(int key)
 			break;
 		case SDLK_RETURN:
 			if (TDFSB_OBJECT_SELECTED) {
-				if ((TDFSB_MPEG_FILE != TDFSB_OBJECT_SELECTED) && (TDFSB_OBJECT_SELECTED->regtype == 3)) {
+				if (TDFSB_OBJECT_SELECTED->regtype == 5) {
+					// Ensure any playing MP3 is stopped
 					if (TDFSB_MP3_FILE) {
 						SMPEG_stop(TDFSB_MP3_HANDLE);
 						SMPEG_delete(TDFSB_MP3_HANDLE);
 						TDFSB_MP3_FILE = NULL;
 					}
-					if (TDFSB_MPEG_FILE) {
-						printf("MPEG Stop %s\n", TDFSB_MPEG_FILE->name);
-						TDFSB_MPEG_FILE = NULL;
-						SMPEG_stop(TDFSB_MPEG_HANDLE);
-						SMPEG_delete(TDFSB_MPEG_HANDLE);
-						SDL_FreeSurface(TDFSB_MPEG_SURFACE);
-					}
-					printf("MPEG Start %s\n", fullpath);
-
-					TDFSB_MPEG_HANDLE = SMPEG_new(fullpath, &TDFSB_MPEG_INFO, 1);
-					if (SMPEG_error(TDFSB_MPEG_HANDLE)) {
-						printf(" * small error, trying without audio\n");
-						TDFSB_MPEG_HANDLE = SMPEG_new(fullpath, &TDFSB_MPEG_INFO, 0);
-						if (SMPEG_error(TDFSB_MPEG_HANDLE)) {
-							printf("Error opening mpeg file (opening).\n");
-							SMPEG_delete(TDFSB_MPEG_HANDLE);
-							break;
-						}
-						SMPEG_enableaudio(TDFSB_MPEG_HANDLE, 0);
-						SMPEG_enablevideo(TDFSB_MPEG_HANDLE, 1);
-					} else {
-						SMPEG_enableaudio(TDFSB_MPEG_HANDLE, 1);
-						SMPEG_enablevideo(TDFSB_MPEG_HANDLE, 1);
-					}
-
-					if (!(TDFSB_MPEG_INFO.has_video)) {
-						printf("Error opening mpeg file (info).\n");
-						SMPEG_delete(TDFSB_MPEG_HANDLE);
-						break;
-					}
-					TDFSB_MPEG_SURFACE = SDL_CreateRGBSurface(SDL_SWSURFACE, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1, 32,
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-										  0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
-#else
-										  0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
-#endif
-					    );
-					TDFSB_MPEG_FRAMENO = 1;
-					SMPEG_setdisplay(TDFSB_MPEG_HANDLE, TDFSB_MPEG_SURFACE, 0, 0);
-					SMPEG_scaleXY(TDFSB_MPEG_HANDLE, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
-					SMPEG_renderFrame(TDFSB_MPEG_HANDLE, TDFSB_MPEG_FRAMENO);
-
-					TDFSB_MPEG_FILE = TDFSB_OBJECT_SELECTED;
-
-					SMPEG_loop(TDFSB_MPEG_HANDLE, 1);
-					SMPEG_play(TDFSB_MPEG_HANDLE);
-				} else if ((TDFSB_MPEG_FILE == TDFSB_OBJECT_SELECTED) && (TDFSB_OBJECT_SELECTED->regtype == 3)) {
-					SMPEG_stop(TDFSB_MPEG_HANDLE);
-					printf("MPEG stop %s\n", TDFSB_MPEG_FILE->name);
-					TDFSB_MPEG_FILE = NULL;
-					SMPEG_delete(TDFSB_MPEG_HANDLE);
-					SDL_FreeSurface(TDFSB_MPEG_SURFACE);
-				} else if (TDFSB_OBJECT_SELECTED->regtype == 5) {
 					if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
 						GstState state;
 						gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
@@ -3549,13 +3350,6 @@ int speckey(int key)
 						SMPEG_delete(TDFSB_MP3_HANDLE);
 						TDFSB_MP3_FILE = NULL;
 					} else {
-						if (TDFSB_MPEG_FILE) {
-							SMPEG_stop(TDFSB_MPEG_HANDLE);
-							printf("MPEG Stop %s\n", TDFSB_MPEG_FILE->name);
-							TDFSB_MPEG_FILE = NULL;
-							SMPEG_delete(TDFSB_MPEG_HANDLE);
-							SDL_FreeSurface(TDFSB_MPEG_SURFACE);
-						}
 						if (TDFSB_MP3_FILE) {
 							printf("MP3 Stop %s\n", TDFSB_MP3_FILE->name);
 							SMPEG_stop(TDFSB_MP3_HANDLE);
@@ -3564,7 +3358,7 @@ int speckey(int key)
 						}
 
 						printf("MP3 Start %s\n", fullpath);
-						TDFSB_MP3_HANDLE = SMPEG_new(fullpath, &TDFSB_MPEG_INFO, 1);
+						TDFSB_MP3_HANDLE = SMPEG_new(fullpath, &TDFSB_MP3_INFO, 1);
 						if (SMPEG_error(TDFSB_MP3_HANDLE)) {
 							printf("Error opening mpeg file (opening).\n");
 							SMPEG_delete(TDFSB_MP3_HANDLE);
