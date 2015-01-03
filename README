@@ -45,6 +45,7 @@ OpenGL/GLU/glut (       Linux/FreeBSD:  look at your distribution
                                         with BeOS,
                                         for glut look at http://www.bebits.com
                 )
+libmagic-dev	For mimetype identification
 
 On Ubuntu, you can install all build-time dependencies with:
 

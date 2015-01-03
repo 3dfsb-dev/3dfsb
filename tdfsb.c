@@ -60,7 +60,10 @@
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
 
+// For saving pixbuf's to a file
 #include <gtk/gtk.h>
+
+#include <magic.h>
 
 #ifndef _GLUfuncptr
 #define _GLUfuncptr void*
@@ -347,6 +350,9 @@ static GstGLDisplay *sdl_gl_display;
 // GstBuffer with the new frame
 GstBuffer *videobuffer;
 
+// Mimetype database handle
+magic_t magic;
+
 static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 {
 	switch (GST_MESSAGE_TYPE(msg)) {
@@ -385,6 +391,8 @@ void cleanup_media_player()
 void ende(int code)
 {
 	cleanup_media_player();
+
+	magic_close(magic);	// Mimetype database
 
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
@@ -1858,6 +1866,10 @@ void leodir(void)
 					}
 				}
 			}
+
+// TODO: use contents-based mimetype instead of extension-based "identifizierung"
+			const char *mime = magic_file(magic, fullpath); 
+			printf("Got mimetype: %s\n", mime);
 
 /* Data File Loading + Setting Parameters */
 			if ((mode & 0x1F) == 1 || (mode & 0x1F) == 11) {
@@ -3706,6 +3718,10 @@ int main(int argc, char **argv)
 	}
 	// Init GStreamer
 	gst_init(&argc, &argv);
+
+	// Init mimetype database
+	magic = magic_open(MAGIC_MIME_TYPE); 
+	magic_load(magic, NULL);
 
 	info = SDL_GetVideoInfo();
 	if (!info) {
