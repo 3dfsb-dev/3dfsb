@@ -37,7 +37,6 @@ and the sdl-config script.
 
 SDL             (http://www.libsdl.org)
 SDL_image       (http://www.libsdl.org/projects/SDL_image/index.html)
-SMPEG           (http://www.lokigames.com/development/smpeg.php3)
 OpenGL/GLU/glut (       Linux/FreeBSD:  look at your distribution
                                         if that fails:
                                         http://www.rpmfind.net/

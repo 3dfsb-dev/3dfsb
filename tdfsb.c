@@ -36,7 +36,6 @@
 #include <GL/glut.h>
 #include <SDL.h>
 #include <SDL_image.h>
-#include <smpeg/smpeg.h>
 
 #include <gst/gst.h>
 
@@ -166,9 +165,7 @@ int TDFSB_MW_STEPS = 1;
 long TDFSB_US_RUN = 0;
 int TDFSB_CSE_FLAG = 1;
 
-SMPEG *TDFSB_MP3_HANDLE = NULL;
-SMPEG_Info TDFSB_MP3_INFO;
-struct tree_entry *TDFSB_MP3_FILE, *TDFSB_MEDIA_FILE;
+struct tree_entry *TDFSB_MEDIA_FILE;
 
 // Used to limit the number of video texture changes for performance
 unsigned int framecounter;
@@ -384,11 +381,6 @@ void ende(int code)
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
 		free(TDFSB_TEX_NAMES);
-	if (TDFSB_MP3_FILE) {
-		SMPEG_stop(TDFSB_MP3_HANDLE);
-		SMPEG_delete(TDFSB_MP3_HANDLE);
-	}
-	TDFSB_MP3_FILE = NULL;
 	if (DRN != 0) {
 		help = root;
 		while (help) {
@@ -413,7 +405,7 @@ void ende(int code)
 	exit(code);
 }
 
-void play_avi()
+void play_media()
 {
 	// Ensure we don't refresh the texture if nothing changed
 	if (framecounter == displayedframenumber) {
@@ -1137,7 +1129,7 @@ void setup_help(void)
 	strcat(help_str, "DOWN      backward   HOME     start pos\n");
 	strcat(help_str, "L/R     step aside   LMB  select object\n");
 	strcat(help_str, "END    ground zero   +RMB|CTRL appr.obj\n");
-	strcat(help_str, "F7/F8  max fps +/-   +ENTER ply mpg/mp3\n");
+	strcat(help_str, "F7/F8  max fps +/-   +ENTER  play media\n");
 
 	sprintf(tmpstr, "\"%c\"      filenames   \"%c\"   ground cross\n", TDFSB_KC_NAME, TDFSB_KC_GCR);
 	strcat(help_str, tmpstr);
@@ -1751,11 +1743,8 @@ void leodir(void)
 	TDFSB_WAS_NOREAD = 0;
 	TDFSB_TEX_NUM = 0;
 	TDFSB_TEX_NAMES = NULL;
-	if (TDFSB_MP3_FILE) {
-		SMPEG_stop(TDFSB_MP3_HANDLE);
-		SMPEG_delete(TDFSB_MP3_HANDLE);
-	}
-	TDFSB_MP3_FILE = NULL;
+
+	// TODO: stop any playing media file?
 
 	if (DRN != 0) {
 		help = root;
@@ -2399,17 +2388,8 @@ void display(void)
 	find_entry = NULL;
 	find_dist = 10000000;
 
-	if (TDFSB_MP3_FILE) {
-		if (SMPEG_status(TDFSB_MP3_HANDLE) == SMPEG_ERROR) {
-			printf("MP3 ERROR stopping %s\n", TDFSB_MP3_FILE->name);
-			SMPEG_stop(TDFSB_MP3_HANDLE);
-			SMPEG_delete(TDFSB_MP3_HANDLE);
-			TDFSB_MP3_FILE = NULL;
-		}
-	}
-
 	if (TDFSB_MEDIA_FILE) {
-		play_avi();
+		play_media();
 		// TODO: add error handling + what if the video is finished?
 	}
 
@@ -3253,134 +3233,97 @@ int speckey(int key)
 			}
 			break;
 		case SDLK_RETURN:
-			if (TDFSB_OBJECT_SELECTED) {
-				if (TDFSB_OBJECT_SELECTED->regtype == 5 || TDFSB_OBJECT_SELECTED->regtype == 6) {
-					// Ensure any playing MP3 is stopped
-					if (TDFSB_MP3_FILE) {
-						SMPEG_stop(TDFSB_MP3_HANDLE);
-						SMPEG_delete(TDFSB_MP3_HANDLE);
-						TDFSB_MP3_FILE = NULL;
-					}
-					if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
-						GstState state;
-						gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
+			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == 5 || TDFSB_OBJECT_SELECTED->regtype == 6)) {
+				if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
+					GstState state;
+					gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
 
-						if (state != GST_STATE_PAUSED) {
-							// We are already playing the selected videofile, so pause it
-							gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
-						} else {
-							// We have selected this file already but it is already paused so play it again
-							// TODO: check if the video has finished and if it has, start it again
-							gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
-						}
-
-					} else {
-						// If a media pipeline was already constructed, then stop it and cleanup
-						if (pipeline && GST_IS_ELEMENT(pipeline)) {
-							gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
-							gst_object_unref(pipeline);
-						}
-
-						printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
-
-						GstBus *bus = NULL;
-						GstElement *fakesink = NULL;
-						GstState state;
-						const gchar *platform;
-
-						// create a new pipeline
-						GError *error = NULL;
-						gchar *uri = gst_filename_to_uri(fullpath, &error);
-						if (error != NULL) {
-							g_print("Could not convert filename %s to URI: %s\n", fullpath, error->message);
-							g_error_free(error);
-							exit(1);
-						}
-
-						gchar *descr;
-						if (TDFSB_OBJECT_SELECTED->regtype == 5) {
-							descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
-						} else {
-							descr = g_strdup_printf("uridecodebin uri=%s ! audioconvert ! playsink", uri);
-						}
-						// Use this for pulseaudio:
-						// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=tdfsb", uri);
-
-						//printf("gst-launch-1.0 %s\n", descr);
-						pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
-
-						if (error != NULL) {
-							g_print("could not construct pipeline: %s\n", error->message);
-							g_error_free(error);
-							exit(-1);
-						}
-						// Debugging:
-						GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
-
-						bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-						gst_bus_add_signal_watch(bus);
-						/* For later: g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), loop);
-						   g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
-						   g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop); */
-						gst_bus_enable_sync_message_emission(bus);
-						g_signal_connect(bus, "sync-message", G_CALLBACK(sync_bus_call), NULL);
-						gst_object_unref(bus);
-
-						/* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
-						 * shared with the sdl one */
+					if (state != GST_STATE_PAUSED) {
+						// We are already playing the selected videofile, so pause it
 						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
-						state = GST_STATE_PAUSED;
-						if (gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
-							g_debug("failed to pause pipeline\n");
-							return -1;
-						}
-
-						fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "fakesink0");
-						if (fakesink && GST_IS_ELEMENT(pipeline)) {
-							g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
-							g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
-							gst_object_unref(fakesink);
-						} else {
-							// There is no fakesink, must be because we are playing an audio file
-						}
-
-						framecounter = 0;
-						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
-
-						TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
-					}
-				} else if (TDFSB_OBJECT_SELECTED->regtype == 6) {
-					if (TDFSB_MP3_FILE == TDFSB_OBJECT_SELECTED) {
-						SMPEG_stop(TDFSB_MP3_HANDLE);
-						SMPEG_delete(TDFSB_MP3_HANDLE);
-						TDFSB_MP3_FILE = NULL;
 					} else {
-						if (TDFSB_MP3_FILE) {
-							printf("MP3 Stop %s\n", TDFSB_MP3_FILE->name);
-							SMPEG_stop(TDFSB_MP3_HANDLE);
-							SMPEG_delete(TDFSB_MP3_HANDLE);
-							TDFSB_MP3_FILE = NULL;
-						}
-
-						printf("MP3 Start %s\n", fullpath);
-						TDFSB_MP3_HANDLE = SMPEG_new(fullpath, &TDFSB_MP3_INFO, 1);
-						if (SMPEG_error(TDFSB_MP3_HANDLE)) {
-							printf("Error opening mpeg file (opening).\n");
-							SMPEG_delete(TDFSB_MP3_HANDLE);
-							break;
-						}
-
-						SMPEG_enableaudio(TDFSB_MP3_HANDLE, 1);
-						SMPEG_enablevideo(TDFSB_MP3_HANDLE, 0);
-
-						SMPEG_loop(TDFSB_MP3_HANDLE, 1);
-						SMPEG_play(TDFSB_MP3_HANDLE);
-
-						TDFSB_MP3_FILE = TDFSB_OBJECT_SELECTED;
-
+						// We have selected this file already but it is already paused so play it again
+						// TODO: check if the video has finished and if it has, start it again
+						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 					}
+
+				} else {
+					// If a media pipeline was already constructed, then stop it and cleanup
+					if (pipeline && GST_IS_ELEMENT(pipeline)) {
+						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
+						gst_object_unref(pipeline);
+					}
+
+					printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
+
+					GstBus *bus = NULL;
+					GstElement *fakesink = NULL;
+					GstState state;
+					const gchar *platform;
+
+					// create a new pipeline
+					GError *error = NULL;
+					gchar *uri = gst_filename_to_uri(fullpath, &error);
+					if (error != NULL) {
+						g_print("Could not convert filename %s to URI: %s\n", fullpath, error->message);
+						g_error_free(error);
+						exit(1);
+					}
+
+					gchar *descr;
+					if (TDFSB_OBJECT_SELECTED->regtype == 5) {
+						descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
+					} else {
+						descr = g_strdup_printf("uridecodebin uri=%s ! audioconvert ! playsink", uri);
+					}
+					// Use this for pulseaudio:
+					// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=tdfsb", uri);
+
+					//printf("gst-launch-1.0 %s\n", descr);
+					pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
+
+					if (error != NULL) {
+						g_print("could not construct pipeline: %s\n", error->message);
+						g_error_free(error);
+						exit(-1);
+					}
+					// Debugging:
+					GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
+
+					bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
+					gst_bus_add_signal_watch(bus);
+					/* For later: g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), loop);
+					   g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
+					   g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop); */
+					gst_bus_enable_sync_message_emission(bus);
+					g_signal_connect(bus, "sync-message", G_CALLBACK(sync_bus_call), NULL);
+					gst_object_unref(bus);
+
+					/* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
+					 * shared with the sdl one */
+					gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
+					state = GST_STATE_PAUSED;
+					if (gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
+						g_debug("failed to pause pipeline\n");
+						return -1;
+					}
+
+					fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "fakesink0");
+					if (fakesink && GST_IS_ELEMENT(pipeline)) {
+						g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
+						g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
+						gst_object_unref(fakesink);
+					} else {
+						// There is no fakesink, must be because we are playing an audio file
+					}
+
+					framecounter = 0;
+					gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
+
+					TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 				}
 			}
+			break;
 
 		default:
 			return (1);
