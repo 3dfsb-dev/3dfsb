@@ -2620,7 +2620,7 @@ void display(void)
 	}
 
 /* animate audio file */
-	if (TDFSB_MP3_FILE) {
+	if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == 6) {
 		glPushMatrix();
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_grn);
 		glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_grn);
@@ -2634,17 +2634,17 @@ void display(void)
 		glEnable(GL_BLEND);
 		glDepthMask(GL_FALSE);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		if (((TDFSB_MP3_FILE->mode) & 0x20)) {
-			glTranslatef(TDFSB_MP3_FILE->posx, 0.0, TDFSB_MP3_FILE->posz);
+		if (((TDFSB_MEDIA_FILE->mode) & 0x20)) {
+			glTranslatef(TDFSB_MEDIA_FILE->posx, 0.0, TDFSB_MEDIA_FILE->posz);
 			glScalef(0.25, 0.25, 0.25);
 		} else {
-			glTranslatef(TDFSB_MP3_FILE->posx, TDFSB_MP3_FILE->posy, TDFSB_MP3_FILE->posz);
+			glTranslatef(TDFSB_MEDIA_FILE->posx, TDFSB_MEDIA_FILE->posy, TDFSB_MEDIA_FILE->posz);
 		}
 		glRotatef(90, 1.0, 0.0, 0.0);
-		glScalef(TDFSB_MP3_FILE->scalex * 0.6, 1 + TDFSB_MP3_FILE->scaley + TDFSB_MP3_FILE->scaley * (-(GLfloat) (abs((((int)spin) & 0xF) - 8)) / 10), TDFSB_MP3_FILE->scaley * 0.6);
+		glScalef(TDFSB_MEDIA_FILE->scalex * 0.6, 1 + TDFSB_MEDIA_FILE->scaley + TDFSB_MEDIA_FILE->scaley * (-(GLfloat) (abs((((int)spin) & 0xF) - 8)) / 10), TDFSB_MEDIA_FILE->scaley * 0.6);
 		glCallList(TDFSB_AudioList);
 		glRotatef(90, 1.0, 0.0, 0.0);
-		glScalef(0.5, 0.75 * TDFSB_MP3_FILE->scaley * ((GLfloat) (abs((((int)spin) & 0xF) - 8)) / 10), 0.5);
+		glScalef(0.5, 0.75 * TDFSB_MEDIA_FILE->scaley * ((GLfloat) (abs((((int)spin) & 0xF) - 8)) / 10), 0.5);
 		glCallList(TDFSB_AudioList);
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 		glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
@@ -3254,7 +3254,7 @@ int speckey(int key)
 			break;
 		case SDLK_RETURN:
 			if (TDFSB_OBJECT_SELECTED) {
-				if (TDFSB_OBJECT_SELECTED->regtype == 5) {
+				if (TDFSB_OBJECT_SELECTED->regtype == 5 || TDFSB_OBJECT_SELECTED->regtype == 6) {
 					// Ensure any playing MP3 is stopped
 					if (TDFSB_MP3_FILE) {
 						SMPEG_stop(TDFSB_MP3_HANDLE);
@@ -3297,7 +3297,12 @@ int speckey(int key)
 							exit(1);
 						}
 
-						gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
+						gchar *descr;
+						if (TDFSB_OBJECT_SELECTED->regtype == 5) {
+							descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
+						} else {
+							descr = g_strdup_printf("uridecodebin uri=%s ! audioconvert ! playsink", uri);
+						}
 						// Use this for pulseaudio:
 						// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=tdfsb", uri);
 
@@ -3331,13 +3336,13 @@ int speckey(int key)
 						}
 
 						fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "fakesink0");
-						if (!fakesink || !GST_IS_ELEMENT(pipeline)) {
-							printf("Could not get fakesink from stream, something's wrong!\n");
-							exit(7);
+						if (fakesink && GST_IS_ELEMENT(pipeline)) {
+							g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
+							g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
+							gst_object_unref(fakesink);
+						} else {
+							// There is no fakesink, must be because we are playing an audio file
 						}
-						g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
-						g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
-						gst_object_unref(fakesink);
 
 						framecounter = 0;
 						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
