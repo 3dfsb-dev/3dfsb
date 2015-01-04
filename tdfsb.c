@@ -1716,7 +1716,10 @@ void leodir(void)
 			strcat(fullpath, entry);
 			printf("Loading: %s ", entry);
 			lstat(fullpath, &buf);
+
 /* What ist it? */
+			// LSB 5 of "mode" contains a flag that says whether the file is a symlinkk or not
+			// LSB 4-1 of "mode" contain an enum; 0 for regular file, 1 for directory, 2 for char, 3 for block, 4 for fifo
 			if (S_ISREG(buf.st_mode) != 0)
 				mode = 0;
 			else if (S_ISDIR(buf.st_mode) != 0)
@@ -1766,7 +1769,8 @@ void leodir(void)
 			}
 
 /* Check Permissions */
-			if ((mode & 0x1F) == 1) {
+			// Note: when there is no permission, the mode is modified again...
+			if ((mode & 0x1F) == 1) {	// Is it a directory?
 				if ((access(fullpath, R_OK) < 0) || (access(fullpath, X_OK) < 0)) {
 					mode = ((mode & 0x1F) + 10) | (mode & 0x20);
 					TDFSB_WAS_NOREAD = 1;
@@ -1777,12 +1781,12 @@ void leodir(void)
 			}
 
 /* Data File Identifizierung */
-			if ((mode & 0x1F) == 0) {
+			if ((mode & 0x1F) == 0) {	// Is it a regular file?
 				temptype = get_file_type(fullpath);
 			}
 
 /* Data File Loading + Setting Parameters */
-			if ((mode & 0x1F) == 1 || (mode & 0x1F) == 11) {
+			if ((mode & 0x1F) == 1 || (mode & 0x1F) == 11) {	// Directory
 				temptype = 0;
 				locpx = locpz = locpy = 0;
 				locsx = locsy = locsz = 1;
@@ -1809,7 +1813,7 @@ void leodir(void)
 					uni0 = p2w;
 					uni1 = p2h;
 					uni2 = cglmode;
-					uni3 = 0;	/* width height colormode NULL */
+					uni3 = 0;
 					printf("IMAGE: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
 					if (www < hhh) {
 						locsx = locsz = ((GLfloat) log(((double)www / 512) + 1)) + 1;
@@ -1875,7 +1879,7 @@ void leodir(void)
 						printf("TEXT: %ld char.\n", c1);
 					}
 				}
-				locsy = 4.5;	/* locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1; */
+				locsy = 4.5;	// locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
 				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				locpx = locpz = 0;
 				locpy = locsy - 1;
@@ -1883,7 +1887,7 @@ void leodir(void)
 				locptr = read_videoframe(fullpath);
 				if (!locptr) {
 					printf("Reading video frame from %s failed\n", fullpath);
-					locptr = NULL;	/* superfluous, because it is NULL here because of the if(!locprt) above anyway... */
+					locptr = NULL;	// superfluous, because it is NULL here because of the if(!locprt) above anyway...
 					uni0 = 0;
 					uni1 = 0;
 					uni2 = 0;
@@ -1897,7 +1901,7 @@ void leodir(void)
 					uni0 = p2w;
 					uni1 = p2h;
 					uni2 = cglmode;
-					uni3 = 31337;	/* this is not used and later gets filled in with the texture id */
+					uni3 = 31337;	// this is not used and later gets filled in with the texture id
 					printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
 					if (www < hhh) {
 						locsx = locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
@@ -1930,7 +1934,7 @@ void leodir(void)
 				uni1 = 0;
 				uni2 = 0;
 				uni3 = 0;
-				temptype = 0;
+				temptype = UNKNOWNFILE;
 				locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
 				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				locpx = locpz = 0;
@@ -2045,7 +2049,9 @@ void leodir(void)
 
 	c1 = 0;
 	for (help = root; help; help = help->next) {
+		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
 		if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == IMAGEFILE)) && (((help->mode) & 0x1F) == 0)) {
+			// TODO?: if (help->uniptr) {
 			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
