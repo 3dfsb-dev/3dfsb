@@ -3195,7 +3195,7 @@ int speckey(int key)
 				} else {
 					cleanup_media_player();	// Stop all other playing media
 
-					printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
+					//printf("Starting GStreamer pipeline for URI %s\n", fullpath);
 
 					GstBus *bus = NULL;
 					GstElement *fakesink = NULL;
