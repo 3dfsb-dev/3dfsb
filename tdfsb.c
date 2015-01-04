@@ -1785,7 +1785,12 @@ void leodir(void)
 				temptype = get_file_type(fullpath);
 			}
 
+			// Count the number of textures we'll need, so we can allocate them already below
+			if (temptype == IMAGEFILE || temptype == VIDEOFILE)
+				TDFSB_TEX_NUM++;
+
 /* Data File Loading + Setting Parameters */
+			/*
 			if ((mode & 0x1F) == 1 || (mode & 0x1F) == 11) {	// Directory
 				temptype = 0;
 				locpx = locpz = locpy = 0;
@@ -1941,6 +1946,7 @@ void leodir(void)
 				locpy = locsy - 1;
 				printf(" .. done.\n");
 			}
+			*/
 
 			insert(entry, linkpath, mode, buf.st_size, temptype, uni0, uni1, uni2, uni3, www, hhh, locptr, locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
@@ -2039,9 +2045,7 @@ void leodir(void)
 			help = NULL;
 	}
 
-/* Creating Texture Objects */
-	printf("%ld Textures loaded\n", (long int)TDFSB_TEX_NUM);
-
+/* Creating Texture Names (which get filled in later) */
 	if (!(TDFSB_TEX_NAMES = (GLuint *) malloc((TDFSB_TEX_NUM + 1) * sizeof(GLuint)))) {
 		printf("low mem while alloc texture names\n");
 		ende(1);
@@ -2049,10 +2053,13 @@ void leodir(void)
 	glGenTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 
 	c1 = 0;
-	for (help = root; help; help = help->next) {
+	for (help = root; help; help = help->next)
+		help->uniint3 = TDFSB_TEX_NAMES[c1++];
+
+	/*
 		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
 		if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == IMAGEFILE)) && (((help->mode) & 0x1F) == 0)) {
-			// TODO?: if (help->uniptr) {
+			// TODO?: if (help->uniptr) 
 			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -2065,6 +2072,8 @@ void leodir(void)
 			c1++;
 		}
 	}
+	*/
+
 
 /* Creating Display List */
 
