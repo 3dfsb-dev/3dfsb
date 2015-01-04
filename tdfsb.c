@@ -863,6 +863,8 @@ void tdb_gen_list(void)
 	glEnable(GL_BLEND);
 	glDepthMask(GL_FALSE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Draw text files
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
 		mx = help->posx;
@@ -894,6 +896,8 @@ void tdb_gen_list(void)
 			glPopMatrix();
 		}
 	}
+
+	// Draw audio files
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
 		mx = help->posx;
@@ -926,6 +930,8 @@ void tdb_gen_list(void)
 			glPopMatrix();
 		}
 	}
+
+	// Draw symlinks?
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
 		mx = help->posx;
@@ -956,6 +962,8 @@ void tdb_gen_list(void)
 			glPopMatrix();
 		}
 	}
+
+	// Draw symlinks?
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
 		mx = help->posx;
@@ -2596,6 +2604,7 @@ void display(void)
 	glCallList(TDFSB_BlendList);
 	glPopMatrix();
 
+	// Draw cube around selected object
 	if (TDFSB_OBJECT_SELECTED) {
 		glPushMatrix();
 
@@ -3202,7 +3211,7 @@ int speckey(int key)
 				} else {
 					cleanup_media_player();	// Stop all other playing media
 
-					printf("Starting AVI player using GStreamer of URI %s\n", fullpath);
+					//printf("Starting GStreamer pipeline for URI %s\n", fullpath);
 
 					GstBus *bus = NULL;
 					GstElement *fakesink = NULL;
