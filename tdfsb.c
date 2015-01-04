@@ -1948,6 +1948,11 @@ void leodir(void)
 			}
 			*/
 
+			locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+			locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
+			locpy = locsy - 1;		// vertical position of the object
+			// Note: locpx (posx) and locpy (posy) are calculated later on
+
 			insert(entry, linkpath, mode, buf.st_size, temptype, uni0, uni1, uni2, uni3, www, hhh, locptr, locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
 		}
@@ -1956,7 +1961,7 @@ void leodir(void)
 
 	free(entry_list);
 
-/* calculate object positions */
+/* calculate object's x,z positions (y is altitude and stays untouched here) */
 
 	DRNratio = (int)sqrt((double)DRN);
 	help = root;
@@ -2120,6 +2125,8 @@ void leodir(void)
 
 	TDFSB_ANIM_COUNT = 0;
 	TDFSB_ANIM_STATE = 0;
+
+	// TODO: Start a new thread that loads the textures (of images and video files) and sets them
 
 	return;
 }
