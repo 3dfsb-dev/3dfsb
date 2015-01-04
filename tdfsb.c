@@ -774,13 +774,13 @@ void tdb_gen_list(void)
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
-		if (((help->mode) & 0x1F) == 1 || ((help->mode) & 0x1F) == 11) {
+		if (((help->mode) & 0x1F) == 1 || ((help->mode) & 0x1F) == 11) {	// Directory
 			glTranslatef(mx, my, mz);
 			if ((help->mode) & 0x20)
 				glutSolidSphere(0.5, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
-		} else if (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) {
+		} else if (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) {	// Regular file
 			if (((help->regtype == IMAGEFILE) || (help->regtype == VIDEOFILE)) && ((help->mode) & 0x1F) == 0) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
@@ -932,7 +932,7 @@ void tdb_gen_list(void)
 		mz = help->posz;
 		my = help->posy;
 
-		if (((help->mode) & 0x1F) >= 10) {
+		if (((help->mode) & 0x1F) >= 10) {	// Symlink check?
 			if (!mat_state) {
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_red);
 				glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_red);
@@ -962,7 +962,7 @@ void tdb_gen_list(void)
 		mz = help->posz;
 		my = help->posy;
 
-		if (((help->mode) & 0x20)) {
+		if (((help->mode) & 0x20)) {	// Symlink check?
 			if (!mat_state) {
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_gry);
 				glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_gry);
@@ -1993,6 +1993,7 @@ void leodir(void)
 	}
 
 /* Calculate Ground Grid */
+	// Calculate the X and Z spacing of the grid lines depending on the maximum size of the items to display in the grid
 	TDFSB_MAXX = TDFSB_MAXZ = 0;
 	help = root;
 	while (help) {
