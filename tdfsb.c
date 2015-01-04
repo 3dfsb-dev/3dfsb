@@ -433,12 +433,13 @@ void ende(int code)
 	exit(code);
 }
 
-char *uppercase(char *str){
-    char *newstr, *p;
-    p = newstr = strdup(str);
-    while(*p++=toupper(*p));
+char *uppercase(char *str)
+{
+	char *newstr, *p;
+	p = newstr = strdup(str);
+	while (*p++ = toupper(*p)) ;
 
-    return newstr;
+	return newstr;
 }
 
 int get_file_type(char *fullpath)
@@ -460,8 +461,8 @@ int get_file_type(char *fullpath)
 	} else {
 		// Some files are not identified by magic_file(), so we fallback to extension-based identification here
 		for (cc = 1; cc < lsuff; cc++) {
-			char * xsuff_upper = uppercase(xsuff[cc]);
-			char * ext_upper = uppercase(&(fullpath[strlen(fullpath) - strlen(xsuff[cc])]));
+			char *xsuff_upper = uppercase(xsuff[cc]);
+			char *ext_upper = uppercase(&(fullpath[strlen(fullpath) - strlen(xsuff[cc])]));
 			if (!strncmp(xsuff_upper, ext_upper, strlen(xsuff[cc]))) {
 				temptype = tsuff[cc];
 				break;
