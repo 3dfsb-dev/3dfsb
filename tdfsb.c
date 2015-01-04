@@ -2340,6 +2340,9 @@ void noDisplay(void)
 
 /* TDFSB DISPLAY FUNCTIONS contains display() warpdisplay() */
 
+/* The scene consists of some pre-made static elements (SolidList and BlendList)
+ * on top of which some dynamic things are drawn (such as audio animation and textfile contents).
+ * Textures are set and updated on the solids for displaying video. */
 void display(void)
 {
 	double odist, vlen, senx, seny, senz, find_dist;
