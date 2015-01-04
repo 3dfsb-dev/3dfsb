@@ -863,6 +863,8 @@ void tdb_gen_list(void)
 	glEnable(GL_BLEND);
 	glDepthMask(GL_FALSE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Draw text files
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
 		mx = help->posx;
@@ -894,6 +896,8 @@ void tdb_gen_list(void)
 			glPopMatrix();
 		}
 	}
+
+	// Draw audio files
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
 		mx = help->posx;
@@ -926,6 +930,8 @@ void tdb_gen_list(void)
 			glPopMatrix();
 		}
 	}
+
+	// Draw symlinks?
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
 		mx = help->posx;
@@ -956,6 +962,8 @@ void tdb_gen_list(void)
 			glPopMatrix();
 		}
 	}
+
+	// Draw symlinks?
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
 		mx = help->posx;
@@ -2580,6 +2588,7 @@ void display(void)
 	glCallList(TDFSB_BlendList);
 	glPopMatrix();
 
+	// Draw cube around selected object
 	if (TDFSB_OBJECT_SELECTED) {
 		glPushMatrix();
 
