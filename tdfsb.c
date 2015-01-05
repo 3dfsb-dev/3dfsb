@@ -2372,15 +2372,20 @@ void display(void)
 		glEnd();
 	}
 
+	// Search for selected object
+	// We keep doing this while the left mouse button is pressed, so it might be called many times per second!
+	// We go through all of the objects until we find a match
+	// We calculate the distance between us and the object (odist) then we do some calculation and finnally find a matching object...
 	for (help = root; help; help = help->next) {
-		if (TDFSB_OBJECT_SEARCH) {
+		if (TDFSB_OBJECT_SEARCH) {	// If we need to search for a selected object...
 			if (!((help->mode) & 0x20))
 				odist = sqrt((help->posx - vposx) * (help->posx - vposx) + (help->posy - vposy) * (help->posy - vposy) + (help->posz - vposz) * (help->posz - vposz));
 			else
 				odist = sqrt((help->posx - vposx) * (help->posx - vposx) + (vposy) * (vposy) + (help->posz - vposz) * (help->posz - vposz));
 
 			if (TDFSB_KEY_FINDER) {
-				if (TDFSB_KEY_FINDER == help->name[0])
+				if (TDFSB_KEY_FINDER == help->name[0]) // If the first letter matches...
+					// If this is the first match, then set it
 					if (find_entry ? (find_entry->name[0] != TDFSB_KEY_FINDER) : 1) {
 						find_entry = help;
 						tposx = (help->posx - vposx) / odist;
