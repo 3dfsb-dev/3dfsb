@@ -92,6 +92,10 @@
 #define	MIME_VIDEO	"video/"
 #define	MIME_ZIP	"application/zip"
 
+#define WEAPON_GUN	10
+
+int CURRENT_TOOL;		// The tool (or weapon) we are currently holding
+
 const SDL_VideoInfo *info = NULL;
 SDL_Event event;
 SDL_Surface *window;
@@ -2371,7 +2375,6 @@ void display(void)
 		glVertex3f(vposx, -1, vposz - 2);
 		glEnd();
 	}
-
 	// Search for selected object
 	// We keep doing this while the left mouse button is pressed, so it might be called many times per second!
 	// We go through all of the objects until we find a match
@@ -2384,7 +2387,7 @@ void display(void)
 				odist = sqrt((help->posx - vposx) * (help->posx - vposx) + (vposy) * (vposy) + (help->posz - vposz) * (help->posz - vposz));
 
 			if (TDFSB_KEY_FINDER) {
-				if (TDFSB_KEY_FINDER == help->name[0]) // If the first letter matches...
+				if (TDFSB_KEY_FINDER == help->name[0])	// If the first letter matches...
 					// If this is the first match, then set it
 					if (find_entry ? (find_entry->name[0] != TDFSB_KEY_FINDER) : 1) {
 						find_entry = help;
@@ -2992,14 +2995,14 @@ void mouse(int button, int state, int x, int y)
 		}
 		break;
 
-	case 4:	 // SDL_SCROLLUP?
+	case 4:		// SDL_SCROLLUP?
 		if (state == SDL_PRESSED)
 			uposy = vposy = vposy + TDFSB_MW_STEPS;
 		if (vposy < 0)
 			vposy = uposy = 0;
 		break;
 
-	case 5:	// SDL_SCROLLDOWN?
+	case 5:		// SDL_SCROLLDOWN?
 		if (state == SDL_PRESSED)
 			uposy = vposy = vposy - TDFSB_MW_STEPS;
 		if (vposy < 0)
@@ -3014,7 +3017,6 @@ void mouse(int button, int state, int x, int y)
 		break;
 	}
 }
-
 
 int speckey(int key)
 {
