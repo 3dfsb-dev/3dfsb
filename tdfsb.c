@@ -874,6 +874,9 @@ void tdb_gen_list(void)
 	// Draw text files
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
@@ -907,6 +910,9 @@ void tdb_gen_list(void)
 	// Draw audio files
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
@@ -941,6 +947,9 @@ void tdb_gen_list(void)
 	// Draw symlinks?
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
@@ -973,6 +982,9 @@ void tdb_gen_list(void)
 	// Draw symlinks?
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
@@ -3225,7 +3237,7 @@ int speckey(int key)
 						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
 					} else {
 						// We have selected this file already but it is already paused so play it again
-						// TODO: check if the video has finished and if it has, start it again
+						// TODO: check if the video has finished and if it has, start it again, or make it loop
 						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 					}
 
