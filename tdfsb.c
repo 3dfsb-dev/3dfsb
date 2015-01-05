@@ -92,9 +92,10 @@
 #define	MIME_VIDEO	"video/"
 #define	MIME_ZIP	"application/zip"
 
-#define TOOL_SELECTOR	10
-#define TOOL_WEAPON	20
-int CURRENT_TOOL = TOOL_WEAPON;	// The tool (or weapon) we are currently holding
+#define	NUMBER_OF_TOOLS	2
+#define TOOL_SELECTOR	0
+#define TOOL_WEAPON	1
+int CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding
 
 const SDL_VideoInfo *info = NULL;
 SDL_Event event;
@@ -1090,6 +1091,7 @@ void setup_help(void)
 	strcat(help_str, "L/R     step aside   LMB  select object\n");
 	strcat(help_str, "END    ground zero   +RMB|CTRL appr.obj\n");
 	strcat(help_str, "F7/F8  max fps +/-   +ENTER  play media\n");
+	strcat(help_str, "F9     change tool\n");
 
 	sprintf(tmpstr, "\"%c\"      filenames   \"%c\"   ground cross\n", TDFSB_KC_NAME, TDFSB_KC_GCR);
 	strcat(help_str, tmpstr);
@@ -3157,6 +3159,11 @@ int speckey(int key)
 			else
 				strcpy(throttlebuf, "Throttle:OFF");
 			TDFSB_SHOW_CONFIG_FPS = 100;
+			break;
+		case SDLK_F9:
+			CURRENT_TOOL++;
+			if (CURRENT_TOOL >= NUMBER_OF_TOOLS)
+				CURRENT_TOOL = 0;
 			break;
 
 		case SDLK_HOME:
