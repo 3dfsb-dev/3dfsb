@@ -136,6 +136,7 @@ struct tree_entry {
 	unsigned int uniint0, uniint1, uniint2, uniint3;
 	unsigned int originalwidth;
 	unsigned int originalheight;
+	unsigned int tombstone;	// object has been deleted
 	unsigned char *uniptr;	/* this can point to the contents of a textfile, or to the data of a texture */
 	off_t size;
 	struct tree_entry *next;
@@ -360,8 +361,6 @@ void stillDisplay(void);
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
 #define CAPS "video/x-raw,format=RGB"
-static GstGLContext *sdl_context;
-static GstGLDisplay *sdl_gl_display;
 
 // GstBuffer with the new frame
 GstBuffer *videobuffer;
@@ -441,7 +440,7 @@ char *uppercase(char *str)
 {
 	char *newstr, *p;
 	p = newstr = strdup(str);
-	while (*p++ = toupper(*p)) ;
+	while ((*p++ = toupper(*p))) ;
 
 	return newstr;
 }
@@ -774,6 +773,10 @@ void tdb_gen_list(void)
 
 	glNewList(TDFSB_SolidList, GL_COMPILE);
 	for (help = root; help; help = help->next) {
+		printf("Adding file %s\n", help->name);
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		glPushMatrix();
 		mx = help->posx;
 		mz = help->posz;
@@ -1543,6 +1546,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		root->uniint3 = uni3;
 		root->originalwidth = originalwidth;
 		root->originalheight = originalheight;
+		root->tombstone = 0;
 		root->posx = posx;
 		root->posy = posy;
 		root->posz = posz;
@@ -1572,6 +1576,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		(help->next)->uniint3 = uni3;
 		(help->next)->originalwidth = originalwidth;
 		(help->next)->originalheight = originalheight;
+		(help->next)->tombstone = 0;
 		(help->next)->posx = posx;
 		(help->next)->posy = posy;
 		(help->next)->posz = posz;
@@ -2332,15 +2337,18 @@ void apply_tool_on_object(struct tree_entry *object)
 	if (CURRENT_TOOL == TOOL_WEAPON) {
 		printf("TODO: Start some animation on the object to show it is being deleted ");
 		printf("and some finalization function of the object so that it is tombstoned...\n");
+		object->tombstone = 1;
 	}
+	// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
+	tdb_gen_list();
 }
 
 /* TDFSB DISPLAY FUNCTIONS contains display() warpdisplay() */
-
 void display(void)
 {
 	double odist, vlen, senx, seny, senz, find_dist;
 	struct tree_entry *find_entry;
+	struct tree_entry *object;
 
 	find_entry = NULL;
 	find_dist = 10000000;
@@ -2387,22 +2395,25 @@ void display(void)
 	// Search for selected object
 	// We keep doing this while the left mouse button is pressed, so it might be called many times per second!
 	// We go through all of the objects until we find a match
-	// We calculate the distance between us and the object (odist) then we do some calculation and finnally find a matching object...
-	for (help = root; help; help = help->next) {
+	// We calculate the distance between us and the object (odist) then we do some calculation and finally find a matching object...
+	for (object = root; object; object = object->next) {
+		if (object->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		if (TDFSB_OBJECT_SEARCH) {	// If we need to search for a selected object...
-			if (!((help->mode) & 0x20))
-				odist = sqrt((help->posx - vposx) * (help->posx - vposx) + (help->posy - vposy) * (help->posy - vposy) + (help->posz - vposz) * (help->posz - vposz));
+			if (!((object->mode) & 0x20))
+				odist = sqrt((object->posx - vposx) * (object->posx - vposx) + (object->posy - vposy) * (object->posy - vposy) + (object->posz - vposz) * (object->posz - vposz));
 			else
-				odist = sqrt((help->posx - vposx) * (help->posx - vposx) + (vposy) * (vposy) + (help->posz - vposz) * (help->posz - vposz));
+				odist = sqrt((object->posx - vposx) * (object->posx - vposx) + (vposy) * (vposy) + (object->posz - vposz) * (object->posz - vposz));
 
 			if (TDFSB_KEY_FINDER) {
-				if (TDFSB_KEY_FINDER == help->name[0])	// If the first letter matches...
+				if (TDFSB_KEY_FINDER == object->name[0])	// If the first letter matches...
 					// If this is the first match, then set it
 					if (find_entry ? (find_entry->name[0] != TDFSB_KEY_FINDER) : 1) {
-						find_entry = help;
-						tposx = (help->posx - vposx) / odist;
-						tposz = (help->posz - vposz) / odist;
-						tposy = (help->posy - vposy) / odist;
+						find_entry = object;
+						tposx = (object->posx - vposx) / odist;
+						tposz = (object->posz - vposz) / odist;
+						tposy = (object->posy - vposy) / odist;
 						viewm();
 					}
 			} else {
@@ -2413,22 +2424,22 @@ void display(void)
 					senx = tposx * odist + vposx;
 					seny = tposy * odist + vposy;
 					senz = tposz * odist + vposz;
-					if (!((help->mode) & 0x20)) {
-						if ((senx > help->posx - help->scalex) && (senx < help->posx + help->scalex))
-							if ((seny > help->posy - help->scaley) && (seny < help->posy + help->scaley))
-								if (((senz > help->posz - help->scalez) && (senz < help->posz + help->scalez)) || ((help->regtype == IMAGEFILE || help->regtype == VIDEOFILE) && ((senz > help->posz - help->scalez - 1) && (senz < help->posz + help->scalez + 1)))) {
-									find_entry = help;
+					if (!((object->mode) & 0x20)) {
+						if ((senx > object->posx - object->scalex) && (senx < object->posx + object->scalex))
+							if ((seny > object->posy - object->scaley) && (seny < object->posy + object->scaley))
+								if (((senz > object->posz - object->scalez) && (senz < object->posz + object->scalez)) || ((object->regtype == IMAGEFILE || object->regtype == VIDEOFILE) && ((senz > object->posz - object->scalez - 1) && (senz < object->posz + object->scalez + 1)))) {
+									find_entry = object;
 									find_dist = odist;
 								}
 					} else {
-						if ((senx > (help->posx) - 1) && (senx < (help->posx) + 1))
+						if ((senx > (object->posx) - 1) && (senx < (object->posx) + 1))
 							if ((seny > -1) && (seny < 1))
-								if ((senz > (help->posz) - 1) && (senz < (help->posz) + 1)) {
-									find_entry = help;
+								if ((senz > (object->posz) - 1) && (senz < (object->posz) + 1)) {
+									find_entry = object;
 									find_dist = odist;
 								}
 					}
-					// TODO: if find_entry was found, then do the selected tool action on it
+					// If find_entry was found, then do the selected tool action on it
 					if (find_entry)
 						apply_tool_on_object(find_entry);
 				}
@@ -2440,23 +2451,28 @@ void display(void)
 				TDFSB_OBJECT_SELECTED = NULL;
 			}
 		}
+		// If the application of the tool above deleted the object, then skip all the rest
+		if (object->tombstone)
+			continue;	// Skip files that are tombstoned
 
-		mx = help->posx;
-		mz = help->posz;
-		my = help->posy;
+		// How can it be that object is NULL when we call tdb_gen_list()
+		// The for loop condition above should exclude that...
+		mx = object->posx;
+		mz = object->posz;
+		my = object->posy;
 
 		if (TDFSB_FILENAMES) {
 			glPushMatrix();
-			if (!((help->mode) & 0x20))
+			if (!((object->mode) & 0x20))
 				glTranslatef(mx, my, mz);
 			else
 				glTranslatef(mx, 1.5, mz);
 
 			if (TDFSB_FILENAMES == 1) {
 				glRotatef(spin + (fmod(c1, 10) * 36), 0, 1, 0);
-				if (!((help->mode) & 0x20))
-					glTranslatef(help->scalex, 1.5, help->scalez);
-				glRotatef(90 - 45 * (help->scalez / help->scalex), 0, 1, 0);
+				if (!((object->mode) & 0x20))
+					glTranslatef(object->scalex, 1.5, object->scalez);
+				glRotatef(90 - 45 * (object->scalez / object->scalex), 0, 1, 0);
 			} else {
 				u = mx - vposx;
 				v = mz - vposz;
@@ -2466,11 +2482,11 @@ void display(void)
 				} else {
 					glRotated(fmod(315 - asin(u / r) * (180 / PI), 360), 0, 1, 0);
 				}
-				if (((help->mode) == 0x00) && ((help->regtype) == IMAGEFILE))
+				if (((object->mode) == 0x00) && ((object->regtype) == IMAGEFILE))
 					glRotatef(-45, 0, 1, 0);
-				if (!((help->mode) & 0x20)) {
-					glTranslatef((help->scalex) + 1, 1.5, (help->scalez) + 1);
-					glRotatef(90 - 45 * (help->scalez / help->scalex), 0, 1, 0);
+				if (!((object->mode) & 0x20)) {
+					glTranslatef((object->scalex) + 1, 1.5, (object->scalez) + 1);
+					glRotatef(90 - 45 * (object->scalez / object->scalex), 0, 1, 0);
 				} else {
 					glTranslatef(0, 0.5, 0);
 					glRotatef(45, 0, 1, 0);
@@ -2479,37 +2495,37 @@ void display(void)
 
 			glScalef(0.005, 0.005, 0.005);
 
-			if (!((help->mode) & 0x20)) {
+			if (!((object->mode) & 0x20)) {
 				glColor4f(TDFSB_FN_R, TDFSB_FN_G, TDFSB_FN_B, 1.0);
-				glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)help->name) / 2, 0, 0);
-				for (c2 = 0; c2 < help->namelen; c2++)
-					glutStrokeCharacter(GLUT_STROKE_ROMAN, help->name[c2]);
+				glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->name) / 2, 0, 0);
+				for (c2 = 0; c2 < object->namelen; c2++)
+					glutStrokeCharacter(GLUT_STROKE_ROMAN, object->name[c2]);
 			} else {
 				fh = ((((GLfloat) spin) - 180) / 360);
 				if (fh < 0) {
 					fh = fabs(fh);
 					glColor4f(1 - (fh), 1 - (fh), 1 - (fh), 1.0);
-					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)help->name) / 2, 0, 0);
-					for (c2 = 0; c2 < help->namelen; c2++)
-						glutStrokeCharacter(GLUT_STROKE_ROMAN, help->name[c2]);
+					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->name) / 2, 0, 0);
+					for (c2 = 0; c2 < object->namelen; c2++)
+						glutStrokeCharacter(GLUT_STROKE_ROMAN, object->name[c2]);
 
 				} else {
 					fh = fabs(fh);
 					glColor4f(0.85 - (fh), 1 - (fh), 1 - (fh), 1.0);
-					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)help->linkpath) / 2, 0, 0);
-					for (c2 = 0; c2 < strlen(help->linkpath); c2++)
-						glutStrokeCharacter(GLUT_STROKE_ROMAN, help->linkpath[c2]);
+					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->linkpath) / 2, 0, 0);
+					for (c2 = 0; c2 < strlen(object->linkpath); c2++)
+						glutStrokeCharacter(GLUT_STROKE_ROMAN, object->linkpath[c2]);
 				}
 			}
 			glPopMatrix();
 		}
 /* see if we entered a sphere */
-		if (((help->mode) == 1) || (((help->mode) & 0x20) && (((help->mode) & 0x1F) < 10))) {
+		if (((object->mode) == 1) || (((object->mode) & 0x20) && (((object->mode) & 0x1F) < 10))) {
 			if (vposx > mx - 1 && vposx < mx + 1 && vposz > mz - 1 && vposz < mz + 1 && vposy < 1.5) {
 				temp_trunc[0] = 0;
 				strcat(TDFSB_CURRENTPATH, "/");
-				strcat(TDFSB_CURRENTPATH, help->name);
-				if ((help->mode != 0x21) && (help->mode & 0x20))
+				strcat(TDFSB_CURRENTPATH, object->name);
+				if ((object->mode != 0x21) && (object->mode & 0x20))
 					strcat(TDFSB_CURRENTPATH, "/..");
 				if (realpath(TDFSB_CURRENTPATH, &temp_trunc[0]) != &temp_trunc[0]) {
 					printf("Cannot resolve path \"%s\".\n", TDFSB_CURRENTPATH);
@@ -2523,9 +2539,9 @@ void display(void)
 			}
 		}
 /* animate text files */
-		if ((help->regtype == TEXTFILE) && ((help->mode) & 0x1F) == 0) {
+		if ((object->regtype == TEXTFILE) && ((object->mode) & 0x1F) == 0) {
 			glPushMatrix();
-			if (((help->mode) & 0x20)) {
+			if (((object->mode) & 0x20)) {
 				cc = 16;
 				c1 = 8;
 				glScalef(0.0625, 0.125, 0.0625);
@@ -2533,9 +2549,9 @@ void display(void)
 				cc = c1 = 1;
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
-			c3 = (int)strlen((char *)help->uniptr);
+			c3 = (int)strlen((char *)object->uniptr);
 			c2 = 0;
-			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((help->uniint2) = (help->uniint2) + (help->uniint0))))), (200 * mz) * cc);
+			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((object->uniint2) = (object->uniint2) + (object->uniint0))))), (200 * mz) * cc);
 			u = mx - vposx;
 			v = mz - vposz;
 			r = sqrt(u * u + v * v);
@@ -2547,15 +2563,15 @@ void display(void)
 			glTranslatef(+mono / 2, 0, 0);
 			do {
 				glTranslatef(-mono, -150, 0);
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, help->uniptr[c2 + (help->uniint1)]);
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->uniptr[c2 + (object->uniint1)]);
 				c2++;
 			}
 			while (c2 < c3 && c2 < 10);
-			if (help->uniint2 >= 150) {
-				(help->uniint1) = (help->uniint1) + 1;
-				if ((help->uniint1) >= c3 - 10)
-					(help->uniint1) = 0;
-				(help->uniint2) = 0;
+			if (object->uniint2 >= 150) {
+				(object->uniint1) = (object->uniint1) + 1;
+				if ((object->uniint1) >= c3 - 10)
+					(object->uniint1) = 0;
+				(object->uniint2) = 0;
 			}
 			glPopMatrix();
 		}
@@ -3221,7 +3237,6 @@ int speckey(int key)
 					GstBus *bus = NULL;
 					GstElement *fakesink = NULL;
 					GstState state;
-					const gchar *platform;
 
 					// create a new pipeline
 					GError *error = NULL;
