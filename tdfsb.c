@@ -92,9 +92,9 @@
 #define	MIME_VIDEO	"video/"
 #define	MIME_ZIP	"application/zip"
 
-#define WEAPON_GUN	10
-
-int CURRENT_TOOL;		// The tool (or weapon) we are currently holding
+#define TOOL_SELECTOR	10
+#define TOOL_WEAPON	20
+int CURRENT_TOOL = TOOL_WEAPON;	// The tool (or weapon) we are currently holding
 
 const SDL_VideoInfo *info = NULL;
 SDL_Event event;
@@ -2326,6 +2326,15 @@ void noDisplay(void)
 	TDFSB_FUNC_IDLE = stillDisplay;
 }
 
+// When a user points to and clicks on an object, the tool is applied on it
+void apply_tool_on_object(struct tree_entry *object)
+{
+	if (CURRENT_TOOL == TOOL_WEAPON) {
+		printf("TODO: Start some animation on the object to show it is being deleted ");
+		printf("and some finalization function of the object so that it is tombstoned...\n");
+	}
+}
+
 /* TDFSB DISPLAY FUNCTIONS contains display() warpdisplay() */
 
 void display(void)
@@ -2419,6 +2428,9 @@ void display(void)
 									find_dist = odist;
 								}
 					}
+					// TODO: if find_entry was found, then do the selected tool action on it
+					if (find_entry)
+						apply_tool_on_object(find_entry);
 				}
 			}
 
