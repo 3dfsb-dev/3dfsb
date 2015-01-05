@@ -2700,6 +2700,7 @@ void display(void)
 		glCallList(TDFSB_HelpList);
 		glPopMatrix();
 	} else {
+		// If an object is selected, then show it onscreen
 		if (TDFSB_OBJECT_SELECTED) {
 			glPushMatrix();
 			glTranslatef(10, SWY - 18, 0);
@@ -2911,103 +2912,104 @@ void MouseLift(int x, int y)
 
 void mouse(int button, int state, int x, int y)
 {
-	if (!TDFSB_ANIM_STATE) {
-		switch (button) {
+	if (TDFSB_ANIM_STATE)
+		return;		// We don't react to mouse buttons when we are in animation state, such as flying somewhere
 
-		case SDL_BUTTON_LEFT:
-			if (!TDFSB_CLASSIC_NAV) {
-				if (state == SDL_PRESSED) {
-					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_OBJECT_SEARCH = 1;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_KEY = keyfinder;
-					TDFSB_FUNC_UPKEY = keyupfinder;
+	switch (button) {
 
-				} else {
-					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_OBJECT_SEARCH = 0;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_KEY = keyboard;
-					TDFSB_FUNC_UPKEY = keyboardup;
-				}
-				break;
-			} else {
-				if (state == SDL_PRESSED) {
-					forwardkeybuf = 1;
-					backwardkeybuf = 0;
-					TDFSB_FUNC_IDLE = move;
-				} else {
-					forwardkeybuf = 0;
-					check_still();
-				}
-				break;
-			}
-
-		case SDL_BUTTON_RIGHT:
-			if (!TDFSB_CLASSIC_NAV) {
-				if (state == SDL_PRESSED && TDFSB_OBJECT_SELECTED) {
-					stop_move();
-					TDFSB_OA = TDFSB_OBJECT_SELECTED;
-					TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
-					TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
-					TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
-					TDFSB_ANIM_STATE = 1;
-					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_OBJECT_SEARCH = 0;
-					TDFSB_FUNC_KEY = keyboard;
-					TDFSB_FUNC_UPKEY = keyboardup;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_IDLE = approach;
-				}
-				break;
-			} else {
-				if (state == SDL_PRESSED) {
-					backwardkeybuf = 1;
-					forwardkeybuf = 0;
-					TDFSB_FUNC_IDLE = move;
-				} else {
-					backwardkeybuf = 0;
-					check_still();
-				}
-				break;
-			}
-
-		case SDL_BUTTON_MIDDLE:
+	case SDL_BUTTON_LEFT:
+		if (!TDFSB_CLASSIC_NAV) {
 			if (state == SDL_PRESSED) {
-				TDFSB_FUNC_MOTION = MouseLift;
-				TDFSB_FUNC_IDLE = move;
+				TDFSB_OBJECT_SELECTED = NULL;
+				TDFSB_OBJECT_SEARCH = 1;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_KEY = keyfinder;
+				TDFSB_FUNC_UPKEY = keyupfinder;
+
 			} else {
-				TDFSB_FUNC_MOTION = MouseMove;
-				TDFSB_FUNC_IDLE = move;
-				check_still();
-				uposy = vposy;
+				TDFSB_OBJECT_SELECTED = NULL;
+				TDFSB_OBJECT_SEARCH = 0;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_KEY = keyboard;
+				TDFSB_FUNC_UPKEY = keyboardup;
 			}
 			break;
-
-		case 4:
-			if (state == SDL_PRESSED)
-				uposy = vposy = vposy + TDFSB_MW_STEPS;
-			if (vposy < 0)
-				vposy = uposy = 0;
-			break;
-
-		case 5:
-			if (state == SDL_PRESSED)
-				uposy = vposy = vposy - TDFSB_MW_STEPS;
-			if (vposy < 0)
-				vposy = uposy = 0;
-			break;
-
-		case 6:
-			printf("No function for button 6 yet\n");
-			break;
-
-		default:
+		} else {
+			if (state == SDL_PRESSED) {
+				forwardkeybuf = 1;
+				backwardkeybuf = 0;
+				TDFSB_FUNC_IDLE = move;
+			} else {
+				forwardkeybuf = 0;
+				check_still();
+			}
 			break;
 		}
-	}
 
+	case SDL_BUTTON_RIGHT:
+		if (!TDFSB_CLASSIC_NAV) {
+			if (state == SDL_PRESSED && TDFSB_OBJECT_SELECTED) {
+				stop_move();
+				TDFSB_OA = TDFSB_OBJECT_SELECTED;
+				TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
+				TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
+				TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
+				TDFSB_ANIM_STATE = 1;
+				TDFSB_OBJECT_SELECTED = NULL;
+				TDFSB_OBJECT_SEARCH = 0;
+				TDFSB_FUNC_KEY = keyboard;
+				TDFSB_FUNC_UPKEY = keyboardup;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_IDLE = approach;
+			}
+			break;
+		} else {
+			if (state == SDL_PRESSED) {
+				backwardkeybuf = 1;
+				forwardkeybuf = 0;
+				TDFSB_FUNC_IDLE = move;
+			} else {
+				backwardkeybuf = 0;
+				check_still();
+			}
+			break;
+		}
+
+	case SDL_BUTTON_MIDDLE:
+		if (state == SDL_PRESSED) {
+			TDFSB_FUNC_MOTION = MouseLift;
+			TDFSB_FUNC_IDLE = move;
+		} else {
+			TDFSB_FUNC_MOTION = MouseMove;
+			TDFSB_FUNC_IDLE = move;
+			check_still();
+			uposy = vposy;
+		}
+		break;
+
+	case 4:	 // SDL_SCROLLUP?
+		if (state == SDL_PRESSED)
+			uposy = vposy = vposy + TDFSB_MW_STEPS;
+		if (vposy < 0)
+			vposy = uposy = 0;
+		break;
+
+	case 5:	// SDL_SCROLLDOWN?
+		if (state == SDL_PRESSED)
+			uposy = vposy = vposy - TDFSB_MW_STEPS;
+		if (vposy < 0)
+			vposy = uposy = 0;
+		break;
+
+	case 6:
+		printf("No function for button 6 yet\n");
+		break;
+
+	default:
+		break;
+	}
 }
+
 
 int speckey(int key)
 {
