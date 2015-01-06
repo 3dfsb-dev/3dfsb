@@ -9,7 +9,7 @@ Homepage: https://github.com/tomvanbraeckel/3dfsb
 
 Forked, maintained and improved by Tom Van Braeckel, originally written by Leander Seige.
 
-USAGEb
+USAGE
 =====
 
 3dfsb
