@@ -338,13 +338,24 @@ char *param[] = { "BallDetail", "StartDir", "MaxTexSize", "WindowWidth", "Window
 	"MoveVelocity", "LookVelocity", "NameRed", "NameGreen", "NameBlue", "LiftSteps", "CustomExecuteString"
 };
 
-void *value[] = { &TDFSB_BALL_DETAIL, &TDFSB_CURRENTPATH, &TDFSB_MAX_TEX_SIZE, &SWX, &SWY, &PWX, &PWY, &PWD, &TDFSB_GG_R, &TDFSB_GG_G, &TDFSB_GG_B,
-	&TDFSB_ICUBE, &TDFSB_SHOW_DOTFILES, &TDFSB_DIR_ALPHASORT, &TDFSB_BG_R, &TDFSB_BG_G, &TDFSB_BG_B,
-	&TDFSB_CONFIG_FULLSCREEN, NULL, &TDFSB_SHOW_CROSSHAIR, &TDFSB_GROUND_CROSS, &TDFSB_CLASSIC_NAV,
-	&TDFSB_MODE_FLY, &TDFSB_FPS_CONFIG, &mousespeed, &headspeed, &TDFSB_FN_R, &TDFSB_FN_G, &TDFSB_FN_B, &TDFSB_MW_STEPS, &TDFSB_CUSTOM_EXECUTE_STRING
+void *value[] = { &TDFSB_BALL_DETAIL, &TDFSB_CURRENTPATH, &TDFSB_MAX_TEX_SIZE, &SWX, &SWY, &PWX, &PWY,
+	&PWD, &TDFSB_GG_R, &TDFSB_GG_G, &TDFSB_GG_B,
+	&TDFSB_ICUBE, &TDFSB_SHOW_DOTFILES, &TDFSB_DIR_ALPHASORT,
+	&TDFSB_BG_R, &TDFSB_BG_G, &TDFSB_BG_B,
+	&TDFSB_CONFIG_FULLSCREEN, NULL, &TDFSB_SHOW_CROSSHAIR, &TDFSB_GROUND_CROSS, &TDFSB_CLASSIC_NAV, &TDFSB_MODE_FLY,
+	&TDFSB_FPS_CONFIG, &mousespeed, &headspeed, &TDFSB_FN_R, &TDFSB_FN_G, &TDFSB_FN_B, &TDFSB_MW_STEPS, &TDFSB_CUSTOM_EXECUTE_STRING
 };
 
-char *pdef[] = { "20", "/", "256", "400", "300", "640", "480", "0", "0.2", "0.2", "0.6", "yes", "no", "yes", "0.0", "0.0", "0.0", "no", "X", "yes", "no", "no", "no", "25", "2.0", "1.0", "1.0", "1.0", "1.0", "1", "cd \"%s\"; xterm&" };
+// Default values
+// Too conservative: char *pdef[] = { "20", "/", "256", "400", "300", "640", "480", "0", "0.2", "0.2", "0.6", "yes", "no", "yes", "0.0", "0.0", "0.0", "no", "X", "yes", "no", "no", "no", "25", "2.0", "1.0", "1.0", "1.0", "1.0", "1", "cd \"%s\"; xterm&" };
+char *pdef[] = { "20", "/", "0", "1024", "768", "1024", "768",
+"0", "0.2", "0.2",	// TDFSB_GG_R/G/B
+"0.6", "yes", "no", "yes",
+"0.0", "0.0", "0.0",	// TDFSB_BG_R/G/B
+"yes", "X", "yes", "no", "no", "yes",
+"0", "2.0", "1.3",	// FPS, mousespeed, headspeed
+"1.0", "1.0", "1.0",	// TDFSB_FB_R/G/B
+"1", "cd \"%s\"; xterm&" };
 int type[] = { 1, 2, 1, 1, 1, 1, 1, 1, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 5, 4, 4, 4, 4, 1, 3, 3, 3, 3, 3, 1, 2 };	/* 1=int 2=string 3=float 4=boolean 5=keyboard */
 
 int paracnt = 31;
