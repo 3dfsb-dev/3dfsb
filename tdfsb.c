@@ -92,6 +92,11 @@
 #define	MIME_VIDEO	"video/"
 #define	MIME_ZIP	"application/zip"
 
+#define	NUMBER_OF_TOOLS	2
+#define TOOL_SELECTOR	0
+#define TOOL_WEAPON	1
+int CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding
+
 const SDL_VideoInfo *info = NULL;
 SDL_Event event;
 SDL_Surface *window;
@@ -132,6 +137,7 @@ struct tree_entry {
 	unsigned int uniint0, uniint1, uniint2, uniint3;
 	unsigned int originalwidth;
 	unsigned int originalheight;
+	unsigned int tombstone;	// object has been deleted
 	unsigned char *uniptr;	/* this can point to the contents of a textfile, or to the data of a texture */
 	off_t size;
 	struct tree_entry *next;
@@ -356,8 +362,6 @@ void stillDisplay(void);
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
 #define CAPS "video/x-raw,format=RGB"
-static GstGLContext *sdl_context;
-static GstGLDisplay *sdl_gl_display;
 
 // GstBuffer with the new frame
 GstBuffer *videobuffer;
@@ -437,7 +441,7 @@ char *uppercase(char *str)
 {
 	char *newstr, *p;
 	p = newstr = strdup(str);
-	while (*p++ = toupper(*p)) ;
+	while ((*p++ = toupper(*p))) ;
 
 	return newstr;
 }
@@ -770,6 +774,10 @@ void tdb_gen_list(void)
 
 	glNewList(TDFSB_SolidList, GL_COMPILE);
 	for (help = root; help; help = help->next) {
+		//printf("Adding file %s\n", help->name);
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		glPushMatrix();
 		mx = help->posx;
 		mz = help->posz;
@@ -867,6 +875,9 @@ void tdb_gen_list(void)
 	// Draw text files
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
@@ -900,6 +911,9 @@ void tdb_gen_list(void)
 	// Draw audio files
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
@@ -934,6 +948,9 @@ void tdb_gen_list(void)
 	// Draw symlinks?
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
@@ -966,6 +983,9 @@ void tdb_gen_list(void)
 	// Draw symlinks?
 	mat_state = 0;
 	for (help = root; help; help = help->next) {
+		if (help->tombstone)
+			continue;	// Skip files that are tombstoned
+
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
@@ -1009,7 +1029,7 @@ void set_filetypes(void)
 	/* These filetypes are known to be mis- or non-identified by libmagic, so we fallback to extensions for those */
 	xsuff[0] = "ERROR";
 	tsuff[0] = UNKNOWNFILE;
-	xsuff[1] = ".mp3";	// Some .mp3's are misidentified, they seem to be part of a stream or something...
+	xsuff[1] = ".mp3";	// Some .mp3's are misidentified, they seem to be part of a stream and are missing headers...
 	tsuff[1] = AUDIOFILE;
 	xsuff[2] = ".txt";	// Some .txt's are identified as "application/data"
 	tsuff[2] = TEXTFILE;
@@ -1071,6 +1091,7 @@ void setup_help(void)
 	strcat(help_str, "L/R     step aside   LMB  select object\n");
 	strcat(help_str, "END    ground zero   +RMB|CTRL appr.obj\n");
 	strcat(help_str, "F7/F8  max fps +/-   +ENTER  play media\n");
+	strcat(help_str, "F9     change tool\n");
 
 	sprintf(tmpstr, "\"%c\"      filenames   \"%c\"   ground cross\n", TDFSB_KC_NAME, TDFSB_KC_GCR);
 	strcat(help_str, tmpstr);
@@ -1539,6 +1560,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		root->uniint3 = uni3;
 		root->originalwidth = originalwidth;
 		root->originalheight = originalheight;
+		root->tombstone = 0;
 		root->posx = posx;
 		root->posy = posy;
 		root->posz = posz;
@@ -1568,6 +1590,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		(help->next)->uniint3 = uni3;
 		(help->next)->originalwidth = originalwidth;
 		(help->next)->originalheight = originalheight;
+		(help->next)->tombstone = 0;
 		(help->next)->posx = posx;
 		(help->next)->posy = posy;
 		(help->next)->posz = posz;
@@ -1792,173 +1815,172 @@ void leodir(void)
 			if ((mode & 0x1F) == 0) {	// Is it a regular file?
 				temptype = get_file_type(fullpath);
 			}
-
 			// Count the number of textures we'll need, so we can allocate them already below
 			if (temptype == IMAGEFILE || temptype == VIDEOFILE)
 				TDFSB_TEX_NUM++;
 
 /* Data File Loading + Setting Parameters */
 			/*
-			if ((mode & 0x1F) == 1 || (mode & 0x1F) == 11) {	// Directory
-				temptype = 0;
-				locpx = locpz = locpy = 0;
-				locsx = locsy = locsz = 1;
-				locptr = NULL;
-				uni0 = 0;
-				uni1 = 0;
-				uni2 = 0;
-				printf(" .. DIR done.\n");
-			} else if (temptype == IMAGEFILE) {
-				locptr = read_imagefile(fullpath);
-				if (!locptr) {
-					printf("IMAGE FAILED: %s\n", fullpath);
-					locptr = NULL;
-					uni0 = 0;
-					uni1 = 0;
-					uni2 = 0;
-					uni3 = 0;
-					temptype = 0;
-					locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-					locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-					locpx = locpz = 0;
-					locpy = locsy - 1;
-				} else {
-					uni0 = p2w;
-					uni1 = p2h;
-					uni2 = cglmode;
-					uni3 = 0;
-					printf("IMAGE: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
-					if (www < hhh) {
-						locsx = locsz = ((GLfloat) log(((double)www / 512) + 1)) + 1;
-						locsy = (hhh * (locsx)) / www;
-					} else {
-						locsy = ((GLfloat) log(((double)hhh / 512) + 1)) + 1;
-						locsx = locsz = (www * (locsy)) / hhh;
-					}
-					locsz = 1.44 / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
-					locpx = locpz = 0;
-					locpy = locsy - 1;
-					TDFSB_TEX_NUM++;
-				}
-			} else if (temptype == TEXTFILE) {
-				uni0 = 0;
-				uni1 = 0;
-				uni2 = 0;
-				uni3 = 0;
-				c1 = 0;
-				c2 = 0;
-				c3 = 0;
-				fileptr = fopen(fullpath, "r");
-				if (!fileptr) {
-					printf("TEXT FAILED: %s\n", fullpath);
-					locptr = NULL;
-					temptype = 0;
-				} else {
-					do {
-						c3 = fgetc(fileptr);
-						if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
-							c1++;
-					}
-					while (c3 != EOF);
-					rewind(fileptr);
-					locptr = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
-					if (!locptr) {
-						printf("TEXT FAILED: %s\n", fullpath);
-						fclose(fileptr);
-						locptr = NULL;
-						temptype = 0;
-					} else {
-						temptr = locptr;
-						uni0 = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
-						for (c3 = 0; c3 < 10; c3++) {
-							*temptr = ' ';
-							temptr++;
-						}
-						do {
-							c3 = fgetc(fileptr);
-							if ((c3 != EOF) && (isgraph(c3) || c3 == ' ')) {
-								*temptr = (unsigned char)c3;
-								temptr++;
-								c2++;
-							}
-						}
-						while ((c3 != EOF) && (c2 < c1));
-						for (c3 = 0; c3 < 10; c3++) {
-							*temptr = ' ';
-							temptr++;
-						}
-						*temptr = 0;
-						fclose(fileptr);
-						printf("TEXT: %ld char.\n", c1);
-					}
-				}
-				locsy = 4.5;	// locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
-				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-				locpx = locpz = 0;
-				locpy = locsy - 1;
-			} else if (temptype == VIDEOFILE) {
-				locptr = read_videoframe(fullpath);
-				if (!locptr) {
-					printf("Reading video frame from %s failed\n", fullpath);
-					locptr = NULL;	// superfluous, because it is NULL here because of the if(!locprt) above anyway...
-					uni0 = 0;
-					uni1 = 0;
-					uni2 = 0;
-					uni3 = 0;
-					temptype = 0;
-					locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-					locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-					locpx = locpz = 0;
-					locpy = locsy - 1;
-				} else {
-					uni0 = p2w;
-					uni1 = p2h;
-					uni2 = cglmode;
-					uni3 = 31337;	// this is not used and later gets filled in with the texture id
-					printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
-					if (www < hhh) {
-						locsx = locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
-						locsy = (hhh * (locsx)) / www;
-					} else {
-						locsy = ((GLfloat) log(((double)hhh / 128) + 1)) + 1;
-						locsx = locsz = (www * (locsy)) / hhh;
-					}
-					locsz = (2 * 2.88) / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
-					locpx = locpz = 0;
-					locpy = locsy - 1;
-					TDFSB_TEX_NUM++;
-				}
-			} else if (temptype == AUDIOFILE) {
-				uni0 = 0;
-				uni1 = 0;
-				uni2 = 0;
-				uni3 = 0;
-				c1 = 0;
-				c2 = 0;
-				c3 = 0;
-				locptr = NULL;
-				locsy = locsx = locsz = ((GLfloat) log(((double)buf.st_size / (65536 * 20) + 1))) + 1;
-				locpx = locpz = 0;
-				locpy = locsy - 1;
-				printf("\n");
-			} else {
-				locptr = NULL;
-				uni0 = 0;
-				uni1 = 0;
-				uni2 = 0;
-				uni3 = 0;
-				temptype = UNKNOWNFILE;
-				locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-				locpx = locpz = 0;
-				locpy = locsy - 1;
-				printf(" .. done.\n");
-			}
-			*/
+			   if ((mode & 0x1F) == 1 || (mode & 0x1F) == 11) {     // Directory
+			   temptype = 0;
+			   locpx = locpz = locpy = 0;
+			   locsx = locsy = locsz = 1;
+			   locptr = NULL;
+			   uni0 = 0;
+			   uni1 = 0;
+			   uni2 = 0;
+			   printf(" .. DIR done.\n");
+			   } else if (temptype == IMAGEFILE) {
+			   locptr = read_imagefile(fullpath);
+			   if (!locptr) {
+			   printf("IMAGE FAILED: %s\n", fullpath);
+			   locptr = NULL;
+			   uni0 = 0;
+			   uni1 = 0;
+			   uni2 = 0;
+			   uni3 = 0;
+			   temptype = 0;
+			   locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
+			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+			   locpx = locpz = 0;
+			   locpy = locsy - 1;
+			   } else {
+			   uni0 = p2w;
+			   uni1 = p2h;
+			   uni2 = cglmode;
+			   uni3 = 0;
+			   printf("IMAGE: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
+			   if (www < hhh) {
+			   locsx = locsz = ((GLfloat) log(((double)www / 512) + 1)) + 1;
+			   locsy = (hhh * (locsx)) / www;
+			   } else {
+			   locsy = ((GLfloat) log(((double)hhh / 512) + 1)) + 1;
+			   locsx = locsz = (www * (locsy)) / hhh;
+			   }
+			   locsz = 1.44 / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
+			   locpx = locpz = 0;
+			   locpy = locsy - 1;
+			   TDFSB_TEX_NUM++;
+			   }
+			   } else if (temptype == TEXTFILE) {
+			   uni0 = 0;
+			   uni1 = 0;
+			   uni2 = 0;
+			   uni3 = 0;
+			   c1 = 0;
+			   c2 = 0;
+			   c3 = 0;
+			   fileptr = fopen(fullpath, "r");
+			   if (!fileptr) {
+			   printf("TEXT FAILED: %s\n", fullpath);
+			   locptr = NULL;
+			   temptype = 0;
+			   } else {
+			   do {
+			   c3 = fgetc(fileptr);
+			   if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
+			   c1++;
+			   }
+			   while (c3 != EOF);
+			   rewind(fileptr);
+			   locptr = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
+			   if (!locptr) {
+			   printf("TEXT FAILED: %s\n", fullpath);
+			   fclose(fileptr);
+			   locptr = NULL;
+			   temptype = 0;
+			   } else {
+			   temptr = locptr;
+			   uni0 = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
+			   for (c3 = 0; c3 < 10; c3++) {
+			   *temptr = ' ';
+			   temptr++;
+			   }
+			   do {
+			   c3 = fgetc(fileptr);
+			   if ((c3 != EOF) && (isgraph(c3) || c3 == ' ')) {
+			   *temptr = (unsigned char)c3;
+			   temptr++;
+			   c2++;
+			   }
+			   }
+			   while ((c3 != EOF) && (c2 < c1));
+			   for (c3 = 0; c3 < 10; c3++) {
+			   *temptr = ' ';
+			   temptr++;
+			   }
+			   *temptr = 0;
+			   fclose(fileptr);
+			   printf("TEXT: %ld char.\n", c1);
+			   }
+			   }
+			   locsy = 4.5; // locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
+			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+			   locpx = locpz = 0;
+			   locpy = locsy - 1;
+			   } else if (temptype == VIDEOFILE) {
+			   locptr = read_videoframe(fullpath);
+			   if (!locptr) {
+			   printf("Reading video frame from %s failed\n", fullpath);
+			   locptr = NULL;       // superfluous, because it is NULL here because of the if(!locprt) above anyway...
+			   uni0 = 0;
+			   uni1 = 0;
+			   uni2 = 0;
+			   uni3 = 0;
+			   temptype = 0;
+			   locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
+			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+			   locpx = locpz = 0;
+			   locpy = locsy - 1;
+			   } else {
+			   uni0 = p2w;
+			   uni1 = p2h;
+			   uni2 = cglmode;
+			   uni3 = 31337;        // this is not used and later gets filled in with the texture id
+			   printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
+			   if (www < hhh) {
+			   locsx = locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
+			   locsy = (hhh * (locsx)) / www;
+			   } else {
+			   locsy = ((GLfloat) log(((double)hhh / 128) + 1)) + 1;
+			   locsx = locsz = (www * (locsy)) / hhh;
+			   }
+			   locsz = (2 * 2.88) / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
+			   locpx = locpz = 0;
+			   locpy = locsy - 1;
+			   TDFSB_TEX_NUM++;
+			   }
+			   } else if (temptype == AUDIOFILE) {
+			   uni0 = 0;
+			   uni1 = 0;
+			   uni2 = 0;
+			   uni3 = 0;
+			   c1 = 0;
+			   c2 = 0;
+			   c3 = 0;
+			   locptr = NULL;
+			   locsy = locsx = locsz = ((GLfloat) log(((double)buf.st_size / (65536 * 20) + 1))) + 1;
+			   locpx = locpz = 0;
+			   locpy = locsy - 1;
+			   printf("\n");
+			   } else {
+			   locptr = NULL;
+			   uni0 = 0;
+			   uni1 = 0;
+			   uni2 = 0;
+			   uni3 = 0;
+			   temptype = UNKNOWNFILE;
+			   locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
+			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+			   locpx = locpz = 0;
+			   locpy = locsy - 1;
+			   printf(" .. done.\n");
+			   }
+			 */
 
 			locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 			locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-			locpy = locsy - 1;		// vertical position of the object
+			locpy = locsy - 1;	// vertical position of the object
 			// Note: locpx (posx) and locpy (posy) are calculated later on
 
 			insert(entry, linkpath, mode, buf.st_size, temptype, uni0, uni1, uni2, uni3, www, hhh, locptr, locpx, locpy, locpz, locsx, locsy, locsz);
@@ -2070,23 +2092,21 @@ void leodir(void)
 		help->uniint3 = TDFSB_TEX_NAMES[c1++];
 
 	/*
-		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
-		if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == IMAGEFILE)) && (((help->mode) & 0x1F) == 0)) {
-			// TODO?: if (help->uniptr) 
-			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-			glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) help->uniint2, help->uniint0, help->uniint1, 0, (GLenum) help->uniint2, GL_UNSIGNED_BYTE, help->uniptr);
+	   // "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
+	   if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == IMAGEFILE)) && (((help->mode) & 0x1F) == 0)) {
+	   glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
+	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	   glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) help->uniint2, help->uniint0, help->uniint1, 0, (GLenum) help->uniint2, GL_UNSIGNED_BYTE, help->uniptr);
 
-			help->uniint3 = TDFSB_TEX_NAMES[c1];
-			c1++;
-		}
-	}
-	*/
-
+	   help->uniint3 = TDFSB_TEX_NAMES[c1];
+	   c1++;
+	   }
+	   }
+	 */
 
 /* Creating Display List */
 
@@ -2175,6 +2195,7 @@ void move(void)
 	if (vposy < 0)
 		vposy = 0;
 
+	//printf("vpos = (%f,%f,%f)\n", vposx, vposy, vposz);
 	TDFSB_FUNC_DISP();
 }
 
@@ -2338,7 +2359,16 @@ void noDisplay(void)
 	TDFSB_FUNC_IDLE = stillDisplay;
 }
 
-/* TDFSB DISPLAY FUNCTIONS contains display() warpdisplay() */
+// When a user points to and clicks on an object, the tool is applied on it
+void apply_tool_on_object(struct tree_entry *object)
+{
+	if (CURRENT_TOOL == TOOL_WEAPON) {
+		// printf("TODO: Start some animation on the object to show it is being deleted ");
+		object->tombstone = 1;	// Mark the object as deleted
+	}
+	// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
+	tdb_gen_list();
+}
 
 /* The scene consists of some pre-made static elements (SolidList and BlendList)
  * on top of which some dynamic things are drawn (such as audio animation and textfile contents).
@@ -2347,6 +2377,7 @@ void display(void)
 {
 	double odist, vlen, senx, seny, senz, find_dist;
 	struct tree_entry *find_entry;
+	struct tree_entry *object;
 
 	find_entry = NULL;
 	find_dist = 10000000;
@@ -2382,29 +2413,36 @@ void display(void)
 	c1 = 0;
 
 	if (TDFSB_GROUND_CROSS) {
-		glColor4f(0.3, 0.4, 0.6, 1.0);
 		glBegin(GL_LINES);
+		glColor4f(0.3, 0.4, 0.6, 1.0);
 		glVertex3f(vposx + 2, -1, vposz);
 		glVertex3f(vposx - 2, -1, vposz);
 		glVertex3f(vposx, -1, vposz + 2);
 		glVertex3f(vposx, -1, vposz - 2);
 		glEnd();
 	}
+	// Search for selected object
+	// We keep doing this while the left mouse button is pressed, so it might be called many times per second!
+	// We go through all of the objects until we find a match
+	// We calculate the distance between us and the object (odist) then we do some calculation and finally find a matching object...
+	for (object = root; object; object = object->next) {
+		if (object->tombstone)
+			continue;	// Skip files that are tombstoned
 
-	for (help = root; help; help = help->next) {
-		if (TDFSB_OBJECT_SEARCH) {
-			if (!((help->mode) & 0x20))
-				odist = sqrt((help->posx - vposx) * (help->posx - vposx) + (help->posy - vposy) * (help->posy - vposy) + (help->posz - vposz) * (help->posz - vposz));
+		if (TDFSB_OBJECT_SEARCH) {	// If we need to search for a selected object...
+			if (!((object->mode) & 0x20))
+				odist = sqrt((object->posx - vposx) * (object->posx - vposx) + (object->posy - vposy) * (object->posy - vposy) + (object->posz - vposz) * (object->posz - vposz));
 			else
-				odist = sqrt((help->posx - vposx) * (help->posx - vposx) + (vposy) * (vposy) + (help->posz - vposz) * (help->posz - vposz));
+				odist = sqrt((object->posx - vposx) * (object->posx - vposx) + (vposy) * (vposy) + (object->posz - vposz) * (object->posz - vposz));
 
 			if (TDFSB_KEY_FINDER) {
-				if (TDFSB_KEY_FINDER == help->name[0])
+				if (TDFSB_KEY_FINDER == object->name[0])	// If the first letter matches...
+					// If this is the first match, then set it
 					if (find_entry ? (find_entry->name[0] != TDFSB_KEY_FINDER) : 1) {
-						find_entry = help;
-						tposx = (help->posx - vposx) / odist;
-						tposz = (help->posz - vposz) / odist;
-						tposy = (help->posy - vposy) / odist;
+						find_entry = object;
+						tposx = (object->posx - vposx) / odist;
+						tposz = (object->posz - vposz) / odist;
+						tposy = (object->posy - vposy) / odist;
 						viewm();
 					}
 			} else {
@@ -2415,21 +2453,24 @@ void display(void)
 					senx = tposx * odist + vposx;
 					seny = tposy * odist + vposy;
 					senz = tposz * odist + vposz;
-					if (!((help->mode) & 0x20)) {
-						if ((senx > help->posx - help->scalex) && (senx < help->posx + help->scalex))
-							if ((seny > help->posy - help->scaley) && (seny < help->posy + help->scaley))
-								if (((senz > help->posz - help->scalez) && (senz < help->posz + help->scalez)) || ((help->regtype == IMAGEFILE || help->regtype == VIDEOFILE) && ((senz > help->posz - help->scalez - 1) && (senz < help->posz + help->scalez + 1)))) {
-									find_entry = help;
+					if (!((object->mode) & 0x20)) {
+						if ((senx > object->posx - object->scalex) && (senx < object->posx + object->scalex))
+							if ((seny > object->posy - object->scaley) && (seny < object->posy + object->scaley))
+								if (((senz > object->posz - object->scalez) && (senz < object->posz + object->scalez)) || ((object->regtype == IMAGEFILE || object->regtype == VIDEOFILE) && ((senz > object->posz - object->scalez - 1) && (senz < object->posz + object->scalez + 1)))) {
+									find_entry = object;
 									find_dist = odist;
 								}
 					} else {
-						if ((senx > (help->posx) - 1) && (senx < (help->posx) + 1))
+						if ((senx > (object->posx) - 1) && (senx < (object->posx) + 1))
 							if ((seny > -1) && (seny < 1))
-								if ((senz > (help->posz) - 1) && (senz < (help->posz) + 1)) {
-									find_entry = help;
+								if ((senz > (object->posz) - 1) && (senz < (object->posz) + 1)) {
+									find_entry = object;
 									find_dist = odist;
 								}
 					}
+					// If find_entry was found, then do the selected tool action on it
+					if (find_entry)
+						apply_tool_on_object(find_entry);
 				}
 			}
 
@@ -2439,23 +2480,28 @@ void display(void)
 				TDFSB_OBJECT_SELECTED = NULL;
 			}
 		}
+		// If the application of the tool above deleted the object, then skip all the rest
+		if (object->tombstone)
+			continue;	// Skip files that are tombstoned
 
-		mx = help->posx;
-		mz = help->posz;
-		my = help->posy;
+		// How can it be that object is NULL when we call tdb_gen_list()
+		// The for loop condition above should exclude that...
+		mx = object->posx;
+		mz = object->posz;
+		my = object->posy;
 
 		if (TDFSB_FILENAMES) {
 			glPushMatrix();
-			if (!((help->mode) & 0x20))
+			if (!((object->mode) & 0x20))
 				glTranslatef(mx, my, mz);
 			else
 				glTranslatef(mx, 1.5, mz);
 
 			if (TDFSB_FILENAMES == 1) {
 				glRotatef(spin + (fmod(c1, 10) * 36), 0, 1, 0);
-				if (!((help->mode) & 0x20))
-					glTranslatef(help->scalex, 1.5, help->scalez);
-				glRotatef(90 - 45 * (help->scalez / help->scalex), 0, 1, 0);
+				if (!((object->mode) & 0x20))
+					glTranslatef(object->scalex, 1.5, object->scalez);
+				glRotatef(90 - 45 * (object->scalez / object->scalex), 0, 1, 0);
 			} else {
 				u = mx - vposx;
 				v = mz - vposz;
@@ -2465,11 +2511,11 @@ void display(void)
 				} else {
 					glRotated(fmod(315 - asin(u / r) * (180 / PI), 360), 0, 1, 0);
 				}
-				if (((help->mode) == 0x00) && ((help->regtype) == IMAGEFILE))
+				if (((object->mode) == 0x00) && ((object->regtype) == IMAGEFILE))
 					glRotatef(-45, 0, 1, 0);
-				if (!((help->mode) & 0x20)) {
-					glTranslatef((help->scalex) + 1, 1.5, (help->scalez) + 1);
-					glRotatef(90 - 45 * (help->scalez / help->scalex), 0, 1, 0);
+				if (!((object->mode) & 0x20)) {
+					glTranslatef((object->scalex) + 1, 1.5, (object->scalez) + 1);
+					glRotatef(90 - 45 * (object->scalez / object->scalex), 0, 1, 0);
 				} else {
 					glTranslatef(0, 0.5, 0);
 					glRotatef(45, 0, 1, 0);
@@ -2478,37 +2524,37 @@ void display(void)
 
 			glScalef(0.005, 0.005, 0.005);
 
-			if (!((help->mode) & 0x20)) {
+			if (!((object->mode) & 0x20)) {
 				glColor4f(TDFSB_FN_R, TDFSB_FN_G, TDFSB_FN_B, 1.0);
-				glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)help->name) / 2, 0, 0);
-				for (c2 = 0; c2 < help->namelen; c2++)
-					glutStrokeCharacter(GLUT_STROKE_ROMAN, help->name[c2]);
+				glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->name) / 2, 0, 0);
+				for (c2 = 0; c2 < object->namelen; c2++)
+					glutStrokeCharacter(GLUT_STROKE_ROMAN, object->name[c2]);
 			} else {
 				fh = ((((GLfloat) spin) - 180) / 360);
 				if (fh < 0) {
 					fh = fabs(fh);
 					glColor4f(1 - (fh), 1 - (fh), 1 - (fh), 1.0);
-					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)help->name) / 2, 0, 0);
-					for (c2 = 0; c2 < help->namelen; c2++)
-						glutStrokeCharacter(GLUT_STROKE_ROMAN, help->name[c2]);
+					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->name) / 2, 0, 0);
+					for (c2 = 0; c2 < object->namelen; c2++)
+						glutStrokeCharacter(GLUT_STROKE_ROMAN, object->name[c2]);
 
 				} else {
 					fh = fabs(fh);
 					glColor4f(0.85 - (fh), 1 - (fh), 1 - (fh), 1.0);
-					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)help->linkpath) / 2, 0, 0);
-					for (c2 = 0; c2 < strlen(help->linkpath); c2++)
-						glutStrokeCharacter(GLUT_STROKE_ROMAN, help->linkpath[c2]);
+					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->linkpath) / 2, 0, 0);
+					for (c2 = 0; c2 < strlen(object->linkpath); c2++)
+						glutStrokeCharacter(GLUT_STROKE_ROMAN, object->linkpath[c2]);
 				}
 			}
 			glPopMatrix();
 		}
 /* see if we entered a sphere */
-		if (((help->mode) == 1) || (((help->mode) & 0x20) && (((help->mode) & 0x1F) < 10))) {
+		if (((object->mode) == 1) || (((object->mode) & 0x20) && (((object->mode) & 0x1F) < 10))) {
 			if (vposx > mx - 1 && vposx < mx + 1 && vposz > mz - 1 && vposz < mz + 1 && vposy < 1.5) {
 				temp_trunc[0] = 0;
 				strcat(TDFSB_CURRENTPATH, "/");
-				strcat(TDFSB_CURRENTPATH, help->name);
-				if ((help->mode != 0x21) && (help->mode & 0x20))
+				strcat(TDFSB_CURRENTPATH, object->name);
+				if ((object->mode != 0x21) && (object->mode & 0x20))
 					strcat(TDFSB_CURRENTPATH, "/..");
 				if (realpath(TDFSB_CURRENTPATH, &temp_trunc[0]) != &temp_trunc[0]) {
 					printf("Cannot resolve path \"%s\".\n", TDFSB_CURRENTPATH);
@@ -2522,9 +2568,9 @@ void display(void)
 			}
 		}
 /* animate text files */
-		if ((help->regtype == TEXTFILE) && ((help->mode) & 0x1F) == 0) {
+		if ((object->regtype == TEXTFILE) && (object->uniptr) && ((object->mode) & 0x1F) == 0) {
 			glPushMatrix();
-			if (((help->mode) & 0x20)) {
+			if (((object->mode) & 0x20)) {
 				cc = 16;
 				c1 = 8;
 				glScalef(0.0625, 0.125, 0.0625);
@@ -2532,9 +2578,9 @@ void display(void)
 				cc = c1 = 1;
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
-			c3 = (int)strlen((char *)help->uniptr);
+			c3 = (int)strlen((char *)object->uniptr);
 			c2 = 0;
-			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((help->uniint2) = (help->uniint2) + (help->uniint0))))), (200 * mz) * cc);
+			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((object->uniint2) = (object->uniint2) + (object->uniint0))))), (200 * mz) * cc);
 			u = mx - vposx;
 			v = mz - vposz;
 			r = sqrt(u * u + v * v);
@@ -2546,15 +2592,15 @@ void display(void)
 			glTranslatef(+mono / 2, 0, 0);
 			do {
 				glTranslatef(-mono, -150, 0);
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, help->uniptr[c2 + (help->uniint1)]);
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->uniptr[c2 + (object->uniint1)]);
 				c2++;
 			}
 			while (c2 < c3 && c2 < 10);
-			if (help->uniint2 >= 150) {
-				(help->uniint1) = (help->uniint1) + 1;
-				if ((help->uniint1) >= c3 - 10)
-					(help->uniint1) = 0;
-				(help->uniint2) = 0;
+			if (object->uniint2 >= 150) {
+				(object->uniint1) = (object->uniint1) + 1;
+				if ((object->uniint1) >= c3 - 10)
+					(object->uniint1) = 0;
+				(object->uniint2) = 0;
 			}
 			glPopMatrix();
 		}
@@ -2608,7 +2654,7 @@ void display(void)
 	glPopMatrix();
 
 	// Draw cube around selected object
-	if (TDFSB_OBJECT_SELECTED) {
+	if (CURRENT_TOOL == TOOL_SELECTOR && TDFSB_OBJECT_SELECTED) {
 		glPushMatrix();
 
 		if ((TDFSB_OBJECT_SELECTED->mode) & 0x20) {
@@ -2626,6 +2672,28 @@ void display(void)
 		glutWireCube(2.0);
 		glPopMatrix();
 	}
+
+	smoox += (tposx - smoox) / 2;
+	smooy += (tposy - smooy) / 2;
+	smooz += (tposz - smooz) / 2;
+
+	// Draw the laser
+	GLfloat old_width;
+	glGetFloatv(GL_LINE_WIDTH, &old_width);
+	glLineWidth(3);
+	if ((CURRENT_TOOL == TOOL_WEAPON && TDFSB_OBJECT_SEARCH) || TDFSB_OBJECT_SELECTED) {
+		glBegin(GL_LINES);
+		glColor4f(1.0, 0.0, 0, 1.0);	// red
+		// Laser starts under us, and a bit to the side, so that it seems to be coming out of our gun
+		glVertex4f(vposx - 0.5, vposy - 1, vposz, 1.0f);
+		glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 1.0f);
+		// This makes the line too jumpy:
+		// glVertex4f(TDFSB_OBJECT_SELECTED->posx, TDFSB_OBJECT_SELECTED->posy, TDFSB_OBJECT_SELECTED->posz, 1.0f);
+		// This should make the laser into an endless vector, but this doesn't this work...
+		// if (!TDFSB_OBJECT_SELECTED) glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 0.0f);
+		glEnd();
+	}
+	glLineWidth(old_width);
 
 /* on screen displays */
 	glMatrixMode(GL_PROJECTION);
@@ -2719,6 +2787,7 @@ void display(void)
 		glCallList(TDFSB_HelpList);
 		glPopMatrix();
 	} else {
+		// If an object is selected, then show it onscreen
 		if (TDFSB_OBJECT_SELECTED) {
 			glPushMatrix();
 			glTranslatef(10, SWY - 18, 0);
@@ -2855,9 +2924,6 @@ void display(void)
 
 	glLoadIdentity();
 	gluPerspective(60, (GLfloat) SWX / (GLfloat) SWY, 0.5, 2000);
-	smoox += (tposx - smoox) / 2;
-	smooy += (tposy - smooy) / 2;
-	smooz += (tposz - smooz) / 2;
 
 	gluLookAt(vposx, vposy, vposz, vposx + smoox, vposy + smooy, vposz + smooz, 0.0, 1.0, 0.0);
 
@@ -2930,102 +2996,102 @@ void MouseLift(int x, int y)
 
 void mouse(int button, int state, int x, int y)
 {
-	if (!TDFSB_ANIM_STATE) {
-		switch (button) {
+	if (TDFSB_ANIM_STATE)
+		return;		// We don't react to mouse buttons when we are in animation state, such as flying somewhere
 
-		case SDL_BUTTON_LEFT:
-			if (!TDFSB_CLASSIC_NAV) {
-				if (state == SDL_PRESSED) {
-					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_OBJECT_SEARCH = 1;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_KEY = keyfinder;
-					TDFSB_FUNC_UPKEY = keyupfinder;
+	switch (button) {
 
-				} else {
-					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_OBJECT_SEARCH = 0;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_KEY = keyboard;
-					TDFSB_FUNC_UPKEY = keyboardup;
-				}
-				break;
-			} else {
-				if (state == SDL_PRESSED) {
-					forwardkeybuf = 1;
-					backwardkeybuf = 0;
-					TDFSB_FUNC_IDLE = move;
-				} else {
-					forwardkeybuf = 0;
-					check_still();
-				}
-				break;
-			}
-
-		case SDL_BUTTON_RIGHT:
-			if (!TDFSB_CLASSIC_NAV) {
-				if (state == SDL_PRESSED && TDFSB_OBJECT_SELECTED) {
-					stop_move();
-					TDFSB_OA = TDFSB_OBJECT_SELECTED;
-					TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
-					TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
-					TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
-					TDFSB_ANIM_STATE = 1;
-					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_OBJECT_SEARCH = 0;
-					TDFSB_FUNC_KEY = keyboard;
-					TDFSB_FUNC_UPKEY = keyboardup;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_IDLE = approach;
-				}
-				break;
-			} else {
-				if (state == SDL_PRESSED) {
-					backwardkeybuf = 1;
-					forwardkeybuf = 0;
-					TDFSB_FUNC_IDLE = move;
-				} else {
-					backwardkeybuf = 0;
-					check_still();
-				}
-				break;
-			}
-
-		case SDL_BUTTON_MIDDLE:
+	case SDL_BUTTON_LEFT:
+		if (!TDFSB_CLASSIC_NAV) {
 			if (state == SDL_PRESSED) {
-				TDFSB_FUNC_MOTION = MouseLift;
-				TDFSB_FUNC_IDLE = move;
+				TDFSB_OBJECT_SELECTED = NULL;
+				TDFSB_OBJECT_SEARCH = 1;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_KEY = keyfinder;
+				TDFSB_FUNC_UPKEY = keyupfinder;
+
 			} else {
-				TDFSB_FUNC_MOTION = MouseMove;
-				TDFSB_FUNC_IDLE = move;
-				check_still();
-				uposy = vposy;
+				TDFSB_OBJECT_SELECTED = NULL;
+				TDFSB_OBJECT_SEARCH = 0;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_KEY = keyboard;
+				TDFSB_FUNC_UPKEY = keyboardup;
 			}
 			break;
-
-		case 4:
-			if (state == SDL_PRESSED)
-				uposy = vposy = vposy + TDFSB_MW_STEPS;
-			if (vposy < 0)
-				vposy = uposy = 0;
-			break;
-
-		case 5:
-			if (state == SDL_PRESSED)
-				uposy = vposy = vposy - TDFSB_MW_STEPS;
-			if (vposy < 0)
-				vposy = uposy = 0;
-			break;
-
-		case 6:
-			printf("No function for button 6 yet\n");
-			break;
-
-		default:
+		} else {
+			if (state == SDL_PRESSED) {
+				forwardkeybuf = 1;
+				backwardkeybuf = 0;
+				TDFSB_FUNC_IDLE = move;
+			} else {
+				forwardkeybuf = 0;
+				check_still();
+			}
 			break;
 		}
-	}
 
+	case SDL_BUTTON_RIGHT:
+		if (!TDFSB_CLASSIC_NAV) {
+			if (state == SDL_PRESSED && TDFSB_OBJECT_SELECTED) {
+				stop_move();
+				TDFSB_OA = TDFSB_OBJECT_SELECTED;
+				TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
+				TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
+				TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
+				TDFSB_ANIM_STATE = 1;
+				TDFSB_OBJECT_SELECTED = NULL;
+				TDFSB_OBJECT_SEARCH = 0;
+				TDFSB_FUNC_KEY = keyboard;
+				TDFSB_FUNC_UPKEY = keyboardup;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_IDLE = approach;
+			}
+			break;
+		} else {
+			if (state == SDL_PRESSED) {
+				backwardkeybuf = 1;
+				forwardkeybuf = 0;
+				TDFSB_FUNC_IDLE = move;
+			} else {
+				backwardkeybuf = 0;
+				check_still();
+			}
+			break;
+		}
+
+	case SDL_BUTTON_MIDDLE:
+		if (state == SDL_PRESSED) {
+			TDFSB_FUNC_MOTION = MouseLift;
+			TDFSB_FUNC_IDLE = move;
+		} else {
+			TDFSB_FUNC_MOTION = MouseMove;
+			TDFSB_FUNC_IDLE = move;
+			check_still();
+			uposy = vposy;
+		}
+		break;
+
+	case 4:		// SDL_SCROLLUP?
+		if (state == SDL_PRESSED)
+			uposy = vposy = vposy + TDFSB_MW_STEPS;
+		if (vposy < 0)
+			vposy = uposy = 0;
+		break;
+
+	case 5:		// SDL_SCROLLDOWN?
+		if (state == SDL_PRESSED)
+			uposy = vposy = vposy - TDFSB_MW_STEPS;
+		if (vposy < 0)
+			vposy = uposy = 0;
+		break;
+
+	case 6:
+		printf("No function for button 6 yet\n");
+		break;
+
+	default:
+		break;
+	}
 }
 
 int speckey(int key)
@@ -3128,6 +3194,11 @@ int speckey(int key)
 				strcpy(throttlebuf, "Throttle:OFF");
 			TDFSB_SHOW_CONFIG_FPS = 100;
 			break;
+		case SDLK_F9:
+			CURRENT_TOOL++;
+			if (CURRENT_TOOL >= NUMBER_OF_TOOLS)
+				CURRENT_TOOL = 0;
+			break;
 
 		case SDLK_HOME:
 			vposy = 0;
@@ -3207,7 +3278,7 @@ int speckey(int key)
 						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
 					} else {
 						// We have selected this file already but it is already paused so play it again
-						// TODO: check if the video has finished and if it has, start it again
+						// TODO: check if the video has finished and if it has, start it again, or make it loop
 						gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 					}
 
@@ -3219,7 +3290,6 @@ int speckey(int key)
 					GstBus *bus = NULL;
 					GstElement *fakesink = NULL;
 					GstState state;
-					const gchar *platform;
 
 					// create a new pipeline
 					GError *error = NULL;
