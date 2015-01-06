@@ -1974,7 +1974,7 @@ void leodir(void)
 						locsy = ((GLfloat) log(((double)hhh / 128) + 1)) + 1;
 						locsx = locsz = (www * (locsy)) / hhh;
 					}
-					locsz = (2 * 2.88) / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
+					locsz = 0.2;	// flatscreens!
 					locpx = locpz = 0;
 					locpy = locsy - 1;
 					TDFSB_TEX_NUM++;
@@ -2163,9 +2163,9 @@ void leodir(void)
 	uposy = 0;
 	viewm();
 
-	strcpy(fullpath, "TDFSB: ");
+	strcpy(fullpath, "3dfsb: ");
 	strcat(fullpath, TDFSB_CURRENTPATH);
-	SDL_WM_SetCaption(fullpath, "TDFSB");
+	SDL_WM_SetCaption(fullpath, "3dfsb");
 
 	printf("Display . files: ");
 	if (TDFSB_SHOW_DOTFILES)
