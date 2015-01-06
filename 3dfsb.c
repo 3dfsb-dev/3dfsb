@@ -1,9 +1,9 @@
 /***************************************************************************
-                          tdfsb.c  -  3D filesystem browser
+                          3dfsb.c  -  3D filesystem browser
                              -------------------
     begin                : Fri Feb 23 2001
-    copyright            : (C) 2001 - 2007 by Leander Seige
-    email                : tdfsb@determinate.net
+    copyleft             : (C) 2014 - 2015 by Tom Van Braeckel as 3dfsb
+    copyright            : (C) 2001 - 2007 by Leander Seige as tdfsb
  ***************************************************************************/
 
 /***************************************************************************
@@ -16,11 +16,10 @@
  ***************************************************************************/
 
 /***************************************************************************
-    Everything here is released under the GPL and coded by Leander Seige.
-    I would like to develop this program myself so if you have bugreports,
-   additional code, bugfixes, comments, suggestions, questions or something
-              similar, please mail me: tdfsb@determinate.net
-                  This is not a limitation, just a request.
+    Everything here is released under the GPL and maintained by Tom Van Braeckel.
+    I would like to invite everyone to make improvements so if you have bugreports,
+    additional code, bugfixes, comments, suggestions, questions, testing reports,
+    quality measures or something similar, do get in touch!
  ***************************************************************************/
 
 #include <stdlib.h>
