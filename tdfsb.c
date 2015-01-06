@@ -415,6 +415,7 @@ void cleanup_media_player()
 {
 	TDFSB_MEDIA_FILE = NULL;	// Set this to NULL, because the later functions check it to know what they should display
 	if (pipeline && GST_IS_ELEMENT(pipeline)) {
+		printf("Cleaning up GStreamer pipeline\n");
 		gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
 		gst_object_unref(pipeline);
 	}
@@ -530,7 +531,7 @@ unsigned char *read_videoframe(char *filename, unsigned int type)
 		printf("Error: read_videoframe can only handle VIDEOFILE and VIDEOSOURCFILE's!\n");
 		return NULL;
 	}
-	GstElement *pipeline, *sink;
+	GstElement *sink;
 	gint width, height;
 	GstSample *sample;
 	gchar *descr;
@@ -552,6 +553,7 @@ unsigned char *read_videoframe(char *filename, unsigned int type)
 		descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
 	} else if (type == VIDEOSOURCEFILE) {
 		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
+		// Idea for speedup: set queue-size to 1 instead of 2
 	}
 	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = gst_parse_launch(descr, &error);
@@ -802,7 +804,7 @@ void tdb_gen_list(void)
 
 	glNewList(TDFSB_SolidList, GL_COMPILE);
 	for (help = root; help; help = help->next) {
-		printf("Adding file %s with mode %x and regtype %x\n", help->name, help->mode, help->regtype);
+		//printf("Adding file %s with mode %x and regtype %x\n", help->name, help->mode, help->regtype);
 		if (help->tombstone)
 			continue;	// Skip files that are tombstoned
 
@@ -818,10 +820,7 @@ void tdb_gen_list(void)
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 			//} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || (((help->mode) & 0x1F == 2) && (help->regtype == VIDEOSOURCEFILE))) {       // Regular file, except VIDEOSOURCEFILE's
 		} else if ((((help->mode) & 0x1F) == 2) && ((help->regtype) == VIDEOSOURCEFILE)) {	// Regular file, except VIDEOSOURCEFILE's
-
-			printf("a\n");
 			if (((help->regtype == IMAGEFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) {
-				printf("b\n");
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
