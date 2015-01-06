@@ -9,13 +9,14 @@ Homepage: https://github.com/tomvanbraeckel/3dfsb
 
 Forked, cleaned up and improved by Tom Van Braeckel, originally written by Leander Seige.
 
-What's new?
-===========
+Version 1.0 (07-01-2015)
+************************
+
 Major
 -----
-- More A/V formats: More than 100 audio and video formats now supported (through GStreamer 1.4.3) and there is no more dependency on libsmpeg
-- Better file identification: filetype is now determined by the contents of the file (libmagic) instead of the extension in the filename
-- High-resolution video previews: cranked up from the old 256x256 pixels to however high your graphics card supports (eg: 8192x8192)
+- More A/V formats: More than 100 audio and video formats now supported (through GStreamer 1.4.3) 
+- Better file identification: filetype is now determined by the contents of the file (libmagic) instead of the file extension
+- High-resolution video previews: up from the old 256x256 pixels to however high your graphics card supports (eg: 8192x8192)
 - You can now zap away at your files with the lasergun tool! Nothing is deleted from disk, for your own protection :-)
 - Video input device (eg: webcam) file previews: these are now visible in the 3D world, just like your movies!
 
@@ -27,11 +28,13 @@ Minor
 - Uncapped texture size by default
 - Higher rendering resolution by default
 - Lots and lots of code cleanups and comments added
+- No more dependency on libsmpeg
 - New maintainer (Tom Van Braeckel)
 
 Performance:
 ------------
 This version runs at 1920x1080 resolution while playing 720p H264 video (2048x2048 texture) on a single-core of the Intel Core i7 at 2.90Ghz.
+
 
 
 USAGE
