@@ -8,6 +8,7 @@ This runs on GNU/Linux, and might run on BeOS and FreeBSD (although this has not
 Homepage: https://github.com/tomvanbraeckel/3dfsb
 
 Maintained and improved by Tom Van Braeckel
+
 Originally written by Leander Seige
 
 This program is free software; you can redistribute it and/or modify
@@ -24,12 +25,94 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+USAGE
+=====
+
+3dfsb
+  or
+3dfsb -V
+  or
+3dfsb --version
+  or
+3dfsb -D /path/to/dir
+  or
+3dfsb --dir /path/to/dir
+
+- the config file is $HOME/.3dfsb (e.g. /home/user/.3dfsb). if it does not
+  exist tdsfb will generate one with all available options. this is strongly
+  recommended.
+
+- if you start the 3dfsb the first time, press 'h' for the help menu
+  (will also be printed to the terminal)
+
+- simply walk into the spheres for cd'ing into another directory
+
+- select an object by pointing at it with the crosshair and press the left
+  mouse button. or hold the left mouse button and press any key to select
+  the first object that begins with that character (case sensitive).
+    -   while an object is selected press the right mouse button simultaneously to
+        automatic approach the object
+        [unfortunately doesn't work on BeOS as well as resizing the window, afaik
+        these are issues of the SDL implementation, use the right CTRL for now].
+    -   if an mp3 or mpeg1 video file is selected press the RETURN key to start
+        the playback
+
+- some of the displays are not visible while the help display is active
+
+- it is possible to execute a custom command from within 3dfsb. configure
+  your command in the config file! the command can be called by pressing
+  the tabulator key. put a "%s" in the command line, this will be replaced
+  by the current directory or selected file.
+  for instance if you set the command to
+    xmms "%s" &
+  and press tab from a directory, xmms will be started with the directory
+  given as argument. 
+  if you select an audio file and press the tab key xmms will play the file.
+  the default command is
+    cd "%s"; xterm&
+  it will open a xterm in the current directory.
+  this command is always present by pressing shift+tab!
+  so you have two commands: 
+  - one by configuring your custom command for the tab key
+  - one by pressing shift+tab, it will execute the built in xterm call  
+  but dont forget the quotation marks!
+  you are free to not add "%s" to your custom command if you just
+  want to launch any program. but if you do so, you can customize
+  3dfsb for your needs, choose a certain kind of files and than launch
+  emacs for editing text files, mplayer for playing avis or whatever...
+
+Here is a print out of the default keyboard settings.
+You may change these by editing ~/.3dfsb
+
+                                        Esc           quit   F1/F2    speed +/-
+                                        Mouse move    look   F3/F4      rot +/-
+                                        UP         forward   F5/F6  ball detail
+                                        DOWN      backward   HOME     start pos
+                                        L/R     step aside   LMB  select object
+                                        END    ground zero   +RMB|CTRL appr.obj
+                                        F7/F8  max fps +/-   +ENTER ply mpg/mp3
+                                        F9     change tool (selector, weapon)
+                                        "t"      filenames   "g"   ground cross
+                                        "c"      crosshair   "d"        display
+                                        "."      dot files   "p"      print FPS
+                                        "r" rel./get mouse   "f"     fullscreen
+                                        "l"     reload dir   "b"   image bricks
+                                        "u"           cd..   "a"      alphasort
+                                        "m"        shading   " "         flying
+                                        "h"      show help   "i"  print GL info
+                                        "0"      jump home   "o"    classic nav
+                                        "s"    save config   "#"   fps throttle
+                                         
+                                        "1|3|q|e"            Up|Down|Left|Right
+                                        "2|w"                  Forward|Backward
+                                        PgUp/Down or MMB+Mouse move up/downward
+
 
 
 Dependencies
 ============
 
-(a better installation (autoconf) is planned for future releases)
+Note: this section needs a cleanup!
 
 Needed Libraries:
 
@@ -94,6 +177,7 @@ Read 'man gcc' for additional arguments.
 
 
 ADDITIONAL NOTES
+================
 
 
 FreeBSD:
@@ -133,106 +217,23 @@ guarantee, try it on your own risk!
 
 
 
-********CREDITS********
+CREDITS
+=======
+Maintained, improved and cleaned up by Tom Van Braeckel
 
-Thanks to:
+Thanks go out to:
+- Leander Seige for building the original tdfsb program
+- Marc Berhault for some additional code (see ChangeLog)
+- Nico 'aMadMan' Toerl for extensive beta testing
+- Kyle 'greenfly' Rankin for some additional code (see ChangeLog)
+- Benjamin Burke for help and testing of the compile.sh
+- Rafal Zawadzki for creating man pages and debian packages
 
-Marc Berhault for some additional code (see ChangeLog)
-
-Nico 'aMadMan' Toerl for extensive beta testing
-
-Kyle 'greenfly' Rankin for some additional code (see ChangeLog)
-
-Benjamin Burke for help and testing of the compile.sh
-
-Rafal Zawadzki for creating man pages and debian packages
-
-all the people who sent me additional compile strings and new ideas
-
-
-
-
-*********USAGE*********
-
-3dfsb
-  or
-3dfsb -V
-  or
-3dfsb --version
-  or
-3dfsb -D /path/to/dir
-  or
-3dfsb --dir /path/to/dir
-
-- the config file is $HOME/.3dfsb (e.g. /home/user/.3dfsb). if it does not
-  exist tdsfb will generate one with all available options. this is strongly
-  recommended.
-
-- if you start the 3dfsb the first time, press 'h' for the help menu
-  (will also be printed to the terminal)
-
-- simply walk into the spheres for cd'ing into another directory
-
-- select an object by pointing at it with the crosshair and press the left
-  mouse button. or hold the left mouse button and press any key to select
-  the first object that begins with that character (case sensitive).
-    -   while an object is selected press the right mouse button simultaneously to
-        automatic approach the object
-        [unfortunately doesn't work on BeOS as well as resizing the window, afaik
-        these are issues of the SDL implementation, use the right CTRL for now].
-    -   if an mp3 or mpeg1 video file is selected press the RETURN key to start
-        the playback
-
-- some of the displays are not visible while the help display is active
-
-- it is possible to execute a custom command from within 3dfsb. configure
-  your command in the config file! the command can be called by pressing
-  the tabulator key. put a "%s" in the command line, this will be replaced
-  by the current directory or selected file.
-  for instance if you set the command to
-    xmms "%s" &
-  and press tab from a directory, xmms will be started with the directory
-  given as argument. 
-  if you select an audio file and press the tab key xmms will play the file.
-  the default command is
-    cd "%s"; xterm&
-  it will open a xterm in the current directory.
-  this command is always present by pressing shift+tab!
-  so you have two commands: 
-  - one by configuring your custom command for the tab key
-  - one by pressing shift+tab, it will execute the built in xterm call  
-  but dont forget the quotation marks!
-  you are free to not add "%s" to your custom command if you just
-  want to launch any program. but if you do so, you can customize
-  3dfsb for your needs, choose a certain kind of files and than launch
-  emacs for editing text files, mplayer for playing avis or whatever...
-
-Here is a print out of the default keyboard settings.
-You may change these by editing ~/.3dfsb
-
-=======================================
-Esc           quit   F1/F2    speed +/-
-Mouse move    look   F3/F4      rot +/-
-UP         forward   F5/F6  ball detail
-DOWN      backward   HOME     start pos
-L/R     step aside   LMB  select object
-END    ground zero   +RMB|CTRL appr.obj
-F7/F8  max fps +/-   +ENTER ply mpg/mp3
-"t"      filenames   "g"   ground cross
-"c"      crosshair   "d"        display
-"."      dot files   "p"      print FPS
-"r" rel./get mouse   "f"     fullscreen
-"l"     reload dir   "b"   image bricks
-"u"           cd..   "a"      alphasort
-"m"        shading   " "         flying
-"h"      show help   "i"  print GL info
-"0"      jump home   "o"    classic nav
-"s"    save config   "#"   fps throttle
- 
-"1|3|q|e"            Up|Down|Left|Right
-"2|w"                  Forward|Backward
-PgUp/Down or MMB+Mouse move up/downward
-=======================================
+History
+=======
+25/12/2014:
+Tom here; I've picked up where Leander left off.
+I'm cleaning up the code and adding features, see CHANGELOG!
 
 22/06/2007:
 ps. TDFSB is 6 years old now and I havent done anything on it for a long time.
@@ -243,6 +244,3 @@ Some days ago I installed Gentoo for the first time and I heared that someone
 Besides that it has problems with freeglut which I quickly fixed now.
 So I hope some people, YOU,  still like it. Have fun!
 
-25/12/2014:
-Tom here; I've picked up where Leander left off.
-I'm cleaning up the code and adding features, see CHANGELOG!
