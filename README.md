@@ -16,7 +16,7 @@ Version 1.0 (07-01-2015)
 - More A/V formats: More than 100 audio and video formats now supported (through GStreamer 1.4.3) and there is no more dependency on libsmpeg
 - Better file identification: filetype is now determined by the contents of the file (libmagic) instead of the extension in the filename
 - High-resolution video previews: cranked up from the old 256x256 pixels to however high your graphics card supports (eg: 8192x8192)
-- More fun: you can now zap away your files with the laser tool! They're not actually deleted, though :-)
+- You can now zap away your files with a laser gun! They're not actually deleted from disk, though :-)
 - Faster navigation by default
 - Visible on-screen info by default
 - Uncapped framerate by default
