@@ -9,7 +9,7 @@ Homepage: https://github.com/tomvanbraeckel/3dfsb
 
 Forked, maintained and improved by Tom Van Braeckel, originally written by Leander Seige.
 
-USAGE
+USAGEb
 =====
 
 3dfsb
@@ -40,7 +40,7 @@ USAGE
   the first object that begins with that character (case sensitive).
     -   while an object is selected press the right mouse button simultaneously to
         automatic approach the object
-        [unfortunately doesn't work on BeOS as well as resizing the window, afaik
+        [unfortunately doesn't work on BeOS/Haiku as well as resizing the window, afaik
         these are issues of the SDL implementation, use the right CTRL for now].
     -   if an mp3 or mpeg1 video file is selected press the RETURN key to start
         the playback
@@ -171,7 +171,7 @@ make install
 BeOS/Haiku:
 
 This package does not contain a BeOS binary, because I don't 
-have BeOS/Haiku installed on my computer anymore, sorry :/
+have BeOS/Haiku installed on my computer anymore.
 
 The source should compile anyway.
 
