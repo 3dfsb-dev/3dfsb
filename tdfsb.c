@@ -73,10 +73,11 @@
 #undef PI
 #endif
 
-/* #define PI 3.1415926535897932384626433832795029 this is too accurate.. yes, realy :)  */
+/* #define PI 3.1415926535897932384626433832795029 this is too accurate.. yes, really :)  */
 #define PI  3.14159
 #define SQF 0.70710
 
+#define NUMBER_OF_FILETYPES	8
 #define	UNKNOWNFILE	0
 #define	IMAGEFILE	1
 #define	TEXTFILE	2
@@ -84,6 +85,7 @@
 #define	ZIPFILE		4
 #define	VIDEOFILE	5
 #define	AUDIOFILE	6
+#define	VIDEOSOURCEFILE	7
 
 #define	MIME_AUDIO	"audio/"
 #define	MIME_IMAGE	"image/"
@@ -91,6 +93,8 @@
 #define	MIME_TEXT	"text/"
 #define	MIME_VIDEO	"video/"
 #define	MIME_ZIP	"application/zip"
+
+#define PATH_DEV_V4L	"/dev/video"
 
 #define	NUMBER_OF_TOOLS	2
 #define TOOL_SELECTOR	0
@@ -174,7 +178,7 @@ const int lsuff = 3;
 
 char *xsuff[3];
 unsigned int tsuff[3];
-char *nsuff[7];
+char *nsuff[NUMBER_OF_FILETYPES];
 
 GLfloat fh, fh2, mono;
 
@@ -349,13 +353,14 @@ void *value[] = { &TDFSB_BALL_DETAIL, &TDFSB_CURRENTPATH, &TDFSB_MAX_TEX_SIZE, &
 // Default values
 // Too conservative: char *pdef[] = { "20", "/", "256", "400", "300", "640", "480", "0", "0.2", "0.2", "0.6", "yes", "no", "yes", "0.0", "0.0", "0.0", "no", "X", "yes", "no", "no", "no", "25", "2.0", "1.0", "1.0", "1.0", "1.0", "1", "cd \"%s\"; xterm&" };
 char *pdef[] = { "20", "/", "0", "1024", "768", "1024", "768",
-"0", "0.2", "0.2",	// TDFSB_GG_R/G/B
-"0.6", "yes", "no", "yes",
-"0.0", "0.0", "0.0",	// TDFSB_BG_R/G/B
-"yes", "X", "yes", "no", "no", "yes",
-"0", "2.0", "1.3",	// FPS, mousespeed, headspeed
-"1.0", "1.0", "1.0",	// TDFSB_FB_R/G/B
-"1", "cd \"%s\"; xterm&" };
+	"0", "0.2", "0.2",	// TDFSB_GG_R/G/B
+	"0.6", "yes", "no", "yes",
+	"0.0", "0.0", "0.0",	// TDFSB_BG_R/G/B
+	"yes", "X", "yes", "no", "no", "yes",
+	"0", "2.0", "1.3",	// FPS, mousespeed, headspeed
+	"1.0", "1.0", "1.0",	// TDFSB_FB_R/G/B
+	"1", "cd \"%s\"; xterm&"
+};
 int type[] = { 1, 2, 1, 1, 1, 1, 1, 1, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 5, 4, 4, 4, 4, 1, 3, 3, 3, 3, 3, 1, 2 };	/* 1=int 2=string 3=float 4=boolean 5=keyboard */
 
 int paracnt = 31;
@@ -518,8 +523,13 @@ void play_media()
 }
 
 /* Returns a pointer to (not a char but) the buffer that holds the image texture */
-unsigned char *read_videoframe(char *filename)
+// types of VIDEOFILE and VIDEOSOURCEFILE are currently supported
+unsigned char *read_videoframe(char *filename, unsigned int type)
 {
+	if (type != VIDEOFILE && type != VIDEOSOURCEFILE) {
+		printf("Error: read_videoframe can only handle VIDEOFILE and VIDEOSOURCFILE's!\n");
+		return NULL;
+	}
 	GstElement *pipeline, *sink;
 	gint width, height;
 	GstSample *sample;
@@ -538,14 +548,18 @@ unsigned char *read_videoframe(char *filename)
 		exit(1);
 	}
 
-	descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
-	//printf("gst-launch-1.0 %s\n", descr);
+	if (type == VIDEOFILE) {
+		descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
+	} else if (type == VIDEOSOURCEFILE) {
+		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
+	}
+	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = gst_parse_launch(descr, &error);
 
 	if (error != NULL) {
 		g_print("could not construct pipeline: %s\n", error->message);
 		g_error_free(error);
-		exit(-1);
+		//exit(-1);
 	}
 
 	/* get sink */
@@ -556,39 +570,42 @@ unsigned char *read_videoframe(char *filename)
 	switch (ret) {
 	case GST_STATE_CHANGE_FAILURE:
 		g_print("failed to play the file\n");
-		exit(-1);
+		//exit(-1);
 	case GST_STATE_CHANGE_NO_PREROLL:
 		/* for live sources, we need to set the pipeline to PLAYING before we can
-		 * receive a buffer. We don't do that yet */
-		g_print("live sources not supported yet\n");
-		exit(-1);
+		 * receive a buffer. */
+		gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
+		//g_print("live sources not supported yet\n");
+		//exit(-1);
 	default:
 		break;
 	}
-/* This can block for up to 5 seconds. If your machine is really overloaded,
-   * it might time out before the pipeline prerolled and we generate an error. A
-   * better way is to run a mainloop and catch errors there. */
+	/* This can block for up to 5 seconds. If your machine is really overloaded,
+	 * it might time out before the pipeline prerolled and we generate an error. A
+	 * better way is to run a mainloop and catch errors there. */
 	ret = gst_element_get_state(pipeline, NULL, NULL, 5 * GST_SECOND);
 	if (ret == GST_STATE_CHANGE_FAILURE) {
 		g_print("failed to play the file\n");
-		exit(-1);
+		//exit(-1);
 	}
 
-	/* get the duration */
-	gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration);
+	if (type == VIDEOFILE) {	// VIDEOSOURCEFILE's cannot be seeked
+		/* get the duration */
+		gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration);
 
-	if (duration != -1)
-		/* we have a duration, seek to 5% */
-		position = duration * 5 / 100;
-	else
-		/* no duration, seek to 1 second, this could EOS */
-		position = 1 * GST_SECOND;
+		if (duration != -1)
+			/* we have a duration, seek to 5% */
+			position = duration * 5 / 100;
+		else
+			/* no duration, seek to 1 second, this could EOS */
+			position = 1 * GST_SECOND;
 
-	/* seek to the a position in the file. Most files have a black first frame so
-	 * by seeking to somewhere else we have a bigger chance of getting something
-	 * more interesting. An optimisation would be to detect black images and then
-	 * seek a little more */
-	gst_element_seek_simple(pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH, position);
+		/* seek to the a position in the file. Most files have a black first frame so
+		 * by seeking to somewhere else we have a bigger chance of getting something
+		 * more interesting. An optimisation would be to detect black images and then
+		 * seek a little more */
+		gst_element_seek_simple(pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH, position);
+	}
 
 	/* get the preroll buffer from appsink, this block untils appsink really
 	 * prerolls */
@@ -607,7 +624,7 @@ unsigned char *read_videoframe(char *filename)
 		caps = gst_sample_get_caps(sample);
 		if (!caps) {
 			g_print("could not get snapshot format\n");
-			exit(-1);
+			//exit(-1);
 		}
 		s = gst_caps_get_structure(caps, 0);
 
@@ -616,7 +633,7 @@ unsigned char *read_videoframe(char *filename)
 		res |= gst_structure_get_int(s, "height", &height);
 		if (!res) {
 			g_print("could not get snapshot dimension\n");
-			exit(-1);
+			//exit(-1);
 		}
 
 	} else {
@@ -785,7 +802,7 @@ void tdb_gen_list(void)
 
 	glNewList(TDFSB_SolidList, GL_COMPILE);
 	for (help = root; help; help = help->next) {
-		//printf("Adding file %s\n", help->name);
+		printf("Adding file %s with mode %x and regtype %x\n", help->name, help->mode, help->regtype);
 		if (help->tombstone)
 			continue;	// Skip files that are tombstoned
 
@@ -799,8 +816,12 @@ void tdb_gen_list(void)
 				glutSolidSphere(0.5, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
-		} else if (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) {	// Regular file
-			if (((help->regtype == IMAGEFILE) || (help->regtype == VIDEOFILE)) && ((help->mode) & 0x1F) == 0) {
+			//} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || (((help->mode) & 0x1F == 2) && (help->regtype == VIDEOSOURCEFILE))) {       // Regular file, except VIDEOSOURCEFILE's
+		} else if ((((help->mode) & 0x1F) == 2) && ((help->regtype) == VIDEOSOURCEFILE)) {	// Regular file, except VIDEOSOURCEFILE's
+
+			printf("a\n");
+			if (((help->regtype == IMAGEFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) {
+				printf("b\n");
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -831,7 +852,7 @@ void tdb_gen_list(void)
 				}
 				glEnd();
 				glDisable(GL_TEXTURE_2D);
-			} else if (help->regtype == UNKNOWNFILE || help->regtype == VIDEOFILE) {
+			} else if (help->regtype == UNKNOWNFILE) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -1052,6 +1073,7 @@ void set_filetypes(void)
 	nsuff[ZIPFILE] = "ZIPFILE";
 	nsuff[VIDEOFILE] = "VIDEO";
 	nsuff[AUDIOFILE] = "AUDIO-MP3";
+	nsuff[VIDEOSOURCEFILE] = "VIDEOSOURCE";
 }
 
 void setup_kc(void)
@@ -1825,6 +1847,9 @@ void leodir(void)
 /* Data File Identifizierung */
 			if ((mode & 0x1F) == 0) {	// Is it a regular file?
 				temptype = get_file_type(fullpath);
+			} else if (((mode & 0x1F) == 2) && strncmp(fullpath, PATH_DEV_V4L, strlen(PATH_DEV_V4L)) == 0) {
+				printf("This is a v4l file!\n");
+				temptype = VIDEOSOURCEFILE;
 			}
 
 /* Data File Loading + Setting Parameters */
@@ -1925,8 +1950,8 @@ void leodir(void)
 				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				locpx = locpz = 0;
 				locpy = locsy - 1;
-			} else if (temptype == VIDEOFILE) {
-				locptr = read_videoframe(fullpath);
+			} else if (temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE) {
+				locptr = read_videoframe(fullpath, temptype);
 				if (!locptr) {
 					printf("Reading video frame from %s failed\n", fullpath);
 					locptr = NULL;	// superfluous, because it is NULL here because of the if(!locprt) above anyway...
@@ -2093,7 +2118,8 @@ void leodir(void)
 	c1 = 0;
 	for (help = root; help; help = help->next) {
 		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
-		if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == IMAGEFILE)) && (((help->mode) & 0x1F) == 0)) {
+		// Also device files (mode & 0x1F == 2) can be made into a texture, if they are of the correct regtype
+		if ((help->regtype == VIDEOFILE || help->regtype == IMAGEFILE || help->regtype == VIDEOSOURCEFILE) && (((help->mode) & 0x1F) == 0) || ((help->mode) & 0x1F) == 2) {
 			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -2243,7 +2269,7 @@ void approach(void)
 		break;
 
 	case 2:
-		if ((TDFSB_OA->regtype == IMAGEFILE) || (TDFSB_OA->regtype == VIDEOFILE)) {
+		if ((TDFSB_OA->regtype == IMAGEFILE) || (TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE)) {
 			if (TDFSB_ANIM_COUNT) {
 				smoox += TDFSB_OA_DX;
 				tposx = smoox;
@@ -2451,7 +2477,7 @@ void display(void)
 					if (!((object->mode) & 0x20)) {
 						if ((senx > object->posx - object->scalex) && (senx < object->posx + object->scalex))
 							if ((seny > object->posy - object->scaley) && (seny < object->posy + object->scaley))
-								if (((senz > object->posz - object->scalez) && (senz < object->posz + object->scalez)) || ((object->regtype == IMAGEFILE || object->regtype == VIDEOFILE) && ((senz > object->posz - object->scalez - 1) && (senz < object->posz + object->scalez + 1)))) {
+								if (((senz > object->posz - object->scalez) && (senz < object->posz + object->scalez)) || ((object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) && ((senz > object->posz - object->scalez - 1) && (senz < object->posz + object->scalez + 1)))) {
 									find_entry = object;
 									find_dist = odist;
 								}
@@ -3267,7 +3293,7 @@ int speckey(int key)
 			}
 			break;
 		case SDLK_RETURN:
-			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE || TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE)) {
+			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE || TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE || TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE)) {
 				if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
 					GstState state;
 					gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
@@ -3302,8 +3328,10 @@ int speckey(int key)
 					gchar *descr;
 					if (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE) {
 						descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
-					} else {
+					} else if (TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE) {
 						descr = g_strdup_printf("uridecodebin uri=%s ! audioconvert ! playsink", uri);
+					} else if (TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE) {
+						descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", fullpath, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
 					}
 					// Use this for pulseaudio:
 					// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=tdfsb", uri);
