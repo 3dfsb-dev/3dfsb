@@ -2662,20 +2662,22 @@ void display(void)
 	smooz += (tposz - smooz) / 2;
 
 	// Draw the laser
+	GLfloat old_width;
+	glGetFloatv(GL_LINE_WIDTH, &old_width);
+	glLineWidth(3);
 	if ((CURRENT_TOOL == TOOL_WEAPON && TDFSB_OBJECT_SEARCH) || TDFSB_OBJECT_SELECTED) {
 		glBegin(GL_LINES);
 		glColor4f(1.0, 0.0, 0, 1.0);  // red
 		// Laser starts under us, and a bit to the side, so that it seems to be coming out of our gun
 		glVertex4f(vposx - 0.5, vposy - 1, vposz , 1.0f);
-		if (TDFSB_OBJECT_SELECTED) {
-			glVertex4f(TDFSB_OBJECT_SELECTED->posx, TDFSB_OBJECT_SELECTED->posy, TDFSB_OBJECT_SELECTED->posz, 1.0f);
-			// This should make the laser into an endless vector, but this doesn't this work...
-			// if (!TDFSB_OBJECT_SELECTED) glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 0.0f);
-		} else {
-			glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 1.0f);
-		}
+		glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 1.0f);
+		// This makes the line too jumpy:
+		// glVertex4f(TDFSB_OBJECT_SELECTED->posx, TDFSB_OBJECT_SELECTED->posy, TDFSB_OBJECT_SELECTED->posz, 1.0f);
+		// This should make the laser into an endless vector, but this doesn't this work...
+		// if (!TDFSB_OBJECT_SELECTED) glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 0.0f);
 		glEnd();
 	}
+	glLineWidth(old_width);
 
 /* on screen displays */
 	glMatrixMode(GL_PROJECTION);
