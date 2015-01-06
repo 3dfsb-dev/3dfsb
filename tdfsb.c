@@ -3344,7 +3344,7 @@ int speckey(int key)
 						exit(-1);
 					}
 					// Debugging:
-					GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
+					//GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
 
 					bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
 					gst_bus_add_signal_watch(bus);
