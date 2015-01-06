@@ -2673,10 +2673,14 @@ void display(void)
 	smooz += (tposz - smooz) / 2;
 
 	// Draw the laser
+	// This could be greatly improved, with a more realistic laser: http://codepoke.net/2011/12/27/opengl-libgdx-laser-fx/
+	// and a laser gun in the view somewhere, and a better laser trajectory.
+	// But hey, it's a start!
 	GLfloat old_width;
 	glGetFloatv(GL_LINE_WIDTH, &old_width);
 	glLineWidth(3);
-	if ((CURRENT_TOOL == TOOL_WEAPON && TDFSB_OBJECT_SEARCH) || TDFSB_OBJECT_SELECTED) {
+	// If the weapon is used and the left mouse button is clicked (TDFSB_OBJECT_SEARCH) or an object is selected (TDFSB_OBJECT_SELECTED)
+	if (CURRENT_TOOL == TOOL_WEAPON && (TDFSB_OBJECT_SEARCH || TDFSB_OBJECT_SELECTED)) {
 		glBegin(GL_LINES);
 		glColor4f(1.0, 0.0, 0, 1.0);	// red
 		// Laser starts under us, and a bit to the side, so that it seems to be coming out of our gun
