@@ -818,8 +818,7 @@ void tdb_gen_list(void)
 				glutSolidSphere(0.5, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
-			//} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || (((help->mode) & 0x1F == 2) && (help->regtype == VIDEOSOURCEFILE))) {       // Regular file, except VIDEOSOURCEFILE's
-		} else if ((((help->mode) & 0x1F) == 2) && ((help->regtype) == VIDEOSOURCEFILE)) {	// Regular file, except VIDEOSOURCEFILE's
+		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE))) {	// Regular file, except VIDEOSOURCEFILE's
 			if (((help->regtype == IMAGEFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
@@ -3355,22 +3354,14 @@ int speckey(int key)
 					g_signal_connect(bus, "sync-message", G_CALLBACK(sync_bus_call), NULL);
 					gst_object_unref(bus);
 
-					/* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
-					 * shared with the sdl one */
-					gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
-					state = GST_STATE_PAUSED;
-					if (gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
-						g_debug("failed to pause pipeline\n");
-						return -1;
-					}
-
 					fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "fakesink0");
 					if (fakesink && GST_IS_ELEMENT(pipeline)) {
 						g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
+						// Set a callback function for the handoff signal (when a new frame is received)
 						g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
 						gst_object_unref(fakesink);
 					} else {
-						// There is no fakesink, must be because we are playing an audio file
+						// There is no fakesink, must be because we are playing an audio or videosource file
 					}
 
 					framecounter = 0;
