@@ -1,3 +1,6 @@
+#!/bin/sh
+# A quick and dirty script that I use to compile this software,
+# having compiled GStreamer from source and installed it in /usr/local/lib
 prefix=/usr/lib/x86_64-linux-gnu/
 localprefix=/usr/local/lib/
 
