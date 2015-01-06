@@ -208,15 +208,15 @@ Thanks go out to:
 History
 =======
 25/12/2014:
-Tom here; I've picked up where Leander left off.
+Tom Van Braeckel here; I've picked up where Leander left off.
 I'm cleaning up the code and adding features, see CHANGELOG!
 
 22/06/2007:
-ps. TDFSB is 6 years old now and I havent done anything on it for a long time.
+Leander Seige: "TDFSB is 6 years old now and I havent done anything on it for a long time.
 Today I would code a lot of things very different - better i hope - than years
 ago. But, so what, it still works and I got very less bug reports on 3dfsb.
 Some days ago I installed Gentoo for the first time and I heared that someone
 (thank you!) build a package for Gentoo so I tried emerge 3dfsb and it worked :)
 Besides that it has problems with freeglut which I quickly fixed now.
-So I hope some people, YOU,  still like it. Have fun!
+So I hope some people, YOU, still like it. Have fun!"
 
