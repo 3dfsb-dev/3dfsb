@@ -1,6 +1,6 @@
 *.o
 *.s
-tdfsb
+3dfsb
 sdl-gstreamer
 *~
 .*.swp
