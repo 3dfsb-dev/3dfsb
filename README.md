@@ -14,10 +14,10 @@ Version 1.0 (07-01-2015)
 
 Major
 -----
-- More A/V formats: More than 100 audio and video container formats and decoders are now supported through the latest GStreamer 1.4.3
+- Extended audio and video support: more than 100 additional container formats and decoders are now supported through the latest GStreamer 1.4.3
 - Better file identification: filetype is now determined by the contents of the file (libmagic) with the extension of the file as a fallback
 - High-resolution video previews: cranked up from the old 256x256 pixels to however high your graphics card supports (eg: 8192x8192)
-- More fun: you can now zap away at your files with the lasergun tool! Nothing is pysically deleted from disk, for your own protection :-)
+- More fun: you can now zap away at your files with the lasergun tool! Nothing is pysically deleted from disk, for your own protection.
 - Video input device (eg: webcam) file previews: V4L video capture devices these are now visible in the 3D world, and can be viewed just like your movies!
 
 Minor
