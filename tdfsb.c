@@ -1029,7 +1029,7 @@ void set_filetypes(void)
 	/* These filetypes are known to be mis- or non-identified by libmagic, so we fallback to extensions for those */
 	xsuff[0] = "ERROR";
 	tsuff[0] = UNKNOWNFILE;
-	xsuff[1] = ".mp3";	// Some .mp3's are misidentified, they seem to be part of a stream or something...
+	xsuff[1] = ".mp3";	// Some .mp3's are misidentified, they seem to be part of a stream and are missing headers...
 	tsuff[1] = AUDIOFILE;
 	xsuff[2] = ".txt";	// Some .txt's are identified as "application/data"
 	tsuff[2] = TEXTFILE;
