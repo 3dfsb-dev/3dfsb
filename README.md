@@ -11,19 +11,23 @@ Forked, cleaned up and improved by Tom Van Braeckel, originally written by Leand
 
 What's new?
 ===========
-Version 1.0 (07-01-2015)
-************************
+Major
+-----
 - More A/V formats: More than 100 audio and video formats now supported (through GStreamer 1.4.3) and there is no more dependency on libsmpeg
 - Better file identification: filetype is now determined by the contents of the file (libmagic) instead of the extension in the filename
 - High-resolution video previews: cranked up from the old 256x256 pixels to however high your graphics card supports (eg: 8192x8192)
-- You can now zap away your files with a laser gun! They're not actually deleted from disk, though :-)
+- You can now zap away at your files with the lasergun tool! Nothing is deleted from disk, for your own protection :-)
+- Video input device (eg: webcam) file previews: these are now visible in the 3D world, just like your movies!
+
+Minor
+-----
 - Faster navigation by default
 - Visible on-screen info by default
 - Uncapped framerate by default
 - Uncapped texture size by default
 - Higher rendering resolution by default
-- New maintainer (Tom Van Braeckel)
 - Lots and lots of code cleanups and comments added
+- New maintainer (Tom Van Braeckel)
 
 Performance:
 ------------
