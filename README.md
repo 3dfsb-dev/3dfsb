@@ -3,7 +3,7 @@
 
 3D File System Browser - cleaned up and improved fork of the old tdfsb
 
-This runs on GNU/Linux, and should also run on BeOS/Haiku and FreeBSD.
+This runs on GNU/Linux and should also run on BeOS/Haiku and FreeBSD.
 
 Homepage: https://github.com/tomvanbraeckel/3dfsb
 
@@ -221,7 +221,7 @@ guarantee, try it on your own risk!
 
 CREDITS
 =======
-Maintained, improved and cleaned up by Tom Van Braeckel
+Maintained, improved and cleaned up by Tom Van Braeckel.
 
 Thanks go out to:
 - Leander Seige for building the original tdfsb program
