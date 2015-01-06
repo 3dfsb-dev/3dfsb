@@ -2638,7 +2638,7 @@ void display(void)
 	glPopMatrix();
 
 	// Draw cube around selected object
-	if (TDFSB_OBJECT_SELECTED) {
+	if (CURRENT_TOOL == TOOL_SELECTOR && TDFSB_OBJECT_SELECTED) {
 		glPushMatrix();
 
 		if ((TDFSB_OBJECT_SELECTED->mode) & 0x20) {
@@ -2655,6 +2655,26 @@ void display(void)
 		glRotatef(fmod(spin, 360), 0, 1, 0);
 		glutWireCube(2.0);
 		glPopMatrix();
+	}
+
+	smoox += (tposx - smoox) / 2;
+	smooy += (tposy - smooy) / 2;
+	smooz += (tposz - smooz) / 2;
+
+	// Draw the laser
+	if ((CURRENT_TOOL == TOOL_WEAPON && TDFSB_OBJECT_SEARCH) || TDFSB_OBJECT_SELECTED) {
+		glBegin(GL_LINES);
+		glColor4f(1.0, 0.0, 0, 1.0);  // red
+		// Laser starts under us, and a bit to the side, so that it seems to be coming out of our gun
+		glVertex4f(vposx - 0.5, vposy - 1, vposz , 1.0f);
+		if (TDFSB_OBJECT_SELECTED) {
+			glVertex4f(TDFSB_OBJECT_SELECTED->posx, TDFSB_OBJECT_SELECTED->posy, TDFSB_OBJECT_SELECTED->posz, 1.0f);
+			// This should make the laser into an endless vector, but this doesn't this work...
+			// if (!TDFSB_OBJECT_SELECTED) glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 0.0f);
+		} else {
+			glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 1.0f);
+		}
+		glEnd();
 	}
 
 /* on screen displays */
@@ -2882,26 +2902,6 @@ void display(void)
 		}
 		glPopMatrix();
 		TDFSB_ALERT_KC--;
-	}
-
-	smoox += (tposx - smoox) / 2;
-	smooy += (tposy - smooy) / 2;
-	smooz += (tposz - smooz) / 2;
-
-	// Draw the laser
-	if ((CURRENT_TOOL == TOOL_WEAPON && TDFSB_OBJECT_SEARCH) || TDFSB_OBJECT_SELECTED) {
-		glBegin(GL_LINES);
-		glColor4f(1.0, 0.0, 0, 1.0);  // red
-		// Laser starts under us, and a bit to the side, so that it seems to be coming out of our gun
-		glVertex4f(vposx - 0.5, vposy - 1, vposz , 1.0f);
-		if (TDFSB_OBJECT_SELECTED) {
-			glVertex4f(TDFSB_OBJECT_SELECTED->posx, TDFSB_OBJECT_SELECTED->posy, TDFSB_OBJECT_SELECTED->posz, 1.0f);
-			// This should make the laser into an endless vector, but this doesn't this work...
-			// if (!TDFSB_OBJECT_SELECTED) glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 0.0f);
-		} else {
-			glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 1.0f);
-		}
-		glEnd();
 	}
 
 	glLoadIdentity();
