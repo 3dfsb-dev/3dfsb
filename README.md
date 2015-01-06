@@ -3,39 +3,27 @@
 
 3D File System Browser - improved, cleaned up and maintained fork of the old tdfsb
 
-This runs on GNU/Linux, and might run on BeOS and FreeBSD (although this has not been tested recently).
+This runs on GNU/Linux, and should also run on BeOS/Haiku and FreeBSD.
 
 Homepage: https://github.com/tomvanbraeckel/3dfsb
 
-Maintained and improved by Tom Van Braeckel
-
-Originally written by Leander Seige
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+Forked, maintained and improved by Tom Van Braeckel, originally written by Leander Seige.
 
 USAGE
 =====
 
 3dfsb
+
   or
-3dfsb -V
-  or
+  
 3dfsb --version
+
   or
+  
 3dfsb -D /path/to/dir
+
   or
+  
 3dfsb --dir /path/to/dir
 
 - the config file is $HOME/.3dfsb (e.g. /home/user/.3dfsb). if it does not
@@ -84,28 +72,28 @@ USAGE
 Here is a print out of the default keyboard settings.
 You may change these by editing ~/.3dfsb
 
-                                        Esc           quit   F1/F2    speed +/-
-                                        Mouse move    look   F3/F4      rot +/-
-                                        UP         forward   F5/F6  ball detail
-                                        DOWN      backward   HOME     start pos
-                                        L/R     step aside   LMB  select object
-                                        END    ground zero   +RMB|CTRL appr.obj
-                                        F7/F8  max fps +/-   +ENTER ply mpg/mp3
-                                        F9     change tool (selector, weapon)
-                                        "t"      filenames   "g"   ground cross
-                                        "c"      crosshair   "d"        display
-                                        "."      dot files   "p"      print FPS
-                                        "r" rel./get mouse   "f"     fullscreen
-                                        "l"     reload dir   "b"   image bricks
-                                        "u"           cd..   "a"      alphasort
-                                        "m"        shading   " "         flying
-                                        "h"      show help   "i"  print GL info
-                                        "0"      jump home   "o"    classic nav
-                                        "s"    save config   "#"   fps throttle
-                                         
-                                        "1|3|q|e"            Up|Down|Left|Right
-                                        "2|w"                  Forward|Backward
-                                        PgUp/Down or MMB+Mouse move up/downward
+    Esc           quit   F1/F2    speed +/-
+    Mouse move    look   F3/F4      rot +/-
+    UP         forward   F5/F6  ball detail
+    DOWN      backward   HOME     start pos
+    L/R     step aside   LMB  select object
+    END    ground zero   +RMB|CTRL appr.obj
+    F7/F8  max fps +/-   +ENTER ply mpg/mp3
+    F9     change tool (selector, weapon)
+    "t"      filenames   "g"   ground cross
+    "c"      crosshair   "d"        display
+    "."      dot files   "p"      print FPS
+    "r" rel./get mouse   "f"     fullscreen
+    "l"     reload dir   "b"   image bricks
+    "u"           cd..   "a"      alphasort
+    "m"        shading   " "         flying
+    "h"      show help   "i"  print GL info
+    "0"      jump home   "o"    classic nav
+    "s"    save config   "#"   fps throttle
+     
+    "1|3|q|e"            Up|Down|Left|Right
+    "2|w"                  Forward|Backward
+    PgUp/Down or MMB+Mouse move up/downward
 
 
 
@@ -120,17 +108,11 @@ You may need to install 'devel' packages of these
 libraries in order to get the necessary .h files
 and the sdl-config script.
 
-SDL             (http://www.libsdl.org)
-SDL_image       (http://www.libsdl.org/projects/SDL_image/index.html)
-OpenGL/GLU/glut (       Linux/FreeBSD:  look at your distribution
-                                        if that fails:
-                                        http://www.rpmfind.net/
-                                        http://freshmeat.net/
-                        BeOS:           OpenGL (including GLU) should come 
-                                        with BeOS,
-                                        for glut look at http://www.bebits.com
-                )
-libmagic-dev	For mimetype identification
+- SDL: http://www.libsdl.org
+- SDL_image: http://www.libsdl.org/projects/SDL_image/index.html
+- OpenGL/GLU/glut: Linux/FreeBSB users can use their package manager, BeOS/Haiku users should have OpenGL (including GLU) included. For glut look at http://www.bebits.com/
+- GSteamer 1.xx Core, Gstreamer 1.xx plugins: http://www.gstreamer.com/
+- libmagic-dev: for mimetype identification
 
 On Ubuntu, you can install all build-time dependencies with:
 
@@ -153,8 +135,7 @@ sudo apt-get install gstreamer1.0-pulseaudio
 Compilation
 ===========
 
-There is a small shell script which contains a standard compile
-string for every OS (Linux, BeOS and BSD). So please try
+There is a small shell script which contains a standard compile string for every OS (Linux, BeOS and BSD). So please try:
 
 ./compile.sh
 
@@ -162,7 +143,7 @@ If something goes wrong error messages will appear. If
 you don't know how to solve them don't hesitate and
 report the error messages to me.
 
-If ./compile.sh was successful you can call the 3dfsb
+If ./compile.sh was successful you can call the 3dfsb:
 
 ./3dfsb
 
@@ -187,22 +168,17 @@ cd /usr/ports/graphics/sdl_image/
 make install
 
 
-BeOS:
+BeOS/Haiku:
 
-This package does not contain a BeOS binary, because i don't 
-have BeOS installed on my computer anymore, sorry :/
+This package does not contain a BeOS binary, because I don't 
+have BeOS/Haiku installed on my computer anymore, sorry :/
+
 The source should compile anyway.
 
-I noticed that the SMPEG library could be hard to find,
-especially the development package so i made that package
-available from my own page:
-http://www.determinate.net/webdata/data/SDLGameLibs-1.2.2-devel-beos.zip
+NVidia Cards under Linux (+FreeBSD?)
+------------------------------------
 
-NVidia Cards under Linux (+FreeBSD?):
-
-NVidia users who have problems compiling the 3dfsb
---------------------------------------------------
-In most cases they are linking
+NVidia users who have problems compiling the 3dfsb are often linking
 against the wrong libraries, especially the libGLU.so.
 In this case please read the instructions that came
 with your drivers.
