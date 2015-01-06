@@ -50,20 +50,19 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 	#link=$(pkg-config --cflags gstreamer-1.0)" "$(pkg-config --cflags gstreamer-gl-1.0)" "$(pkg-config --cflags gstreamer-video-1.0)" "$(pkg-config --cflags gdk-pixbuf-2.0)
 	#gccopt="-static -static-libgcc"
 
-    gcc $warnings $gccopt -v $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include $includes -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -D_THREAD_SAFE -g -x c $link -lSDL_image -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -o tdfsb tdfsb.c
+    gcc $warnings $gccopt -v $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include $includes -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -D_THREAD_SAFE -g -x c $link -lSDL_image -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -o 3dfsb 3dfsb.c
 
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
     echo "BeOS detected.";
     echo "compiling...";
-    gcc $ARGS1 $ARGS2 -I/boot/develop/tools/gnupro/include/ -I/boot/develop/headers/be/opengl/ -L/boot/home/config/lib -L/boot/develop/tools/gnupro/lib/ -lSDL_image -lGL -lglut -lsmpeg -D_THREAD_SAFE -O2 -x c -o tdfsb tdfsb.c;
+    gcc $ARGS1 $ARGS2 -I/boot/develop/tools/gnupro/include/ -I/boot/develop/headers/be/opengl/ -L/boot/home/config/lib -L/boot/develop/tools/gnupro/lib/ -lSDL_image -lGL -lglut -lsmpeg -D_THREAD_SAFE -O2 -x c -o 3dfsb 3dfsb.c;
 elif uname -s | grep -i -c "BSD" > /dev/null; then 
     echo "BSD detected.";
     echo "compiling...";
-    gcc $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -lSDL_image -lGL -lGLU -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -D_THREAD_SAFE -O2 -x c -o tdfsb tdfsb.c;
+    gcc $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -lSDL_image -lGL -lGLU -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -D_THREAD_SAFE -O2 -x c -o 3dfsb 3dfsb.c;
 else
     echo "Unknown OS. If you are running Linux, BeOS or";
     echo "FreeBSD please send me the output of 'uname -s'." 
-    echo "tdfsb@determinate.net";
     exit 1;
 fi;
 

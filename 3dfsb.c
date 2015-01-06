@@ -1172,9 +1172,9 @@ int setup_config(void)
 	strcpy(home, getenv("HOME"));
 	strcpy(homefile, home);
 	if (homefile[strlen(homefile) - 1] == '/')
-		strcat(homefile, ".tdfsb");
+		strcat(homefile, ".3dfsb");
 	else
-		strcat(homefile, "/.tdfsb");
+		strcat(homefile, "/.3dfsb");
 
 	if ((config = fopen(homefile, "r"))) {
 		printf("Reading %s ...\n", homefile);
@@ -1363,7 +1363,7 @@ int setup_config(void)
 		printf("couldn't open config file\n");
 		printf("creating config file\n");
 		if ((config = fopen(homefile, "w"))) {
-			fprintf(config, "# TDFSB Example Config File\n\n");
+			fprintf(config, "# 3DFSB Example Config File\n\n");
 			for (x = 0; x < paracnt; x++)
 				if (type[x] != 5)
 					fprintf(config, "%-18s = %-6s # %s\n", param[x], pdef[x], tdfsb_comment[x]);
@@ -1389,9 +1389,9 @@ void save_config(void)
 	strcpy(home, getenv("HOME"));
 	strcpy(homefile, home);
 	if (homefile[strlen(homefile) - 1] == '/')
-		strcat(homefile, ".tdfsb");
+		strcat(homefile, ".3dfsb");
 	else
-		strcat(homefile, "/.tdfsb");
+		strcat(homefile, "/.3dfsb");
 
 	if ((config = fopen(homefile, "w"))) {
 		fprintf(config, "# TDFSB Saved Config File\n\n");
@@ -3331,7 +3331,7 @@ int speckey(int key)
 						descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", fullpath, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
 					}
 					// Use this for pulseaudio:
-					// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=tdfsb", uri);
+					// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=3dfsb", uri);
 
 					//printf("gst-launch-1.0 %s\n", descr);
 					pipeline = (GstPipeline *) gst_parse_launch(descr, &error);

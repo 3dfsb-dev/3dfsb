@@ -1,12 +1,11 @@
-This is the TDFSB version 0.0.10
+This is the 3D File System Browser (3dfsb)
 
-...should run on GNU/Linux, BeOS and FreeBSD
+...should run on GNU/Linux, and might run on BeOS and FreeBSD (this is untested, lately)
 
-Homepage: http://www.determinate.net/webdata/seg/tdfsb.html
-E-Mail  : tdfsb@determinate.net
+Homepage: https://github.com/tomvanbraeckel/3dfsb
 
-written by Leander Seige, license is the GPL (http://www.gnu.org/copyleft/gpl.html)
-or see the file COPYING
+Maintained and improved by Tom Van Braeckel
+Originally written by Leander Seige
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -51,7 +50,7 @@ On Ubuntu, you can install all build-time dependencies with:
 
 sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2-dev libsmpeg-dev libxi-dev libxmu-dev
 
-This list of dependencies was made using: apt-rdepends --build-depends --follow=DEPENDS tdfsb
+This list of dependencies was made using: apt-rdepends --build-depends --follow=DEPENDS 3dfsb
 
 + for GStreamer, you need:
 sudo apt-get install libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libgstreamer-plugins-bad0.10-dev
@@ -74,16 +73,16 @@ string for every OS (Linux, BeOS and BSD). So please try
 ./compile.sh
 
 If something goes wrong error messages will appear. If
-you don't know how to solve them don't hesitate and mail
-the error messages to me: tdfsb@determinate.net
+you don't know how to solve them don't hesitate and
+report the error messages to me.
 
-If ./compile.sh was successful you can call the tdfsb
+If ./compile.sh was successful you can call the 3dfsb
 
-./tdfsb
+./3dfsb
 
-or copy the tdfsb binary to your path, e.g. /usr/bin/
+or copy the 3dfsb binary to your path, e.g. /usr/bin/
 
-Once you have a working tdfsb binary you may try to
+Once you have a working 3dfsb binary you may try to
 edit the compile.sh for a more optimized version.
 You could change the -O2 argument (opimization) to a
 higher value (e.g. -O6) or add machine specific
@@ -114,8 +113,9 @@ http://www.determinate.net/webdata/data/SDLGameLibs-1.2.2-devel-beos.zip
 
 NVidia Cards under Linux (+FreeBSD?):
 
-I often get emails from NVidia users who have problems
-compiling the tdfsb. In most cases they are linking
+NVidia users who have problems compiling the 3dfsb
+--------------------------------------------------
+In most cases they are linking
 against the wrong libraries, especially the libGLU.so.
 In this case please read the instructions that came
 with your drivers.
@@ -151,21 +151,21 @@ all the people who sent me additional compile strings and new ideas
 
 *********USAGE*********
 
-tdfsb
+3dfsb
   or
-tdfsb -V
+3dfsb -V
   or
-tdfsb --version
+3dfsb --version
   or
-tdfsb -D /path/to/dir
+3dfsb -D /path/to/dir
   or
-tdfsb --dir /path/to/dir
+3dfsb --dir /path/to/dir
 
-- the config file is $HOME/.tdfsb (e.g. /home/user/.tdfsb). if it does not
+- the config file is $HOME/.3dfsb (e.g. /home/user/.3dfsb). if it does not
   exist tdsfb will generate one with all available options. this is strongly
   recommended.
 
-- if you start the tdfsb the first time, press 'h' for the help menu
+- if you start the 3dfsb the first time, press 'h' for the help menu
   (will also be printed to the terminal)
 
 - simply walk into the spheres for cd'ing into another directory
@@ -182,7 +182,7 @@ tdfsb --dir /path/to/dir
 
 - some of the displays are not visible while the help display is active
 
-- it is possible to execute a custom command from within tdfsb. configure
+- it is possible to execute a custom command from within 3dfsb. configure
   your command in the config file! the command can be called by pressing
   the tabulator key. put a "%s" in the command line, this will be replaced
   by the current directory or selected file.
@@ -201,11 +201,11 @@ tdfsb --dir /path/to/dir
   but dont forget the quotation marks!
   you are free to not add "%s" to your custom command if you just
   want to launch any program. but if you do so, you can customize
-  tdfsb for your needs, choose a certain kind of files and than launch
+  3dfsb for your needs, choose a certain kind of files and than launch
   emacs for editing text files, mplayer for playing avis or whatever...
 
 Here is a print out of the default keyboard settings.
-You may change these by editing ~/.tdfsb
+You may change these by editing ~/.3dfsb
 
 =======================================
 Esc           quit   F1/F2    speed +/-
@@ -234,8 +234,12 @@ PgUp/Down or MMB+Mouse move up/downward
 22/06/2007:
 ps. TDFSB is 6 years old now and I havent done anything on it for a long time.
 Today I would code a lot of things very different - better i hope - than years
-ago. But, so what, it still works and I got very less bug reports on tdfsb.
+ago. But, so what, it still works and I got very less bug reports on 3dfsb.
 Some days ago I installed Gentoo for the first time and I heared that someone
-(thank you!) build a package for Gentoo so I tried emerge tdfsb and it worked :) 
+(thank you!) build a package for Gentoo so I tried emerge 3dfsb and it worked :)
 Besides that it has problems with freeglut which I quickly fixed now.
 So I hope some people, YOU,  still like it. Have fun!
+
+25/12/2014:
+Tom here; I've picked up where Leander left off.
+I'm cleaning up the code and adding features, see CHANGELOG!
