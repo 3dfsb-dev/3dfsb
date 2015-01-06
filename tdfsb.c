@@ -774,7 +774,7 @@ void tdb_gen_list(void)
 
 	glNewList(TDFSB_SolidList, GL_COMPILE);
 	for (help = root; help; help = help->next) {
-		printf("Adding file %s\n", help->name);
+		//printf("Adding file %s\n", help->name);
 		if (help->tombstone)
 			continue;	// Skip files that are tombstoned
 
@@ -2083,7 +2083,6 @@ void leodir(void)
 	for (help = root; help; help = help->next) {
 		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
 		if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == IMAGEFILE)) && (((help->mode) & 0x1F) == 0)) {
-			// TODO?: if (help->uniptr) {
 			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -2182,6 +2181,7 @@ void move(void)
 	if (vposy < 0)
 		vposy = 0;
 
+	//printf("vpos = (%f,%f,%f)\n", vposx, vposy, vposz);
 	TDFSB_FUNC_DISP();
 }
 
@@ -2349,9 +2349,8 @@ void noDisplay(void)
 void apply_tool_on_object(struct tree_entry *object)
 {
 	if (CURRENT_TOOL == TOOL_WEAPON) {
-		printf("TODO: Start some animation on the object to show it is being deleted ");
-		printf("and some finalization function of the object so that it is tombstoned...\n");
-		object->tombstone = 1;
+		// printf("TODO: Start some animation on the object to show it is being deleted ");
+		object->tombstone = 1;	// Mark the object as deleted
 	}
 	// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
 	tdb_gen_list();
@@ -2398,8 +2397,8 @@ void display(void)
 	c1 = 0;
 
 	if (TDFSB_GROUND_CROSS) {
-		glColor4f(0.3, 0.4, 0.6, 1.0);
 		glBegin(GL_LINES);
+		glColor4f(0.3, 0.4, 0.6, 1.0);
 		glVertex3f(vposx + 2, -1, vposz);
 		glVertex3f(vposx - 2, -1, vposz);
 		glVertex3f(vposx, -1, vposz + 2);
@@ -2885,11 +2884,28 @@ void display(void)
 		TDFSB_ALERT_KC--;
 	}
 
-	glLoadIdentity();
-	gluPerspective(60, (GLfloat) SWX / (GLfloat) SWY, 0.5, 2000);
 	smoox += (tposx - smoox) / 2;
 	smooy += (tposy - smooy) / 2;
 	smooz += (tposz - smooz) / 2;
+
+	// Draw the laser
+	if ((CURRENT_TOOL == TOOL_WEAPON && TDFSB_OBJECT_SEARCH) || TDFSB_OBJECT_SELECTED) {
+		glBegin(GL_LINES);
+		glColor4f(1.0, 0.0, 0, 1.0);  // red
+		// Laser starts under us, and a bit to the side, so that it seems to be coming out of our gun
+		glVertex4f(vposx - 0.5, vposy - 1, vposz , 1.0f);
+		if (TDFSB_OBJECT_SELECTED) {
+			glVertex4f(TDFSB_OBJECT_SELECTED->posx, TDFSB_OBJECT_SELECTED->posy, TDFSB_OBJECT_SELECTED->posz, 1.0f);
+			// This should make the laser into an endless vector, but this doesn't this work...
+			// if (!TDFSB_OBJECT_SELECTED) glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 0.0f);
+		} else {
+			glVertex4f(vposx + smoox, vposy + smooy, vposz + smooz, 1.0f);
+		}
+		glEnd();
+	}
+
+	glLoadIdentity();
+	gluPerspective(60, (GLfloat) SWX / (GLfloat) SWY, 0.5, 2000);
 
 	gluLookAt(vposx, vposy, vposz, vposx + smoox, vposy + smooy, vposz + smooz, 0.0, 1.0, 0.0);
 
