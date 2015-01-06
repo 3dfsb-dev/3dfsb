@@ -16,7 +16,7 @@ Major
 -----
 - More A/V formats: More than 100 audio and video formats now supported (through GStreamer 1.4.3)
 - Better file identification: filetype is now determined by the contents of the file (libmagic) instead of the file extension
-- High-resolution videos: up from the old 256² pixels to the maximum your graphics card can handle (eg:8192²)
+- High-resolution videos: up from the old 256² pixels to the maximum your graphics card can handle (eg: 8192²)
 - You can now zap away at your files with the lasergun tool! Nothing is deleted from disk, for your own protection.
 - Video input device (eg: webcam) file previews: these are now visible in the 3D world, just like your movies!
 
