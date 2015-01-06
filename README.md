@@ -14,10 +14,10 @@ Version 1.0 (07-01-2015)
 
 Major
 -----
-- More A/V formats: More than 100 audio and video formats now supported (through GStreamer 1.4.3) 
+- More A/V formats: More than 100 audio and video formats now supported (through GStreamer 1.4.3)
 - Better file identification: filetype is now determined by the contents of the file (libmagic) instead of the file extension
-- High-resolution video previews: up from the old 256x256 pixels to however high your graphics card supports (eg: 8192x8192)
-- You can now zap away at your files with the lasergun tool! Nothing is deleted from disk, for your own protection :-)
+- High-resolution videos: up from the old 256x256 pixels to the maximum your graphics card can handle (eg:8192x8192)
+- You can now zap away at your files with the lasergun tool! Nothing is deleted from disk, for your own protection.
 - Video input device (eg: webcam) file previews: these are now visible in the 3D world, just like your movies!
 
 Minor
@@ -34,6 +34,7 @@ Minor
 Performance:
 ------------
 This version runs at 1920x1080 resolution while playing 720p H264 video (2048x2048 texture) on a single-core of the Intel Core i7 at 2.90Ghz.
+
 
 
 
