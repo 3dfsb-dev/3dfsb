@@ -140,8 +140,6 @@ You may change these by editing ~/.3dfsb
 Dependencies
 ============
 
-Note: this section needs a cleanup!
-
 Needed Libraries:
 
 You may need to install 'devel' packages of these
@@ -158,12 +156,12 @@ On Ubuntu, you can install all build-time dependencies with:
 
 sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2-dev libxi-dev libxmu-dev libmagic-dev
 
-+ for GStreamer, you need:
+For GStreamer, you need:
 sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev
 
-and if you want all GStreamer codecs and plugins, use:
+And if you want all GStreamer codecs and plugins, use:
 
-sudo apt-get install gstreamer1.0-plugins-*
+sudo apt-get install gstreamer1.0-plugins-* gstreamer1.0-libav
 
 (And for pulseaudio, but this is not being used currently but might be someday: sudo apt-get install gstreamer1.0-pulseaudio)
 
