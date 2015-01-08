@@ -158,21 +158,16 @@ and the sdl-config script.
 
 On Ubuntu, you can install all build-time dependencies with:
 
-sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2-dev libsmpeg-dev libxi-dev libxmu-dev
-
-This list of dependencies was made using: apt-rdepends --build-depends --follow=DEPENDS 3dfsb
+sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2-dev libxi-dev libxmu-dev libmagic-dev
 
 + for GStreamer, you need:
-sudo apt-get install libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libgstreamer-plugins-bad0.10-dev
+sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev
 
-and also perhaps:
+and if you want all GStreamer codecs and plugins, use:
 
-sudo apt-get install gstreamer0.10-plugins-*
-sudo apt-get install gstinterfaces
+sudo apt-get install gstreamer1.0-plugins-*
 
-and for pulseaudio:
-
-sudo apt-get install gstreamer1.0-pulseaudio
+(And for pulseaudio, but this is not being used currently but might be someday: sudo apt-get install gstreamer1.0-pulseaudio)
 
 Compilation
 ===========
