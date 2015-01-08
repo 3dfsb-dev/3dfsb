@@ -1,9 +1,9 @@
 /***************************************************************************
-                          tdfsb.c  -  3D filesystem browser
+                          3dfsb.c  -  3D filesystem browser
                              -------------------
     begin                : Fri Feb 23 2001
-    copyright            : (C) 2001 - 2007 by Leander Seige
-    email                : tdfsb@determinate.net
+    copyleft             : (C) 2014 - 2015 by Tom Van Braeckel as 3dfsb
+    copyright            : (C) 2001 - 2007 by Leander Seige as tdfsb
  ***************************************************************************/
 
 /***************************************************************************
@@ -16,11 +16,10 @@
  ***************************************************************************/
 
 /***************************************************************************
-    Everything here is released under the GPL and coded by Leander Seige.
-    I would like to develop this program myself so if you have bugreports,
-   additional code, bugfixes, comments, suggestions, questions or something
-              similar, please mail me: tdfsb@determinate.net
-                  This is not a limitation, just a request.
+    Everything here is released under the GPL and maintained by Tom Van Braeckel.
+    I would like to invite everyone to make improvements so if you have bugreports,
+    additional code, bugfixes, comments, suggestions, questions, testing reports,
+    quality measures or something similar, do get in touch!
  ***************************************************************************/
 
 #include <stdlib.h>
@@ -73,10 +72,11 @@
 #undef PI
 #endif
 
-/* #define PI 3.1415926535897932384626433832795029 this is too accurate.. yes, realy :)  */
+/* #define PI 3.1415926535897932384626433832795029 this is too accurate.. yes, really :)  */
 #define PI  3.14159
 #define SQF 0.70710
 
+#define NUMBER_OF_FILETYPES	8
 #define	UNKNOWNFILE	0
 #define	IMAGEFILE	1
 #define	TEXTFILE	2
@@ -84,6 +84,7 @@
 #define	ZIPFILE		4
 #define	VIDEOFILE	5
 #define	AUDIOFILE	6
+#define	VIDEOSOURCEFILE	7
 
 #define	MIME_AUDIO	"audio/"
 #define	MIME_IMAGE	"image/"
@@ -91,6 +92,8 @@
 #define	MIME_TEXT	"text/"
 #define	MIME_VIDEO	"video/"
 #define	MIME_ZIP	"application/zip"
+
+#define PATH_DEV_V4L	"/dev/video"
 
 #define	NUMBER_OF_TOOLS	2
 #define TOOL_SELECTOR	0
@@ -174,7 +177,7 @@ const int lsuff = 3;
 
 char *xsuff[3];
 unsigned int tsuff[3];
-char *nsuff[7];
+char *nsuff[NUMBER_OF_FILETYPES];
 
 GLfloat fh, fh2, mono;
 
@@ -338,13 +341,25 @@ char *param[] = { "BallDetail", "StartDir", "MaxTexSize", "WindowWidth", "Window
 	"MoveVelocity", "LookVelocity", "NameRed", "NameGreen", "NameBlue", "LiftSteps", "CustomExecuteString"
 };
 
-void *value[] = { &TDFSB_BALL_DETAIL, &TDFSB_CURRENTPATH, &TDFSB_MAX_TEX_SIZE, &SWX, &SWY, &PWX, &PWY, &PWD, &TDFSB_GG_R, &TDFSB_GG_G, &TDFSB_GG_B,
-	&TDFSB_ICUBE, &TDFSB_SHOW_DOTFILES, &TDFSB_DIR_ALPHASORT, &TDFSB_BG_R, &TDFSB_BG_G, &TDFSB_BG_B,
-	&TDFSB_CONFIG_FULLSCREEN, NULL, &TDFSB_SHOW_CROSSHAIR, &TDFSB_GROUND_CROSS, &TDFSB_CLASSIC_NAV,
-	&TDFSB_MODE_FLY, &TDFSB_FPS_CONFIG, &mousespeed, &headspeed, &TDFSB_FN_R, &TDFSB_FN_G, &TDFSB_FN_B, &TDFSB_MW_STEPS, &TDFSB_CUSTOM_EXECUTE_STRING
+void *value[] = { &TDFSB_BALL_DETAIL, &TDFSB_CURRENTPATH, &TDFSB_MAX_TEX_SIZE, &SWX, &SWY, &PWX, &PWY,
+	&PWD, &TDFSB_GG_R, &TDFSB_GG_G, &TDFSB_GG_B,
+	&TDFSB_ICUBE, &TDFSB_SHOW_DOTFILES, &TDFSB_DIR_ALPHASORT,
+	&TDFSB_BG_R, &TDFSB_BG_G, &TDFSB_BG_B,
+	&TDFSB_CONFIG_FULLSCREEN, NULL, &TDFSB_SHOW_CROSSHAIR, &TDFSB_GROUND_CROSS, &TDFSB_CLASSIC_NAV, &TDFSB_MODE_FLY,
+	&TDFSB_FPS_CONFIG, &mousespeed, &headspeed, &TDFSB_FN_R, &TDFSB_FN_G, &TDFSB_FN_B, &TDFSB_MW_STEPS, &TDFSB_CUSTOM_EXECUTE_STRING
 };
 
-char *pdef[] = { "20", "/", "256", "400", "300", "640", "480", "0", "0.2", "0.2", "0.6", "yes", "no", "yes", "0.0", "0.0", "0.0", "no", "X", "yes", "no", "no", "no", "25", "2.0", "1.0", "1.0", "1.0", "1.0", "1", "cd \"%s\"; xterm&" };
+// Default values
+// Too conservative: char *pdef[] = { "20", "/", "256", "400", "300", "640", "480", "0", "0.2", "0.2", "0.6", "yes", "no", "yes", "0.0", "0.0", "0.0", "no", "X", "yes", "no", "no", "no", "25", "2.0", "1.0", "1.0", "1.0", "1.0", "1", "cd \"%s\"; xterm&" };
+char *pdef[] = { "20", "/", "0", "1024", "768", "1024", "768",
+	"0", "0.2", "0.2",	// TDFSB_GG_R/G/B
+	"0.6", "yes", "no", "yes",
+	"0.0", "0.0", "0.0",	// TDFSB_BG_R/G/B
+	"yes", "X", "yes", "no", "no", "yes",
+	"0", "2.0", "1.3",	// FPS, mousespeed, headspeed
+	"1.0", "1.0", "1.0",	// TDFSB_FB_R/G/B
+	"1", "cd \"%s\"; xterm&"
+};
 int type[] = { 1, 2, 1, 1, 1, 1, 1, 1, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 5, 4, 4, 4, 4, 1, 3, 3, 3, 3, 3, 1, 2 };	/* 1=int 2=string 3=float 4=boolean 5=keyboard */
 
 int paracnt = 31;
@@ -399,6 +414,7 @@ void cleanup_media_player()
 {
 	TDFSB_MEDIA_FILE = NULL;	// Set this to NULL, because the later functions check it to know what they should display
 	if (pipeline && GST_IS_ELEMENT(pipeline)) {
+		printf("Cleaning up GStreamer pipeline\n");
 		gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
 		gst_object_unref(pipeline);
 	}
@@ -507,9 +523,14 @@ void play_media()
 }
 
 /* Returns a pointer to (not a char but) the buffer that holds the image texture */
-unsigned char *read_videoframe(char *filename)
+// types of VIDEOFILE and VIDEOSOURCEFILE are currently supported
+unsigned char *read_videoframe(char *filename, unsigned int type)
 {
-	GstElement *pipeline, *sink;
+	if (type != VIDEOFILE && type != VIDEOSOURCEFILE) {
+		printf("Error: read_videoframe can only handle VIDEOFILE and VIDEOSOURCFILE's!\n");
+		return NULL;
+	}
+	GstElement *sink;
 	gint width, height;
 	GstSample *sample;
 	gchar *descr;
@@ -527,14 +548,19 @@ unsigned char *read_videoframe(char *filename)
 		exit(1);
 	}
 
-	descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
-	//printf("gst-launch-1.0 %s\n", descr);
+	if (type == VIDEOFILE) {
+		descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
+	} else if (type == VIDEOSOURCEFILE) {
+		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
+		// Idea for speedup: set queue-size to 1 instead of 2
+	}
+	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = gst_parse_launch(descr, &error);
 
 	if (error != NULL) {
 		g_print("could not construct pipeline: %s\n", error->message);
 		g_error_free(error);
-		exit(-1);
+		//exit(-1);
 	}
 
 	/* get sink */
@@ -545,39 +571,42 @@ unsigned char *read_videoframe(char *filename)
 	switch (ret) {
 	case GST_STATE_CHANGE_FAILURE:
 		g_print("failed to play the file\n");
-		exit(-1);
+		//exit(-1);
 	case GST_STATE_CHANGE_NO_PREROLL:
 		/* for live sources, we need to set the pipeline to PLAYING before we can
-		 * receive a buffer. We don't do that yet */
-		g_print("live sources not supported yet\n");
-		exit(-1);
+		 * receive a buffer. */
+		gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
+		//g_print("live sources not supported yet\n");
+		//exit(-1);
 	default:
 		break;
 	}
-/* This can block for up to 5 seconds. If your machine is really overloaded,
-   * it might time out before the pipeline prerolled and we generate an error. A
-   * better way is to run a mainloop and catch errors there. */
+	/* This can block for up to 5 seconds. If your machine is really overloaded,
+	 * it might time out before the pipeline prerolled and we generate an error. A
+	 * better way is to run a mainloop and catch errors there. */
 	ret = gst_element_get_state(pipeline, NULL, NULL, 5 * GST_SECOND);
 	if (ret == GST_STATE_CHANGE_FAILURE) {
 		g_print("failed to play the file\n");
-		exit(-1);
+		//exit(-1);
 	}
 
-	/* get the duration */
-	gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration);
+	if (type == VIDEOFILE) {	// VIDEOSOURCEFILE's cannot be seeked
+		/* get the duration */
+		gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration);
 
-	if (duration != -1)
-		/* we have a duration, seek to 5% */
-		position = duration * 5 / 100;
-	else
-		/* no duration, seek to 1 second, this could EOS */
-		position = 1 * GST_SECOND;
+		if (duration != -1)
+			/* we have a duration, seek to 5% */
+			position = duration * 5 / 100;
+		else
+			/* no duration, seek to 1 second, this could EOS */
+			position = 1 * GST_SECOND;
 
-	/* seek to the a position in the file. Most files have a black first frame so
-	 * by seeking to somewhere else we have a bigger chance of getting something
-	 * more interesting. An optimisation would be to detect black images and then
-	 * seek a little more */
-	gst_element_seek_simple(pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH, position);
+		/* seek to the a position in the file. Most files have a black first frame so
+		 * by seeking to somewhere else we have a bigger chance of getting something
+		 * more interesting. An optimisation would be to detect black images and then
+		 * seek a little more */
+		gst_element_seek_simple(pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH, position);
+	}
 
 	/* get the preroll buffer from appsink, this block untils appsink really
 	 * prerolls */
@@ -596,7 +625,7 @@ unsigned char *read_videoframe(char *filename)
 		caps = gst_sample_get_caps(sample);
 		if (!caps) {
 			g_print("could not get snapshot format\n");
-			exit(-1);
+			//exit(-1);
 		}
 		s = gst_caps_get_structure(caps, 0);
 
@@ -605,7 +634,7 @@ unsigned char *read_videoframe(char *filename)
 		res |= gst_structure_get_int(s, "height", &height);
 		if (!res) {
 			g_print("could not get snapshot dimension\n");
-			exit(-1);
+			//exit(-1);
 		}
 
 	} else {
@@ -774,7 +803,7 @@ void tdb_gen_list(void)
 
 	glNewList(TDFSB_SolidList, GL_COMPILE);
 	for (help = root; help; help = help->next) {
-		//printf("Adding file %s\n", help->name);
+		//printf("Adding file %s with mode %x and regtype %x\n", help->name, help->mode, help->regtype);
 		if (help->tombstone)
 			continue;	// Skip files that are tombstoned
 
@@ -788,8 +817,8 @@ void tdb_gen_list(void)
 				glutSolidSphere(0.5, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
-		} else if (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) {	// Regular file
-			if (((help->regtype == IMAGEFILE) || (help->regtype == VIDEOFILE)) && ((help->mode) & 0x1F) == 0) {
+		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE))) {	// Regular file, except VIDEOSOURCEFILE's
+			if (((help->regtype == IMAGEFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -820,7 +849,7 @@ void tdb_gen_list(void)
 				}
 				glEnd();
 				glDisable(GL_TEXTURE_2D);
-			} else if (help->regtype == UNKNOWNFILE || help->regtype == VIDEOFILE) {
+			} else if (help->regtype == UNKNOWNFILE) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -1041,6 +1070,7 @@ void set_filetypes(void)
 	nsuff[ZIPFILE] = "ZIPFILE";
 	nsuff[VIDEOFILE] = "VIDEO";
 	nsuff[AUDIOFILE] = "AUDIO-MP3";
+	nsuff[VIDEOSOURCEFILE] = "VIDEOSOURCE";
 }
 
 void setup_kc(void)
@@ -1142,9 +1172,9 @@ int setup_config(void)
 	strcpy(home, getenv("HOME"));
 	strcpy(homefile, home);
 	if (homefile[strlen(homefile) - 1] == '/')
-		strcat(homefile, ".tdfsb");
+		strcat(homefile, ".3dfsb");
 	else
-		strcat(homefile, "/.tdfsb");
+		strcat(homefile, "/.3dfsb");
 
 	if ((config = fopen(homefile, "r"))) {
 		printf("Reading %s ...\n", homefile);
@@ -1333,7 +1363,7 @@ int setup_config(void)
 		printf("couldn't open config file\n");
 		printf("creating config file\n");
 		if ((config = fopen(homefile, "w"))) {
-			fprintf(config, "# TDFSB Example Config File\n\n");
+			fprintf(config, "# 3DFSB Example Config File\n\n");
 			for (x = 0; x < paracnt; x++)
 				if (type[x] != 5)
 					fprintf(config, "%-18s = %-6s # %s\n", param[x], pdef[x], tdfsb_comment[x]);
@@ -1359,9 +1389,9 @@ void save_config(void)
 	strcpy(home, getenv("HOME"));
 	strcpy(homefile, home);
 	if (homefile[strlen(homefile) - 1] == '/')
-		strcat(homefile, ".tdfsb");
+		strcat(homefile, ".3dfsb");
 	else
-		strcat(homefile, "/.tdfsb");
+		strcat(homefile, "/.3dfsb");
 
 	if ((config = fopen(homefile, "w"))) {
 		fprintf(config, "# TDFSB Saved Config File\n\n");
@@ -1814,170 +1844,17 @@ void leodir(void)
 /* Data File Identifizierung */
 			if ((mode & 0x1F) == 0) {	// Is it a regular file?
 				temptype = get_file_type(fullpath);
+			} else if (((mode & 0x1F) == 2) && strncmp(fullpath, PATH_DEV_V4L, strlen(PATH_DEV_V4L)) == 0) {
+				printf("This is a v4l file!\n");
+				temptype = VIDEOSOURCEFILE;
 			}
 			// Count the number of textures we'll need, so we can allocate them already below
 			if (temptype == IMAGEFILE || temptype == VIDEOFILE)
 				TDFSB_TEX_NUM++;
 
-/* Data File Loading + Setting Parameters */
-			/*
-			   if ((mode & 0x1F) == 1 || (mode & 0x1F) == 11) {     // Directory
-			   temptype = 0;
-			   locpx = locpz = locpy = 0;
-			   locsx = locsy = locsz = 1;
-			   locptr = NULL;
-			   uni0 = 0;
-			   uni1 = 0;
-			   uni2 = 0;
-			   printf(" .. DIR done.\n");
-			   } else if (temptype == IMAGEFILE) {
-			   locptr = read_imagefile(fullpath);
-			   if (!locptr) {
-			   printf("IMAGE FAILED: %s\n", fullpath);
-			   locptr = NULL;
-			   uni0 = 0;
-			   uni1 = 0;
-			   uni2 = 0;
-			   uni3 = 0;
-			   temptype = 0;
-			   locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-			   locpx = locpz = 0;
-			   locpy = locsy - 1;
-			   } else {
-			   uni0 = p2w;
-			   uni1 = p2h;
-			   uni2 = cglmode;
-			   uni3 = 0;
-			   printf("IMAGE: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
-			   if (www < hhh) {
-			   locsx = locsz = ((GLfloat) log(((double)www / 512) + 1)) + 1;
-			   locsy = (hhh * (locsx)) / www;
-			   } else {
-			   locsy = ((GLfloat) log(((double)hhh / 512) + 1)) + 1;
-			   locsx = locsz = (www * (locsy)) / hhh;
-			   }
-			   locsz = 1.44 / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
-			   locpx = locpz = 0;
-			   locpy = locsy - 1;
-			   TDFSB_TEX_NUM++;
-			   }
-			   } else if (temptype == TEXTFILE) {
-			   uni0 = 0;
-			   uni1 = 0;
-			   uni2 = 0;
-			   uni3 = 0;
-			   c1 = 0;
-			   c2 = 0;
-			   c3 = 0;
-			   fileptr = fopen(fullpath, "r");
-			   if (!fileptr) {
-			   printf("TEXT FAILED: %s\n", fullpath);
-			   locptr = NULL;
-			   temptype = 0;
-			   } else {
-			   do {
-			   c3 = fgetc(fileptr);
-			   if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
-			   c1++;
-			   }
-			   while (c3 != EOF);
-			   rewind(fileptr);
-			   locptr = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
-			   if (!locptr) {
-			   printf("TEXT FAILED: %s\n", fullpath);
-			   fclose(fileptr);
-			   locptr = NULL;
-			   temptype = 0;
-			   } else {
-			   temptr = locptr;
-			   uni0 = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
-			   for (c3 = 0; c3 < 10; c3++) {
-			   *temptr = ' ';
-			   temptr++;
-			   }
-			   do {
-			   c3 = fgetc(fileptr);
-			   if ((c3 != EOF) && (isgraph(c3) || c3 == ' ')) {
-			   *temptr = (unsigned char)c3;
-			   temptr++;
-			   c2++;
-			   }
-			   }
-			   while ((c3 != EOF) && (c2 < c1));
-			   for (c3 = 0; c3 < 10; c3++) {
-			   *temptr = ' ';
-			   temptr++;
-			   }
-			   *temptr = 0;
-			   fclose(fileptr);
-			   printf("TEXT: %ld char.\n", c1);
-			   }
-			   }
-			   locsy = 4.5; // locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
-			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-			   locpx = locpz = 0;
-			   locpy = locsy - 1;
-			   } else if (temptype == VIDEOFILE) {
-			   locptr = read_videoframe(fullpath);
-			   if (!locptr) {
-			   printf("Reading video frame from %s failed\n", fullpath);
-			   locptr = NULL;       // superfluous, because it is NULL here because of the if(!locprt) above anyway...
-			   uni0 = 0;
-			   uni1 = 0;
-			   uni2 = 0;
-			   uni3 = 0;
-			   temptype = 0;
-			   locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-			   locpx = locpz = 0;
-			   locpy = locsy - 1;
-			   } else {
-			   uni0 = p2w;
-			   uni1 = p2h;
-			   uni2 = cglmode;
-			   uni3 = 31337;        // this is not used and later gets filled in with the texture id
-			   printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, uni0, uni1);
-			   if (www < hhh) {
-			   locsx = locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
-			   locsy = (hhh * (locsx)) / www;
-			   } else {
-			   locsy = ((GLfloat) log(((double)hhh / 128) + 1)) + 1;
-			   locsx = locsz = (www * (locsy)) / hhh;
-			   }
-			   locsz = (2 * 2.88) / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
-			   locpx = locpz = 0;
-			   locpy = locsy - 1;
-			   TDFSB_TEX_NUM++;
-			   }
-			   } else if (temptype == AUDIOFILE) {
-			   uni0 = 0;
-			   uni1 = 0;
-			   uni2 = 0;
-			   uni3 = 0;
-			   c1 = 0;
-			   c2 = 0;
-			   c3 = 0;
-			   locptr = NULL;
-			   locsy = locsx = locsz = ((GLfloat) log(((double)buf.st_size / (65536 * 20) + 1))) + 1;
-			   locpx = locpz = 0;
-			   locpy = locsy - 1;
-			   printf("\n");
-			   } else {
-			   locptr = NULL;
-			   uni0 = 0;
-			   uni1 = 0;
-			   uni2 = 0;
-			   uni3 = 0;
-			   temptype = UNKNOWNFILE;
-			   locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-			   locpx = locpz = 0;
-			   locpy = locsy - 1;
-			   printf(" .. done.\n");
-			   }
-			 */
+/*  + Setting Parameters */
 
+			// Setting some temporary parameters for dummy objects; the real data file loading will happen later on
 			locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 			locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
 			locpy = locsy - 1;	// vertical position of the object
@@ -2090,23 +1967,20 @@ void leodir(void)
 	c1 = 0;
 	for (help = root; help; help = help->next)
 		help->uniint3 = TDFSB_TEX_NAMES[c1++];
-
+		
 	/*
-	   // "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
-	   if ((((help->regtype) == VIDEOFILE) || ((help->regtype) == IMAGEFILE)) && (((help->mode) & 0x1F) == 0)) {
-	   glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
-	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	   glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) help->uniint2, help->uniint0, help->uniint1, 0, (GLenum) help->uniint2, GL_UNSIGNED_BYTE, help->uniptr);
-
-	   help->uniint3 = TDFSB_TEX_NAMES[c1];
-	   c1++;
-	   }
-	   }
-	 */
+	for (help = root; help; help = help->next) {
+		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
+		// Also device files (mode & 0x1F == 2) can be made into a texture, if they are of the correct regtype
+		if ((help->regtype == VIDEOFILE || help->regtype == IMAGEFILE || help->regtype == VIDEOSOURCEFILE) && (((help->mode) & 0x1F) == 0) || ((help->mode) & 0x1F) == 2) {
+			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+			glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) help->uniint2, help->uniint0, help->uniint1, 0, (GLenum) help->uniint2, GL_UNSIGNED_BYTE, help->uniptr);
+	*/
 
 /* Creating Display List */
 
@@ -2141,9 +2015,9 @@ void leodir(void)
 	uposy = 0;
 	viewm();
 
-	strcpy(fullpath, "TDFSB: ");
+	strcpy(fullpath, "3dfsb: ");
 	strcat(fullpath, TDFSB_CURRENTPATH);
-	SDL_WM_SetCaption(fullpath, "TDFSB");
+	SDL_WM_SetCaption(fullpath, "3dfsb");
 
 	printf("Display . files: ");
 	if (TDFSB_SHOW_DOTFILES)
@@ -2246,7 +2120,7 @@ void approach(void)
 		break;
 
 	case 2:
-		if ((TDFSB_OA->regtype == IMAGEFILE) || (TDFSB_OA->regtype == VIDEOFILE)) {
+		if ((TDFSB_OA->regtype == IMAGEFILE) || (TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE)) {
 			if (TDFSB_ANIM_COUNT) {
 				smoox += TDFSB_OA_DX;
 				tposx = smoox;
@@ -2456,7 +2330,7 @@ void display(void)
 					if (!((object->mode) & 0x20)) {
 						if ((senx > object->posx - object->scalex) && (senx < object->posx + object->scalex))
 							if ((seny > object->posy - object->scaley) && (seny < object->posy + object->scaley))
-								if (((senz > object->posz - object->scalez) && (senz < object->posz + object->scalez)) || ((object->regtype == IMAGEFILE || object->regtype == VIDEOFILE) && ((senz > object->posz - object->scalez - 1) && (senz < object->posz + object->scalez + 1)))) {
+								if (((senz > object->posz - object->scalez) && (senz < object->posz + object->scalez)) || ((object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) && ((senz > object->posz - object->scalez - 1) && (senz < object->posz + object->scalez + 1)))) {
 									find_entry = object;
 									find_dist = odist;
 								}
@@ -2678,10 +2552,14 @@ void display(void)
 	smooz += (tposz - smooz) / 2;
 
 	// Draw the laser
+	// This could be greatly improved, with a more realistic laser: http://codepoke.net/2011/12/27/opengl-libgdx-laser-fx/
+	// and a laser gun in the view somewhere, and a better laser trajectory.
+	// But hey, it's a start!
 	GLfloat old_width;
 	glGetFloatv(GL_LINE_WIDTH, &old_width);
 	glLineWidth(3);
-	if ((CURRENT_TOOL == TOOL_WEAPON && TDFSB_OBJECT_SEARCH) || TDFSB_OBJECT_SELECTED) {
+	// If the weapon is used and the left mouse button is clicked (TDFSB_OBJECT_SEARCH) or an object is selected (TDFSB_OBJECT_SELECTED)
+	if (CURRENT_TOOL == TOOL_WEAPON && (TDFSB_OBJECT_SEARCH || TDFSB_OBJECT_SELECTED)) {
 		glBegin(GL_LINES);
 		glColor4f(1.0, 0.0, 0, 1.0);	// red
 		// Laser starts under us, and a bit to the side, so that it seems to be coming out of our gun
@@ -3268,7 +3146,7 @@ int speckey(int key)
 			}
 			break;
 		case SDLK_RETURN:
-			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE || TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE)) {
+			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE || TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE || TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE)) {
 				if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
 					GstState state;
 					gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
@@ -3303,11 +3181,13 @@ int speckey(int key)
 					gchar *descr;
 					if (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE) {
 						descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
-					} else {
+					} else if (TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE) {
 						descr = g_strdup_printf("uridecodebin uri=%s ! audioconvert ! playsink", uri);
+					} else if (TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE) {
+						descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", fullpath, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
 					}
 					// Use this for pulseaudio:
-					// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=tdfsb", uri);
+					// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=3dfsb", uri);
 
 					//printf("gst-launch-1.0 %s\n", descr);
 					pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
@@ -3318,7 +3198,7 @@ int speckey(int key)
 						exit(-1);
 					}
 					// Debugging:
-					GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
+					//GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
 
 					bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
 					gst_bus_add_signal_watch(bus);
@@ -3329,22 +3209,14 @@ int speckey(int key)
 					g_signal_connect(bus, "sync-message", G_CALLBACK(sync_bus_call), NULL);
 					gst_object_unref(bus);
 
-					/* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
-					 * shared with the sdl one */
-					gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
-					state = GST_STATE_PAUSED;
-					if (gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
-						g_debug("failed to pause pipeline\n");
-						return -1;
-					}
-
 					fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "fakesink0");
 					if (fakesink && GST_IS_ELEMENT(pipeline)) {
 						g_object_set(G_OBJECT(fakesink), "signal-handoffs", TRUE, NULL);
+						// Set a callback function for the handoff signal (when a new frame is received)
 						g_signal_connect(fakesink, "handoff", G_CALLBACK(on_gst_buffer), NULL);
 						gst_object_unref(fakesink);
 					} else {
-						// There is no fakesink, must be because we are playing an audio file
+						// There is no fakesink, must be because we are playing an audio or videosource file
 					}
 
 					framecounter = 0;
