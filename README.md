@@ -37,6 +37,20 @@ Performance
 -----------
 This version runs at 1920x1080 resolution while playing 720p H264 video (2048x2048 texture) on a single-core of the Intel Core i7 at 2.90Ghz.
 
+Screenshots
+===========
+![Screenshot: all major audio and video formats are supported through GStreamer. Video texture size went up from 256x256 to however high your GPU can go. Think 8192x8192.](/screenshots/01_videos.png?raw=true "High-resolution video previews")
+*Above: all major audio and video formats are supported through GStreamer. Video texture size went up from 256x256 to however high your GPU can go. Think 8192x8192.*
+
+![Screenshot: hardware device files (such as webcams) are visible in the 3D world and can be accessed from it.](/screenshots/02_webcam.png?raw=true "Hardware device file video capture")
+*Above: hardware device files (such as webcams) are visible in the 3D world and can be accessed from it.*
+
+![Screenshot: filetype detection is much more robust and versatile, relying on libmagic to identify a filetype by its contents. The old method, which is based on filename extensions, is used as a fallback.](/screenshots/03_image.png?raw=true "Improved filetype detection")
+*Above: filetype detection is much more robust and versatile, relying on libmagic to identify a filetype by its contents. The old method, which is based on filename extensions, is used as a fallback.*
+
+![Screenshot: you can use different tools to operate on your files, for example: blast them with the laser to delete them! And don't worry: for safety reasons, the program doesn't actually delete them from your disk unless you explicitly configure it to do so.](/screenshots/04_laser_weapon_tool.png?raw=true "Laserweapon tool to delete your files")
+*Above: you can use different tools to operate on your files, for example: blast them with the laser to delete them! And don't worry: for safety reasons, the program doesn't actually delete them from your disk unless you explicitly configure it to do so.*
+
 USAGE
 =====
 
