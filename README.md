@@ -37,6 +37,11 @@ Performance
 -----------
 This version runs at 1920x1080 resolution while playing 720p H264 video (2048x2048 texture) on a single-core of the Intel Core i7 at 2.90Ghz.
 
+Screenshots
+===========
+![Screenshot: all major audio and video formats are supported through GStreamer. Video texture size went up from 256x256 to however high your GPU can go. Think 8192x8192.](/screenshots/01_videos.png?raw=true "All major audio and video formats are supported through GStreamer. Video texture size went up from 256x256 to however high your GPU can go. Think 8192x8192.")
+*Above: all major audio and video formats are supported through GStreamer. Video texture size went up from 256x256 to however high your GPU can go. Think 8192x8192.*
+
 USAGE
 =====
 
