@@ -7,8 +7,6 @@ E-mail: tomvanbraeckel+3dfsb@gmail.com
 
 Homepage: https://github.com/tomvanbraeckel/3dfsb
 
-Weblog: http://globalblindspot.blogspot.be/search/label/3dfsb
-
 Forked, cleaned up and improved by Tom Van Braeckel, originally written by Leander Seige.
 
 Version 1.0 (07-01-2015)
