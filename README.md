@@ -1,12 +1,12 @@
 3dfsb
 =====
 
-3D File System Browser - cleaned up and improved fork of the old tdfsb
-
-This runs on GNU/Linux and should also run on BeOS/Haiku and FreeBSD.
+3D File System Browser - cleaned up and improved fork of the old tdfsb which runs on GNU/Linux and should also run on BeOS/Haiku and FreeBSD.
 
 E-mail: tomvanbraeckel+3dfsb@gmail.com
+
 Homepage: https://github.com/tomvanbraeckel/3dfsb
+
 Weblog: http://globalblindspot.blogspot.be/search/label/3dfsb
 
 Forked, cleaned up and improved by Tom Van Braeckel, originally written by Leander Seige.
