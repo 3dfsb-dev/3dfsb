@@ -55,11 +55,11 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
     echo "BeOS detected.";
     echo "compiling...";
-    gcc $ARGS1 $ARGS2 -I/boot/develop/tools/gnupro/include/ -I/boot/develop/headers/be/opengl/ -L/boot/home/config/lib -L/boot/develop/tools/gnupro/lib/ -lSDL_image -lGL -lglut -lsmpeg -D_THREAD_SAFE -O2 -x c -o 3dfsb 3dfsb.c;
+    gcc $ARGS1 $ARGS2 -I/boot/develop/tools/gnupro/include/ -I/boot/develop/headers/be/opengl/ -L/boot/home/config/lib -L/boot/develop/tools/gnupro/lib/ -lSDL_image -lGL -lglut -lmagic -D_THREAD_SAFE -O2 -x c -o 3dfsb 3dfsb.c;
 elif uname -s | grep -i -c "BSD" > /dev/null; then 
     echo "BSD detected.";
     echo "compiling...";
-    gcc $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -lSDL_image -lGL -lGLU -lglut -lXmu -lXi -lXext -lX11 -lm -lsmpeg -D_THREAD_SAFE -O2 -x c -o 3dfsb 3dfsb.c;
+    gcc $ARGS1 $ARGS2 -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -lSDL_image -lGL -lGLU -lglut -lXmu -lXi -lXext -lX11 -lm -lmagic -D_THREAD_SAFE -O2 -x c -o 3dfsb 3dfsb.c;
 else
     echo "Unknown OS. If you are running Linux, BeOS or";
     echo "FreeBSD please send me the output of 'uname -s'." 
