@@ -789,13 +789,27 @@ unsigned char *read_imagefile(unsigned char *filename)
 		return NULL;
 	}*/
 
-	// This does NOT crash...  cool, but... why?!
-	strncpy(ssi, converter->pixels, memsize);
+	// These do not crash:
+	//memcpy(ssi, converter->pixels, 256*256*4);
+	//memcpy(ssi, converter->pixels, 2560*2560*4);
+	memcpy(ssi, converter->pixels, www*hhh*4);
+
+	// I know that ssi is big enough, so it must be that converter->pixels is too small to read more than www*hhh*4 bytes from...
+	// But the scale operation above IS not reading more than www*hhh*4 bytes, right...?!
+
+	// Trying...
+
+	// This crashes:
+	//memcpy(ssi, converter->pixels, (www+1)*(hhh+1)*4);
+	//memcpy(ssi, converter->pixels, 4096*2560*4);
+	//memcpy(ssi, converter->pixels, memsize);
+	//memcpy(ssi, converter->pixels, 25600*25600*4);
 
 	SDL_UnlockSurface(converter);
 	SDL_FreeSurface(converter);
 
 	cglmode = GL_RGBA;
+	printf("IMAGE: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, filename, p2w, p2h);
 	return ssi;
 }
 
@@ -816,25 +830,17 @@ void* async_load_textures(void *arg) {
 			strcat(fullpath, object->name);
 			printf("Loading texture of %s\n", fullpath);
 
-			if ((object->mode & 0x1F) == 1 || (object->mode & 0x1F) == 11) {	// Directory
-				/*temptype = 0;
-				locpx = locpz = locpy = 0;
-				locsx = locsy = locsz = 1;
-				texturewidth = 0;
-				textureheight = 0;
-				textureformat = 0;
-				printf(" .. DIR done.\n");*/
-			} else if (object->regtype == IMAGEFILE) {
+			if (object->regtype == IMAGEFILE) {
 				object->texturedata = read_imagefile(fullpath);
 				if (!object->texturedata) {
 					printf("IMAGE FAILED: %s\n", fullpath);
 				} else {
-/*					texturewidth = p2w;
-					textureheight = p2h;
-					textureformat = cglmode;
-					textureid = 0;
-					printf("IMAGE: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, texturewidth, textureheight);
-					if (www < hhh) {
+					/*object->texturewidth = p2w;
+					object->textureheight = p2h;*/
+					object->texturewidth = 256;
+					object->textureheight = 256;
+					object->textureformat = cglmode;
+/*					if (www < hhh) {
 						locsx = locsz = ((GLfloat) log(((double)www / 512) + 1)) + 1;
 						locsy = (hhh * (locsx)) / www;
 					} else {
