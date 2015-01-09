@@ -835,8 +835,9 @@ void* async_load_textures(void *arg) {
 				if (!object->texturedata) {
 					printf("IMAGE FAILED: %s\n", fullpath);
 				} else {
-					/*object->texturewidth = p2w;
-					object->textureheight = p2h;*/
+					object->texturewidth = p2w;
+					object->textureheight = p2h;
+					// To ensure our texture is quite valid...?
 					object->texturewidth = 256;
 					object->textureheight = 256;
 					object->textureformat = cglmode;
@@ -852,7 +853,7 @@ void* async_load_textures(void *arg) {
 					locpy = locsy - 1;
 					TDFSB_TEX_NUM++;*/
 				}
-			} else /*if (temptype == TEXTFILE) {
+			} /* else if (temptype == TEXTFILE) {
 				texturewidth = 0;
 				textureheight = 0;
 				textureformat = 0;
@@ -908,7 +909,7 @@ void* async_load_textures(void *arg) {
 				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				locpx = locpz = 0;
 				locpy = locsy - 1;
-			} else */ if (object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
+			} */ else if (object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
 				object->texturedata = read_videoframe(fullpath, object->regtype);
 				if (!object->texturedata) {
 					printf("Reading video frame from %s failed\n", fullpath);
@@ -931,9 +932,9 @@ void* async_load_textures(void *arg) {
 					object->locsz = 0.2;	// flatscreens!
 					object->locpx = object->locpz = 0;
 					object->locpy = object->locsy - 1;*/
-					TDFSB_TEX_NUM++;
+					//TDFSB_TEX_NUM++;
 				}
-			} else /* if (temptype == AUDIOFILE) {
+			} /* else if (temptype == AUDIOFILE) {
 				texturewidth = 0;
 				textureheight = 0;
 				textureformat = 0;
@@ -960,7 +961,8 @@ void* async_load_textures(void *arg) {
 				printf(" .. done.\n");
 			} */
 			if (object->texturedata != NULL) {
-				glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
+				printf("Setting texture on object for %s with ID %d\n", object->name, object->textureid);
+				glBindTexture(GL_TEXTURE_2D, object->textureid);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -2030,7 +2032,7 @@ void leodir(void)
 			}
 
 			// Count the number of textures we'll need, so we can allocate them already below
-			if (temptype == IMAGEFILE || temptype == VIDEOFILE)
+			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE)
 				TDFSB_TEX_NUM++;
 
 /*  + Setting Parameters */
