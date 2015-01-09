@@ -794,7 +794,7 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 	pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
 	GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
 	GST_ROUND_UP_4(p2w * 3), NULL, NULL);	// parameter 7 = rowstride
-	gdk_pixbuf_save(pixbuf, "read_image_converter.png", "png", &error, NULL);
+	gdk_pixbuf_save(pixbuf, "read_videoframe_converter.png", "png", &error, NULL);
 	if (error != NULL) {
 		g_print("Could not save image preview to file: %s\n", error->message);
 		g_error_free(error);
@@ -813,7 +813,6 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 	return converter;
 }
 
-//unsigned char *read_imagefile(unsigned char *filename)
 SDL_Surface *read_imagefile(unsigned char *filename)
 {
 	SDL_Surface *loader, *converter;
@@ -842,20 +841,41 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		return NULL;
 	}
 
-	// PNG images often have 32 bits per pixel, for the alpha channel
+	// PNG images often have an alpha channel and 32 bits per pixel
 	if (loader->format->Amask) {
 		cglmode = GL_RGBA;
 	} else {
 		cglmode = GL_RGB;
 	}
 
-	/* Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
+	// The loader surface is 8 bits per pixel
+	// So I assume the converter surface also becomes 8 bits per pixel
+	// But then we set it on OpenGL, which does not expect this...
+	// TODO: check SDL_DisplayFormat()
+	// or  apt-cache search opengl | grep -i image
+	/*
+gem-plugin-magick - Graphics Environment for Multimedia - ImageMagick support
+gliv - image viewer using gdk-pixbuf and OpenGL
+kipi-plugins - image manipulation/handling plugins for KIPI aware programs
+libdevil-dev - Cross-platform image loading and manipulation toolkit
+libdevil1c2 - Cross-platform image loading and manipulation toolkit
+libopencsg-dev - image-based CSG library using OpenGL (development files)
+libopencsg-example - image-based CSG library using OpenGL (example program)
+libopencsg1 - image-based CSG (Constructive Solid Geometry) library using OpenGL
+libsoil-dev - Simple OpenGL Image Library - development files
+libsoil1 - Simple OpenGL Image Library
+libsoil1-dbg - Simple OpenGL Image Library - debug files
+*/
+
+
+	/*
+	// Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
 	SDL_LockSurface(loader);
 	GError *error = NULL;
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(loader->pixels,
 	GDK_COLORSPACE_RGB, FALSE, 8, www, hhh, // parameter 3 means "has alpha", 4 = bits per sample
 	www * 3, NULL, NULL);	// parameter 7 = rowstride
-	gdk_pixbuf_save(pixbuf, "read_image_loader.png", "png", &error, NULL);
+	gdk_pixbuf_save(pixbuf, "read_imagefile_loader.png", "png", &error, NULL);
 	if (error != NULL) {
 		g_print("Could not save image preview to file: %s\n", error->message);
 		g_error_free(error);
@@ -880,8 +900,8 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 
 	SDL_FreeSurface(loader);
 
-	/* Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
 	// Save the preview for debugging (or caching?) purposes
+	// Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
 	SDL_LockSurface(converter);
 	error = NULL;
 	pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
@@ -894,9 +914,8 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		exit(-1);
 	}
 	SDL_UnlockSurface(converter);
-	*/
 
-	printf("Returning SDL_Surface converter: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, filename, p2w, p2h);
+	printf("read_imagefile is returning SDL_Surface converter: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, filename, p2w, p2h);
 	return converter;
 }
 
