@@ -461,7 +461,8 @@ char *uppercase(char *str)
 
 int get_file_type(char *fullpath)
 {
-	unsigned int temptype, cc;
+	unsigned int temptype = 0;	// temptype needs to be 0 to check if we found a match later on!
+	unsigned int cc;
 	const char *mime = magic_file(magic, fullpath);
 
 	//printf("Got mimetype: %s\n", mime);
