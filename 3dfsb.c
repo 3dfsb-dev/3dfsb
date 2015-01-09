@@ -519,12 +519,106 @@ void play_media()
 
 }
 
+void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
+{
+    int bpp = surface->format->BytesPerPixel;
+    /* Here p is the address to the pixel we want to set */
+    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+
+    switch(bpp) {
+    case 1:
+        *p = pixel;
+        break;
+
+    case 2:
+        *(Uint16 *)p = pixel;
+        break;
+
+    case 3:
+        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+            p[0] = (pixel >> 16) & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = pixel & 0xff;
+        } else {
+            p[0] = pixel & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = (pixel >> 16) & 0xff;
+        }
+        break;
+
+    case 4:
+        *(Uint32 *)p = pixel;
+        break;
+    }
+}
+
+Uint32 getpixel(SDL_Surface *surface, int x, int y)
+{
+    int bpp = surface->format->BytesPerPixel;
+    /* Here p is the address to the pixel we want to retrieve */
+    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+
+    switch(bpp) {
+    case 1:
+        return *p;
+        break;
+
+    case 2:
+        return *(Uint16 *)p;
+        break;
+
+    case 3:
+        if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
+            return p[0] << 16 | p[1] << 8 | p[2];
+        else
+            return p[0] | p[1] << 8 | p[2] << 16;
+        break;
+
+    case 4:
+        return *(Uint32 *)p;
+        break;
+
+    default:
+        return 0;       /* shouldn't happen, but avoids warnings */
+    }
+}
+
+// Here we do that SDL_BlitSurface of SDL 2.0 does
+SDL_Surface *ScaleSurface(SDL_Surface *Surface, double Width, double Height)
+{
+    unsigned int x, y, o_y, o_x;
+
+    if(!Surface || !Width || !Height)
+        return 0;
+     
+    SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
+	/* SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 32,
+	SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 24,
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
+#else
+					 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+#endif
+	    ); */
+
+    double _stretch_factor_x = Width / Surface->w;
+    double _stretch_factor_y = Height / Surface->h;
+    printf("ScaleSurface has stretch factors %f and %f\n", _stretch_factor_x, _stretch_factor_y);
+
+    for(y = 0; y < Surface->h; y++)
+        for(x = 0; x < Surface->w; x++)
+            for(o_y = 0; o_y < _stretch_factor_y; ++o_y)
+                for(o_x = 0; o_x < _stretch_factor_x; ++o_x)
+			putpixel(_ret, _stretch_factor_x * x + o_x, _stretch_factor_y * y + o_y, getpixel(Surface, x, y));
+ 
+    return _ret;
+}
+
+
 /* Returns a pointer to (not a char but) the buffer that holds the image texture */
 // types of VIDEOFILE and VIDEOSOURCEFILE are currently supported
-unsigned char *read_videoframe(char *filename, unsigned int type)
+SDL_Surface *read_videoframe(char *filename, unsigned int type)
 {
-	unsigned char *ssi;     // the final image to return
-
 	if (type != VIDEOFILE && type != VIDEOSOURCEFILE) {
 		printf("Error: read_videoframe can only handle VIDEOFILE and VIDEOSOURCFILE's!\n");
 		return NULL;
@@ -658,19 +752,6 @@ unsigned char *read_videoframe(char *filename, unsigned int type)
 
 	 */
 
-	unsigned long int memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
-
-	if (!(ssi = (unsigned char *)malloc((size_t) memsize))) {
-		printf("Cannot read frame %s ! (low mem buffer) \n", filename);
-		www = 0;
-		hhh = 0;
-		ssi = NULL;
-		p2w = 0;
-		p2h = 0;
-		exit(2);
-		return NULL;
-	}
-
 	GstBuffer *buffer = gst_sample_get_buffer(sample);
 	gst_buffer_map(buffer, &map, GST_MAP_READ);
 
@@ -685,121 +766,35 @@ unsigned char *read_videoframe(char *filename, unsigned int type)
 	   gdk_pixbuf_save(pixbuf, "videopreview.png", "png", &error, NULL);
 	 */
 
-	if (gluScaleImage(GL_RGB, www, hhh, GL_UNSIGNED_BYTE, map.data, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
-		free(ssi);
-		printf("Cannot read frame %s ! (scaling) \n", filename);
+	SDL_Surface * loader = SDL_CreateRGBSurfaceFrom(map.data, width, height, 24, GST_ROUND_UP_4(width * 3),
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+                                         0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
+#else
+                                         0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+#endif
+	);
+
+	// TODO: this surface seems to have 0x0 dimensions...
+	SDL_Surface * converter = ScaleSurface(loader, p2w, p2h);
+	if (!converter) {
+		SDL_FreeSurface(loader);
+		printf("Cannot read image %s ! (converting)\n", filename);
 		www = 0;
 		hhh = 0;
-		ssi = NULL;
 		p2w = 0;
 		p2h = 0;
-		exit(2);
 		return NULL;
 	}
+
+	SDL_FreeSurface(loader);
 
 	gst_buffer_unmap(buffer, &map);
 	gst_sample_unref(sample);
 
 	cleanup_media_player();
 
-	return ssi;
+	return converter;
 }
-
-void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
-{
-    int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to set */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
-
-    switch(bpp) {
-    case 1:
-        *p = pixel;
-        break;
-
-    case 2:
-        *(Uint16 *)p = pixel;
-        break;
-
-    case 3:
-        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-            p[0] = (pixel >> 16) & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = pixel & 0xff;
-        } else {
-            p[0] = pixel & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = (pixel >> 16) & 0xff;
-        }
-        break;
-
-    case 4:
-        *(Uint32 *)p = pixel;
-        break;
-    }
-}
-
-Uint32 getpixel(SDL_Surface *surface, int x, int y)
-{
-    int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to retrieve */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
-
-    switch(bpp) {
-    case 1:
-        return *p;
-        break;
-
-    case 2:
-        return *(Uint16 *)p;
-        break;
-
-    case 3:
-        if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-            return p[0] << 16 | p[1] << 8 | p[2];
-        else
-            return p[0] | p[1] << 8 | p[2] << 16;
-        break;
-
-    case 4:
-        return *(Uint32 *)p;
-        break;
-
-    default:
-        return 0;       /* shouldn't happen, but avoids warnings */
-    }
-}
-
-// Here we do that SDL_BlitSurface of SDL 2.0 does
-SDL_Surface *ScaleSurface(SDL_Surface *Surface, double Width, double Height)
-{
-    unsigned int x, y, o_y, o_x;
-
-    if(!Surface || !Width || !Height)
-        return 0;
-     
-    SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
-	/* SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 32,
-	SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 24,
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
-#else
-					 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
-#endif
-	    ); */
-
-    double _stretch_factor_x = Width / Surface->w;
-    double _stretch_factor_y = Height / Surface->h;
-    printf("ScaleSurface has stretch factors %f and %f\n", _stretch_factor_x, _stretch_factor_y);
-
-    for(y = 0; y < Surface->h; y++)
-        for(x = 0; x < Surface->w; x++)
-            for(o_y = 0; o_y < _stretch_factor_y; ++o_y)
-                for(o_x = 0; o_x < _stretch_factor_x; ++o_x)
-			putpixel(_ret, _stretch_factor_x * x + o_x, _stretch_factor_y * y + o_y, getpixel(Surface, x, y));
- 
-    return _ret;
-}
-
 
 //unsigned char *read_imagefile(unsigned char *filename)
 SDL_Surface *read_imagefile(unsigned char *filename)
@@ -807,7 +802,6 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 	SDL_Surface *loader, *converter;
 	unsigned long int memsize;
 	int cc;	// ensure this is a local variable, for threading issues, doesn't help
-	unsigned char *ssi;     // the final image to return
 	unsigned int bps;
 
 	loader = IMG_Load(filename);
@@ -815,7 +809,6 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		printf("Cannot read image %s ! (file loading)\n", filename);
 		www = 0;
 		hhh = 0;
-		ssi = NULL;
 		p2w = 0;
 		p2h = 0;
 		return NULL;
@@ -827,7 +820,6 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		printf("Cannot read image %s ! (identification error)\n", filename);
 		www = 0;
 		hhh = 0;
-		ssi = NULL;
 		p2w = 0;
 		p2h = 0;
 		return NULL;
@@ -864,7 +856,6 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		printf("Cannot read image %s ! (converting)\n", filename);
 		www = 0;
 		hhh = 0;
-		ssi = NULL;
 		p2w = 0;
 		p2h = 0;
 		return NULL;
@@ -1014,7 +1005,8 @@ void* async_load_textures(void *arg) {
 					object->locsz = 0.2;	// flatscreens!
 					object->locpx = object->locpz = 0;
 					object->locpy = object->locsy - 1;*/
-					//TDFSB_TEX_NUM++;
+					// Redraw/retexture this object in the rendering thread
+					object_to_retexture = object;
 				}
 			} /* else if (temptype == AUDIOFILE) {
 				texturewidth = 0;
