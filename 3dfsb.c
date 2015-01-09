@@ -104,7 +104,6 @@ void (*TDFSB_FUNC_MOUSE) (int button, int state, int x, int y), (*TDFSB_FUNC_MOT
 int (*TDFSB_FUNC_KEY) (unsigned char key);
 int (*TDFSB_FUNC_UPKEY) (unsigned char key);
 
-unsigned char *ssi;
 unsigned long int www, hhh, p2w, p2h, cglmode;
 
 long int c1, c2, c3, c4, cc, cc1, cc2, cc3, cc4;
@@ -519,6 +518,8 @@ void play_media()
 // types of VIDEOFILE and VIDEOSOURCEFILE are currently supported
 unsigned char *read_videoframe(char *filename, unsigned int type)
 {
+	unsigned char *ssi;     // the final image to return
+
 	if (type != VIDEOFILE && type != VIDEOSOURCEFILE) {
 		printf("Error: read_videoframe can only handle VIDEOFILE and VIDEOSOURCFILE's!\n");
 		return NULL;
@@ -703,6 +704,7 @@ unsigned char *read_imagefile(char *filename)
 {
 	SDL_Surface *loader, *converter;
 	unsigned long int memsize;
+	unsigned char *ssi;     // the final image to return
 
 	loader = IMG_Load(filename);
 	if (!loader) {
