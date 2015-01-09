@@ -616,12 +616,10 @@ SDL_Surface *ScaleSurface(SDL_Surface *Surface, double Width, double Height)
 }
 
 
-/* Returns a pointer to (not a char but) the buffer that holds the image texture */
-// types of VIDEOFILE and VIDEOSOURCEFILE are currently supported
-SDL_Surface *read_videoframe(char *filename, unsigned int type)
+SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 {
 	if (type != VIDEOFILE && type != VIDEOSOURCEFILE && type != IMAGEFILE) {
-		printf("Error: read_videoframe can only handle VIDEOFILE, VIDEOSOURCFILE and IMAGEFILE's!\n");
+		printf("Error: get_image_from_file can only handle VIDEOFILE, VIDEOSOURCFILE and IMAGEFILE's!\n");
 		return NULL;
 	}
 	GstElement *sink;
@@ -742,16 +740,7 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 	// Example: image is 350x220 => texture size will be 512x512
 	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
 	p2h = p2w = cc;
-	cglmode = GL_RGB;	// We set this globally here, and it is used somewhere later in the code that calls read_videoframe()
-
-	/* Scaling, from say 352x193 to 256x256
-
-	   Note: this also introduces small relative changes in the RGBA values:
-	   \004\004\006\377\003\003\005\377\003\003\003\377\003\003\003\377
-	   becomes
-	   \003\b\005\377\002\a\003\377\002\a\002\377\002\a\002\377
-
-	 */
+	cglmode = GL_RGB;	// We set this globally here, and it is used somewhere later in the code that calls get_image_from_file()
 
 	GstBuffer *buffer = gst_sample_get_buffer(sample);
 	gst_buffer_map(buffer, &map, GST_MAP_READ);
@@ -794,7 +783,7 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 	pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
 	GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
 	GST_ROUND_UP_4(p2w * 3), NULL, NULL);	// parameter 7 = rowstride
-	gdk_pixbuf_save(pixbuf, "read_videoframe_converter.png", "png", &error, NULL);
+	gdk_pixbuf_save(pixbuf, "get_image_from_file_converter.png", "png", &error, NULL);
 	if (error != NULL) {
 		g_print("Could not save image preview to file: %s\n", error->message);
 		g_error_free(error);
@@ -813,136 +802,9 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 	return converter;
 }
 
-SDL_Surface *read_imagefile(unsigned char *filename)
-{
-	SDL_Surface *loader, *converter;
-	unsigned long int memsize;
-	int cc;	// ensure this is a local variable, for threading issues, doesn't help
-	unsigned int bps;
-
-	loader = IMG_Load(filename);
-	if (!loader) {
-		printf("Cannot read image %s ! (file loading)\n", filename);
-		www = 0;
-		hhh = 0;
-		p2w = 0;
-		p2h = 0;
-		return NULL;
-	}
-	www = loader->w;
-	hhh = loader->h;
-	if ((www <= 0) || (hhh <= 0)) {
-		SDL_FreeSurface(loader);
-		printf("Cannot read image %s ! (identification error)\n", filename);
-		www = 0;
-		hhh = 0;
-		p2w = 0;
-		p2h = 0;
-		return NULL;
-	}
-
-	// PNG images often have an alpha channel and 32 bits per pixel
-	if (loader->format->Amask) {
-		cglmode = GL_RGBA;
-	} else {
-		cglmode = GL_RGB;
-	}
-
-	// The loader surface is 8 bits per pixel
-	// So I assume the converter surface also becomes 8 bits per pixel
-	// But then we set it on OpenGL, which does not expect this...
-	// TODO: check SDL_DisplayFormat()
-	// or  apt-cache search opengl | grep -i image
-	/*
-gem-plugin-magick - Graphics Environment for Multimedia - ImageMagick support
-gliv - image viewer using gdk-pixbuf and OpenGL
-kipi-plugins - image manipulation/handling plugins for KIPI aware programs
-libdevil-dev - Cross-platform image loading and manipulation toolkit
-libdevil1c2 - Cross-platform image loading and manipulation toolkit
-libopencsg-dev - image-based CSG library using OpenGL (development files)
-libopencsg-example - image-based CSG library using OpenGL (example program)
-libopencsg1 - image-based CSG (Constructive Solid Geometry) library using OpenGL
-libsoil-dev - Simple OpenGL Image Library - development files
-libsoil1 - Simple OpenGL Image Library
-libsoil1-dbg - Simple OpenGL Image Library - debug files
-*/
-
-
-	/*
-	// Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
-	SDL_LockSurface(loader);
-	GError *error = NULL;
-	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(loader->pixels,
-	GDK_COLORSPACE_RGB, FALSE, 8, www, hhh, // parameter 3 means "has alpha", 4 = bits per sample
-	www * 3, NULL, NULL);	// parameter 7 = rowstride
-	gdk_pixbuf_save(pixbuf, "read_imagefile_loader.png", "png", &error, NULL);
-	if (error != NULL) {
-		g_print("Could not save image preview to file: %s\n", error->message);
-		g_error_free(error);
-		exit(-1);
-	}
-	SDL_UnlockSurface(loader);
-	*/
-
-	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
-	p2h = p2w = cc;
-
-
-	// http://www.idevgames.com/forums/thread-3814.html
-	SDL_PixelFormat RGBAFormat;
-	RGBAFormat.palette = 0; RGBAFormat.colorkey = 0; RGBAFormat.alpha = 0;
-    RGBAFormat.BitsPerPixel = 32; RGBAFormat.BytesPerPixel = 4;
-	#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    RGBAFormat.Rmask = 0xFF000000; RGBAFormat.Rshift =  0; RGBAFormat.Rloss = 0;
-    RGBAFormat.Gmask = 0x00FF0000; RGBAFormat.Gshift =  8; RGBAFormat.Gloss = 0;
-    RGBAFormat.Bmask = 0x0000FF00; RGBAFormat.Bshift = 16; RGBAFormat.Bloss = 0;
-    RGBAFormat.Amask = 0x000000FF; RGBAFormat.Ashift = 24; RGBAFormat.Aloss = 0;
-#else
-    RGBAFormat.Rmask = 0x000000FF; RGBAFormat.Rshift = 24; RGBAFormat.Rloss = 0;
-    RGBAFormat.Gmask = 0x0000FF00; RGBAFormat.Gshift = 16; RGBAFormat.Gloss = 0;
-    RGBAFormat.Bmask = 0x00FF0000; RGBAFormat.Bshift =  8; RGBAFormat.Bloss = 0;
-    RGBAFormat.Amask = 0xFF000000; RGBAFormat.Ashift =  0; RGBAFormat.Aloss = 0;
-#endif
-	SDL_Surface * conv = SDL_ConvertSurface(loader, &RGBAFormat, SDL_SWSURFACE);
-	cglmode = GL_RGBA; //? 
-
-	converter = ScaleSurface(conv, p2w, p2h);
-	if (!converter) {
-		SDL_FreeSurface(loader);
-		printf("Cannot read image %s ! (converting)\n", filename);
-		www = 0;
-		hhh = 0;
-		p2w = 0;
-		p2h = 0;
-		return NULL;
-	}
-
-	SDL_FreeSurface(loader);
-
-	/*
-	// Save the preview for debugging (or caching?) purposes
-	// Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
-	SDL_LockSurface(converter);
-	error = NULL;
-	pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
-	GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
-	GST_ROUND_UP_4(p2w * 3), NULL, NULL);	// parameter 7 = rowstride
-	gdk_pixbuf_save(pixbuf, "read_image_converter.png", "png", &error, NULL);
-	if (error != NULL) {
-		g_print("Could not save image preview to file: %s\n", error->message);
-		g_error_free(error);
-		exit(-1);
-	}
-	SDL_UnlockSurface(converter);
-	*/
-
-	printf("read_imagefile is returning SDL_Surface converter: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, filename, p2w, p2h);
-	return converter;
-}
 
 // This new thread loads the textures
 void* async_load_textures(void *arg) {
-	//sleep(5);	// doesn't help...
 	// For each object, load its texture and (if possible) set the dimensions...
 	struct tree_entry *object;
 	// TODO: protect this buffer from overflowing in the heap when the file or pathname is very long
@@ -958,34 +820,7 @@ void* async_load_textures(void *arg) {
 			strcat(fullpath, object->name);
 			printf("Loading texture of %s\n", fullpath);
 
-			if (object->regtype == IMAGEFILE) {
-				//object->texturedata = read_imagefile(fullpath);
-				//object->texturesurface = read_imagefile(fullpath);
-				object->texturesurface = read_videoframe(fullpath, object->regtype);
-				if (!object->texturesurface) {
-					printf("IMAGE FAILED: %s\n", fullpath);
-				} else {
-					object->texturewidth = p2w;
-					object->textureheight = p2h;
-					// To ensure our texture is quite valid...?
-					//object->texturewidth = 256;
-					//object->textureheight = 256;
-					object->textureformat = cglmode;
-/*					if (www < hhh) {
-						locsx = locsz = ((GLfloat) log(((double)www / 512) + 1)) + 1;
-						locsy = (hhh * (locsx)) / www;
-					} else {
-						locsy = ((GLfloat) log(((double)hhh / 512) + 1)) + 1;
-						locsx = locsz = (www * (locsy)) / hhh;
-					}
-					locsz = 1.44 / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
-					locpx = locpz = 0;
-					locpy = locsy - 1;*/
-
-					// Redraw/retexture this object in the rendering thread
-					object_to_retexture = object;
-				}
-			} /* else if (temptype == TEXTFILE) {
+			/* else if (temptype == TEXTFILE) {
 				texturewidth = 0;
 				textureheight = 0;
 				textureformat = 0;
@@ -1041,8 +876,9 @@ void* async_load_textures(void *arg) {
 				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				locpx = locpz = 0;
 				locpy = locsy - 1;
-			} */ else if (object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
-				object->texturesurface = read_videoframe(fullpath, object->regtype);
+			} else   */
+			if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
+				object->texturesurface = get_image_from_file(fullpath, object->regtype);
 				if (!object->texturesurface) {
 					printf("Reading video frame from %s failed\n", fullpath);
 					//object->scaley = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
@@ -1065,32 +901,7 @@ void* async_load_textures(void *arg) {
 					// Redraw/retexture this object in the rendering thread
 					object_to_retexture = object;
 				}
-			} /* else if (temptype == AUDIOFILE) {
-				texturewidth = 0;
-				textureheight = 0;
-				textureformat = 0;
-				textureid = 0;
-				c1 = 0;
-				c2 = 0;
-				c3 = 0;
-				texturedata = NULL;
-				locsy = locsx = locsz = ((GLfloat) log(((double)buf.st_size / (65536 * 20) + 1))) + 1;
-				locpx = locpz = 0;
-				locpy = locsy - 1;
-				printf("\n");
-			} else {
-				texturedata = NULL;
-				texturewidth = 0;
-				textureheight = 0;
-				textureformat = 0;
-				textureid = 0;
-				temptype = UNKNOWNFILE;
-				locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-				locpx = locpz = 0;
-				locpy = locsy - 1;
-				printf(" .. done.\n");
-			} */
+			}
 		}
 	}	// end of directory entry iterator
 	free(fullpath);
@@ -2334,7 +2145,6 @@ void leodir(void)
 		printf("Can't create thread :[%s]", strerror(err));
 	else
 		printf("Thread created successfully\n");
-	//sleep(5);	// doesn't help...
 
 	return;
 }
