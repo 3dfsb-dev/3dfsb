@@ -784,7 +784,8 @@ SDL_Surface *ScaleSurface(SDL_Surface *Surface, double Width, double Height)
         return 0;
      
     //SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
-	SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 32,
+	//SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 32,
+	SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
 #else
@@ -855,6 +856,7 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 	p2h = p2w = cc;
 	cglmode = GL_RGB;
 
+/*
 	converter = SDL_CreateRGBSurface(SDL_SWSURFACE, p2w, p2h, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
@@ -862,8 +864,27 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 					 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
 #endif
 	    );
+*/
 
 	//converter = ScaleSurface(loader, p2w, p2h);
+	/*
+	if (!converter) {
+		SDL_FreeSurface(loader);
+		printf("Cannot read image %s ! (converting)\n", filename);
+		www = 0;
+		hhh = 0;
+		ssi = NULL;
+		p2w = 0;
+		p2h = 0;
+		return NULL;
+	}*/
+	//SDL_BlitSurface(loader, NULL, converter, NULL);
+	//SDL_BlitScaled(loader, NULL, converter, NULL);
+	// Hmm, for some reason, only the first 1/5 of the image is saved to file and set to the texture
+	// It's as if the StretchSurfaceBlit has a limit and just stops after a while
+	//SDL_StretchSurfaceBlit(loader, NULL, converter, NULL);
+
+	converter = ScaleSurface(loader, p2w, p2h);
 	if (!converter) {
 		SDL_FreeSurface(loader);
 		printf("Cannot read image %s ! (converting)\n", filename);
@@ -874,11 +895,6 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		p2h = 0;
 		return NULL;
 	}
-	//SDL_BlitSurface(loader, NULL, converter, NULL);
-	//SDL_BlitScaled(loader, NULL, converter, NULL);
-	// Hmm, for some reason, only the first 1/5 of the image is saved to file and set to the texture
-	// It's as if the StretchSurfaceBlit has a limit and just stops after a while
-	SDL_StretchSurfaceBlit(loader, NULL, converter, NULL);
 
 	SDL_FreeSurface(loader);
 
