@@ -887,6 +887,8 @@ libsoil1-dbg - Simple OpenGL Image Library - debug files
 	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
 	p2h = p2w = cc;
 
+
+	// http://www.idevgames.com/forums/thread-3814.html
 	SDL_PixelFormat RGBAFormat;
 	RGBAFormat.palette = 0; RGBAFormat.colorkey = 0; RGBAFormat.alpha = 0;
     RGBAFormat.BitsPerPixel = 32; RGBAFormat.BytesPerPixel = 4;
@@ -902,6 +904,7 @@ libsoil1-dbg - Simple OpenGL Image Library - debug files
     RGBAFormat.Amask = 0xFF000000; RGBAFormat.Ashift =  0; RGBAFormat.Aloss = 0;
 #endif
 	SDL_Surface * conv = SDL_ConvertSurface(loader, &RGBAFormat, SDL_SWSURFACE);
+	cglmode = GL_RGBA; //? 
 
 	converter = ScaleSurface(conv, p2w, p2h);
 	if (!converter) {
