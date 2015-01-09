@@ -887,7 +887,23 @@ libsoil1-dbg - Simple OpenGL Image Library - debug files
 	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
 	p2h = p2w = cc;
 
-	converter = ScaleSurface(loader, p2w, p2h);
+	SDL_PixelFormat RGBAFormat;
+	RGBAFormat.palette = 0; RGBAFormat.colorkey = 0; RGBAFormat.alpha = 0;
+    RGBAFormat.BitsPerPixel = 32; RGBAFormat.BytesPerPixel = 4;
+	#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    RGBAFormat.Rmask = 0xFF000000; RGBAFormat.Rshift =  0; RGBAFormat.Rloss = 0;
+    RGBAFormat.Gmask = 0x00FF0000; RGBAFormat.Gshift =  8; RGBAFormat.Gloss = 0;
+    RGBAFormat.Bmask = 0x0000FF00; RGBAFormat.Bshift = 16; RGBAFormat.Bloss = 0;
+    RGBAFormat.Amask = 0x000000FF; RGBAFormat.Ashift = 24; RGBAFormat.Aloss = 0;
+#else
+    RGBAFormat.Rmask = 0x000000FF; RGBAFormat.Rshift = 24; RGBAFormat.Rloss = 0;
+    RGBAFormat.Gmask = 0x0000FF00; RGBAFormat.Gshift = 16; RGBAFormat.Gloss = 0;
+    RGBAFormat.Bmask = 0x00FF0000; RGBAFormat.Bshift =  8; RGBAFormat.Bloss = 0;
+    RGBAFormat.Amask = 0xFF000000; RGBAFormat.Ashift =  0; RGBAFormat.Aloss = 0;
+#endif
+	SDL_Surface * conv = SDL_ConvertSurface(loader, &RGBAFormat, SDL_SWSURFACE);
+
+	converter = ScaleSurface(conv, p2w, p2h);
 	if (!converter) {
 		SDL_FreeSurface(loader);
 		printf("Cannot read image %s ! (converting)\n", filename);
@@ -900,6 +916,7 @@ libsoil1-dbg - Simple OpenGL Image Library - debug files
 
 	SDL_FreeSurface(loader);
 
+	/*
 	// Save the preview for debugging (or caching?) purposes
 	// Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
 	SDL_LockSurface(converter);
@@ -914,6 +931,7 @@ libsoil1-dbg - Simple OpenGL Image Library - debug files
 		exit(-1);
 	}
 	SDL_UnlockSurface(converter);
+	*/
 
 	printf("read_imagefile is returning SDL_Surface converter: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, filename, p2w, p2h);
 	return converter;
