@@ -380,12 +380,6 @@ GstBuffer *videobuffer;
 // Mimetype database handle
 magic_t magic;
 
-// SDL context switching stuff
-/*SDL_SysWMinfo info;
-Display *sdl_display = NULL;
-Window sdl_win = 0;
-GLXContext sdl_gl_context = NULL;*/
-
 static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 {
 	switch (GST_MESSAGE_TYPE(msg)) {
@@ -2554,6 +2548,7 @@ void display(void)
 			glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) object_to_retexture->textureformat, object_to_retexture->texturewidth, object_to_retexture->textureheight, 0, (GLenum) object_to_retexture->textureformat, GL_UNSIGNED_BYTE, object_to_retexture->texturesurface->pixels);
 			
 			SDL_UnlockSurface(object_to_retexture->texturesurface);
+			SDL_FreeSurface(object_to_retexture->texturesurface);
 		}
 		object_to_retexture = NULL;
 	}
