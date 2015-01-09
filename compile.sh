@@ -31,7 +31,7 @@ GSTREAMER_LIBS=$(pkg-config --libs gstreamer-1.0)	# Example: -L/usr/local/lib -l
 GTK_CFLAGS=$(pkg-config --cflags gtk+-2.0)
 GTK_LIBS=$(pkg-config --libs gtk+-2.0)
 
-OTHER_LIBS=$(pkg-config --libs glu)
+OTHER_LIBS=$(pkg-config --libs glu SDL_stretch)
 
 NOPKGCONFIG_LIBS="-lglut -lmagic -lm"
 

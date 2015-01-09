@@ -776,7 +776,7 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
 }
 
 // Here we do that SDL_BlitSurface of SDL 2.0 does
-SDL_Surface *ScaleSurface(SDL_Surface *Surface, unsigned int Width, unsigned int Height)
+SDL_Surface *ScaleSurface(SDL_Surface *Surface, double Width, double Height)
 {
     unsigned int x, y, o_y, o_x;
 
@@ -784,19 +784,23 @@ SDL_Surface *ScaleSurface(SDL_Surface *Surface, unsigned int Width, unsigned int
         return 0;
      
     //SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
-    SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
+	SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 32,
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
+#else
+					 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+#endif
+	    );
 
     double _stretch_factor_x = Width / Surface->w;
     double _stretch_factor_y = Height / Surface->h;
-    printf("ScaleSurface has stretch factores %f and %f\n", _stretch_factor_x, _stretch_factor_y);
+    printf("ScaleSurface has stretch factors %f and %f\n", _stretch_factor_x, _stretch_factor_y);
 
     for(y = 0; y < Surface->h; y++)
         for(x = 0; x < Surface->w; x++)
             for(o_y = 0; o_y < _stretch_factor_y; ++o_y)
-                for(o_x = 0; o_x < _stretch_factor_x; ++o_x) {
-                    //DrawPixel(_ret, _stretch_factor_x * x + o_x, _stretch_factor_y * y + o_y, ReadPixel(Surface, x, y));
+                for(o_x = 0; o_x < _stretch_factor_x; ++o_x)
 			putpixel(_ret, _stretch_factor_x * x + o_x, _stretch_factor_y * y + o_y, getpixel(Surface, x, y));
-		}
  
     return _ret;
 }
@@ -836,7 +840,8 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
 	p2h = p2w = cc;
 	cglmode = GL_RGB;
-/*
+
+	//return loader;
 	converter = SDL_CreateRGBSurface(SDL_SWSURFACE, p2w, p2h, 32,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
@@ -844,8 +849,8 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 					 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
 #endif
 	    );
-*/
-	converter = ScaleSurface(loader, p2w, p2h);
+
+	//converter = ScaleSurface(loader, p2w, p2h);
 	if (!converter) {
 		SDL_FreeSurface(loader);
 		printf("Cannot read image %s ! (converting)\n", filename);
@@ -858,15 +863,13 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 	}
 	//SDL_BlitSurface(loader, NULL, converter, NULL);
 	//SDL_BlitScaled(loader, NULL, converter, NULL);
+	SDL_StretchSurfaceBlit(loader, NULL, converter, NULL);
 
 	SDL_FreeSurface(loader);
 
-	SDL_LockSurface(converter);
 
 	// Save the preview for debugging (or caching?) purposes
-	// Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
-	// Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
-	// Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
+	SDL_LockSurface(converter);
 	GError *error = NULL;
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
 	GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
