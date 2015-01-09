@@ -837,12 +837,25 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		return NULL;
 	}
 
+	SDL_LockSurface(loader);
+	GError *error = NULL;
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(loader->pixels,
+	GDK_COLORSPACE_RGB, FALSE, 8, www, hhh, // parameter 3 means "has alpha", 4 = bits per sample
+	www * 3, NULL, NULL);	// parameter 7 = rowstride
+	gdk_pixbuf_save(pixbuf, "read_image_loader.png", "png", &error, NULL);
+	if (error != NULL) {
+		g_print("Could not save image preview to file: %s\n", error->message);
+		g_error_free(error);
+		exit(-1);
+	}
+	SDL_UnlockSurface(loader);
+
+
 	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
 	p2h = p2w = cc;
 	cglmode = GL_RGB;
 
-	//return loader;
-	converter = SDL_CreateRGBSurface(SDL_SWSURFACE, p2w, p2h, 32,
+	converter = SDL_CreateRGBSurface(SDL_SWSURFACE, p2w, p2h, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
 #else
@@ -863,6 +876,8 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 	}
 	//SDL_BlitSurface(loader, NULL, converter, NULL);
 	//SDL_BlitScaled(loader, NULL, converter, NULL);
+	// Hmm, for some reason, only the first 1/5 of the image is saved to file and set to the texture
+	// It's as if the StretchSurfaceBlit has a limit and just stops after a while
 	SDL_StretchSurfaceBlit(loader, NULL, converter, NULL);
 
 	SDL_FreeSurface(loader);
@@ -870,11 +885,11 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 
 	// Save the preview for debugging (or caching?) purposes
 	SDL_LockSurface(converter);
-	GError *error = NULL;
-	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
+	error = NULL;
+	pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
 	GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
 	GST_ROUND_UP_4(p2w * 3), NULL, NULL);	// parameter 7 = rowstride
-	gdk_pixbuf_save(pixbuf, "read_image.png", "png", &error, NULL);
+	gdk_pixbuf_save(pixbuf, "read_image_converter.png", "png", &error, NULL);
 	if (error != NULL) {
 		g_print("Could not save image preview to file: %s\n", error->message);
 		g_error_free(error);
