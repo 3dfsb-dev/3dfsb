@@ -2636,21 +2636,19 @@ void display(void)
 
 			SDL_LockSurface(object_to_retexture->texturesurface);
 
-	// Save the preview for debugging (or caching?) purposes
-	// Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
-	// Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
-	// Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
-	GError *error = NULL;
-	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(object_to_retexture->texturesurface->pixels,
-	GDK_COLORSPACE_RGB, FALSE, 8, object_to_retexture->texturewidth, object_to_retexture->textureheight,
-	GST_ROUND_UP_4(object_to_retexture->texturewidth * 3), NULL, NULL);	// parameter 7 = rowstride
-	gdk_pixbuf_save(pixbuf, "textureimagepreview.png", "png", &error, NULL);
-	if (error != NULL) {
-		g_print("Could not save image preview to file: %s\n", error->message);
-		g_error_free(error);
-		exit(-1);
-	}
-
+			/*
+			// Save the preview for debugging (or caching?) purposes
+			GError *error = NULL;
+			GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(object_to_retexture->texturesurface->pixels,
+			GDK_COLORSPACE_RGB, FALSE, 8, object_to_retexture->texturewidth, object_to_retexture->textureheight,
+			GST_ROUND_UP_4(object_to_retexture->texturewidth * 3), NULL, NULL);	// parameter 7 = rowstride
+			gdk_pixbuf_save(pixbuf, "textureimagepreview.png", "png", &error, NULL);
+			if (error != NULL) {
+				g_print("Could not save image preview to file: %s\n", error->message);
+				g_error_free(error);
+				exit(-1);
+			}
+			*/
 
 			glBindTexture(GL_TEXTURE_2D, object_to_retexture->textureid);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
