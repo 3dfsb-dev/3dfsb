@@ -879,23 +879,23 @@ void *async_load_textures(void *arg)
 				object->texturesurface = get_image_from_file(fullpath, object->regtype);
 				if (!object->texturesurface) {
 					printf("Reading video frame from %s failed\n", fullpath);
-					//object->scaley = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-					//object->scalex = scalez = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				} else {
+					/* Ugly dirty global variables */
 					object->texturewidth = p2w;
 					object->textureheight = p2h;
 					object->textureformat = cglmode;
+					object->originalwidth = www;
+					object->originalheight = hhh;
 					printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, object->texturewidth, object->textureheight);
-					/*if (object->www < object->hhh) {
-					   object->locsx = object->locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
-					   object->locsy = (object->hhh * (object->locsx)) / www;
-					   } else {
-					   object->locsy = ((GLfloat) log(((double)hhh / 128) + 1)) + 1;
-					   object->locsx = object->locsz = (www * (object->locsy)) / hhh;
-					   }
-					   object->locsz = 0.2; // flatscreens!
-					   object->locpx = object->locpz = 0;
-					   object->locpy = object->locsy - 1; */
+					if (object->originalwidth < object->originalheight) {
+						object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
+						object->scaley = (object->originalheight * (object->scalex)) / www;
+					} else {
+						object->scaley = ((GLfloat) log(((double)object->originalheight / 128) + 1)) + 1;
+						object->scalex = object->scalez = (object->originalwidth * (object->scaley)) / object->originalheight;
+					}
+					object->posy = object->scaley - 1;	// vertical position of the object
+					object->scalez = 0.5;	// flatscreens instead of the default ugly big square blocks
 					// Redraw/retexture this object in the rendering thread
 					object_to_retexture = object;
 				}
@@ -2374,9 +2374,10 @@ void display(void)
 	}
 
 	if (object_to_retexture != NULL) {
-		printf("Object %s finished loading, drawing on texture with ID %d\n", object_to_retexture->name, object_to_retexture->textureid);
+		//printf("Object %s finished loading, drawing on texture ID %d\n", object_to_retexture->name, object_to_retexture->textureid);
+		tdb_gen_list();	// Recalculate the blocks, because the scale of the object_to_retexture has been corrected
 		if (object_to_retexture->texturesurface != NULL) {
-			printf("Texturesurface of object is not NULL, setting it...\n");
+			//printf("Texturesurface of object is not NULL, setting it...\n");
 
 			SDL_LockSurface(object_to_retexture->texturesurface);
 
