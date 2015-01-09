@@ -620,8 +620,8 @@ SDL_Surface *ScaleSurface(SDL_Surface *Surface, double Width, double Height)
 // types of VIDEOFILE and VIDEOSOURCEFILE are currently supported
 SDL_Surface *read_videoframe(char *filename, unsigned int type)
 {
-	if (type != VIDEOFILE && type != VIDEOSOURCEFILE) {
-		printf("Error: read_videoframe can only handle VIDEOFILE and VIDEOSOURCFILE's!\n");
+	if (type != VIDEOFILE && type != VIDEOSOURCEFILE && type != IMAGEFILE) {
+		printf("Error: read_videoframe can only handle VIDEOFILE, VIDEOSOURCFILE and IMAGEFILE's!\n");
 		return NULL;
 	}
 	GstElement *sink;
@@ -642,7 +642,7 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 		exit(1);
 	}
 
-	if (type == VIDEOFILE) {
+	if (type == VIDEOFILE || type == IMAGEFILE) {
 		descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
 	} else if (type == VIDEOSOURCEFILE) {
 		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
@@ -684,7 +684,7 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 		//exit(-1);
 	}
 
-	if (type == VIDEOFILE) {	// VIDEOSOURCEFILE's cannot be seeked
+	if (type == VIDEOFILE) {	// VIDEOSOURCEFILE's and IMAGEFILE's cannot be seeked
 		/* get the duration */
 		gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration);
 
@@ -960,7 +960,8 @@ void* async_load_textures(void *arg) {
 
 			if (object->regtype == IMAGEFILE) {
 				//object->texturedata = read_imagefile(fullpath);
-				object->texturesurface = read_imagefile(fullpath);
+				//object->texturesurface = read_imagefile(fullpath);
+				object->texturesurface = read_videoframe(fullpath, object->regtype);
 				if (!object->texturesurface) {
 					printf("IMAGE FAILED: %s\n", fullpath);
 				} else {
