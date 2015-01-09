@@ -42,6 +42,7 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 
     # This works fine in the first steps, but then fails in a way very similar to how it fails on pluto
     #gccopt="-static -static-libgcc"
+    gccopt="-g"		# debugging info by default
 
     gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $NOPKGCONFIG_LIBS
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
