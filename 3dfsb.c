@@ -427,6 +427,7 @@ void ende(int code)
 	if (DRN != 0) {
 		help = root;
 		while (help) {
+			//printf("Freeing %s\n", help->name);
 			FMptr = help;
 			FCptr = help->name;
 			free(FCptr);
@@ -755,7 +756,7 @@ unsigned char *read_imagefile(unsigned char *filename)
 
 	memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
 
-	printf("\n - SDL image loading mem %lu %lu\n", memsize, p2w);
+	printf("\n - SDL image allocating %lu bytes of memory for a texture of %lux%lu\n", memsize, p2w, p2h);
 
 	if (!(ssi = (unsigned char *)malloc((size_t) memsize))) {
 		SDL_FreeSurface(converter);
@@ -770,7 +771,12 @@ unsigned char *read_imagefile(unsigned char *filename)
 
 	SDL_LockSurface(converter);
 
-	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, converter->pixels, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
+	// This crashes, no idea why...
+	// - output buffer is bigger than input buffer
+	// - input buffer does not get read beyond the end, because www x hhh pixels get read from converter->pixels
+	// - converter->pixels is allocated
+	// - ssi is allocated
+	/*if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, converter->pixels, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
 		SDL_UnlockSurface(converter);
 		SDL_FreeSurface(converter);
 		free(ssi);
@@ -781,7 +787,10 @@ unsigned char *read_imagefile(unsigned char *filename)
 		p2w = 0;
 		p2h = 0;
 		return NULL;
-	}
+	}*/
+
+	// This does NOT crash...  cool, but... why?!
+	strncpy(ssi, converter->pixels, memsize);
 
 	SDL_UnlockSurface(converter);
 	SDL_FreeSurface(converter);
@@ -791,10 +800,9 @@ unsigned char *read_imagefile(unsigned char *filename)
 }
 
 // This new thread loads the textures
-void async_load_textures() {
+void* async_load_textures(void *arg) {
 	// For each object, load its texture and (if possible) set the dimensions...
 	struct tree_entry *object;
-	unsigned char *entry;
 	// TODO: protect this buffer from overflowing in the heap when the file or pathname is very long
 	unsigned char *fullpath = (unsigned char*) malloc(4096 * sizeof(unsigned char));
 	for (object = root; object; object = object->next) {
@@ -805,33 +813,21 @@ void async_load_textures() {
 			strcpy(fullpath, TDFSB_CURRENTPATH);
 			if (strlen(fullpath) > 1)
 				strcat(fullpath, "/");
-			strcat(fullpath, entry);
+			strcat(fullpath, object->name);
 			printf("Loading texture of %s\n", fullpath);
 
 			if ((object->mode & 0x1F) == 1 || (object->mode & 0x1F) == 11) {	// Directory
 				/*temptype = 0;
 				locpx = locpz = locpy = 0;
 				locsx = locsy = locsz = 1;
-				texturedata = NULL;
 				texturewidth = 0;
 				textureheight = 0;
 				textureformat = 0;
 				printf(" .. DIR done.\n");*/
 			} else if (object->regtype == IMAGEFILE) {
-				//object->texturedata = read_imagefile(fullpath);
-				read_imagefile(fullpath);
+				object->texturedata = read_imagefile(fullpath);
 				if (!object->texturedata) {
-/*					printf("IMAGE FAILED: %s\n", fullpath);
-					texturedata = NULL;
-					texturewidth = 0;
-					textureheight = 0;
-					textureformat = 0;
-					textureid = 0;
-					temptype = 0;
-					locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-					locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-					locpx = locpz = 0;
-					locpy = locsy - 1;*/
+					printf("IMAGE FAILED: %s\n", fullpath);
 				} else {
 /*					texturewidth = p2w;
 					textureheight = p2h;
@@ -969,6 +965,7 @@ void async_load_textures() {
 		}
 	}	// end of directory entry iterator
 	free(fullpath);
+	return NULL;
 }
 
 
@@ -2025,6 +2022,7 @@ void leodir(void)
 				printf("This is a v4l file!\n");
 				temptype = VIDEOSOURCEFILE;
 			}
+
 			// Count the number of textures we'll need, so we can allocate them already below
 			if (temptype == IMAGEFILE || temptype == VIDEOFILE)
 				TDFSB_TEX_NUM++;
@@ -2037,6 +2035,8 @@ void leodir(void)
 			locpy = locsy - 1;	// vertical position of the object
 			// Note: locpx (posx) and locpy (posy) are calculated later on
 
+			// For now, no textures are loaded yet
+			texturedata = NULL;
 			insert(entry, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, www, hhh, texturedata, locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
 		}
@@ -2191,7 +2191,13 @@ void leodir(void)
 	TDFSB_ANIM_COUNT = 0;
 	TDFSB_ANIM_STATE = 0;
 
-	// TODO: Start a new thread that loads the textures (of images and video files) and sets them
+	// Start a new thread that loads the textures (of images and video files) and sets them
+	pthread_t thread_id;
+	int err = pthread_create(&thread_id, NULL, &async_load_textures, NULL);
+	if (err != 0)
+		printf("Can't create thread :[%s]", strerror(err));
+	else
+		printf("Thread created successfully\n");
 
 	return;
 }
