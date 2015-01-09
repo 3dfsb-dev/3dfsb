@@ -56,7 +56,6 @@
 // For saving pixbuf's to a file for debugging
 #include <gtk/gtk.h>
 
-
 #ifndef _GLUfuncptr
 #define _GLUfuncptr void*
 #endif
@@ -126,8 +125,8 @@ struct tree_entry {
 	unsigned int mode, regtype, rasterx, rasterz;
 	GLfloat posx, posy, posz, scalex, scaley, scalez;
 	/* texturewidth = p2w = just the next power of two that fits the texture size!
-			// And for for text files, it is the size:  texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
-			// For audio files, it is nothing
+	   // And for for text files, it is the size:  texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
+	   // For audio files, it is nothing
 	   textureheight = p2h = just the texture size! 
 	   textureformat = cglmode;
 	   textureid = 31337;        gets filled in with the texture id */
@@ -520,101 +519,100 @@ void play_media()
 
 }
 
-void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
+void putpixel(SDL_Surface * surface, int x, int y, Uint32 pixel)
 {
-    int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to set */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+	int bpp = surface->format->BytesPerPixel;
+	/* Here p is the address to the pixel we want to set */
+	Uint8 *p = (Uint8 *) surface->pixels + y * surface->pitch + x * bpp;
 
-    switch(bpp) {
-    case 1:
-        *p = pixel;
-        break;
+	switch (bpp) {
+	case 1:
+		*p = pixel;
+		break;
 
-    case 2:
-        *(Uint16 *)p = pixel;
-        break;
+	case 2:
+		*(Uint16 *) p = pixel;
+		break;
 
-    case 3:
-        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-            p[0] = (pixel >> 16) & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = pixel & 0xff;
-        } else {
-            p[0] = pixel & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = (pixel >> 16) & 0xff;
-        }
-        break;
+	case 3:
+		if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+			p[0] = (pixel >> 16) & 0xff;
+			p[1] = (pixel >> 8) & 0xff;
+			p[2] = pixel & 0xff;
+		} else {
+			p[0] = pixel & 0xff;
+			p[1] = (pixel >> 8) & 0xff;
+			p[2] = (pixel >> 16) & 0xff;
+		}
+		break;
 
-    case 4:
-        *(Uint32 *)p = pixel;
-        break;
-    }
+	case 4:
+		*(Uint32 *) p = pixel;
+		break;
+	}
 }
 
-Uint32 getpixel(SDL_Surface *surface, int x, int y)
+Uint32 getpixel(SDL_Surface * surface, int x, int y)
 {
-    int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to retrieve */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+	int bpp = surface->format->BytesPerPixel;
+	/* Here p is the address to the pixel we want to retrieve */
+	Uint8 *p = (Uint8 *) surface->pixels + y * surface->pitch + x * bpp;
 
-    switch(bpp) {
-    case 1:
-        return *p;
-        break;
+	switch (bpp) {
+	case 1:
+		return *p;
+		break;
 
-    case 2:
-        return *(Uint16 *)p;
-        break;
+	case 2:
+		return *(Uint16 *) p;
+		break;
 
-    case 3:
-        if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-            return p[0] << 16 | p[1] << 8 | p[2];
-        else
-            return p[0] | p[1] << 8 | p[2] << 16;
-        break;
+	case 3:
+		if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+			return p[0] << 16 | p[1] << 8 | p[2];
+		else
+			return p[0] | p[1] << 8 | p[2] << 16;
+		break;
 
-    case 4:
-        return *(Uint32 *)p;
-        break;
+	case 4:
+		return *(Uint32 *) p;
+		break;
 
-    default:
-        return 0;       /* shouldn't happen, but avoids warnings */
-    }
+	default:
+		return 0;	/* shouldn't happen, but avoids warnings */
+	}
 }
 
 // Here we do that SDL_BlitSurface of SDL 2.0 does
-SDL_Surface *ScaleSurface(SDL_Surface *Surface, double Width, double Height)
+SDL_Surface *ScaleSurface(SDL_Surface * Surface, double Width, double Height)
 {
-    unsigned int x, y, o_y, o_x;
+	unsigned int x, y, o_y, o_x;
 
-    if(!Surface || !Width || !Height)
-        return 0;
-     
-    SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
+	if (!Surface || !Width || !Height)
+		return 0;
+
+	SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
 	/* SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 32,
-	SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 24,
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
-#else
-					 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
-#endif
-	    ); */
+	   SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 24,
+	   #if SDL_BYTEORDER == SDL_LIL_ENDIAN
+	   0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
+	   #else
+	   0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+	   #endif
+	   ); */
 
-    double _stretch_factor_x = Width / Surface->w;
-    double _stretch_factor_y = Height / Surface->h;
-    printf("ScaleSurface has stretch factors %f and %f\n", _stretch_factor_x, _stretch_factor_y);
+	double _stretch_factor_x = Width / Surface->w;
+	double _stretch_factor_y = Height / Surface->h;
+	printf("ScaleSurface has stretch factors %f and %f\n", _stretch_factor_x, _stretch_factor_y);
 
-    for(y = 0; y < Surface->h; y++)
-        for(x = 0; x < Surface->w; x++)
-            for(o_y = 0; o_y < _stretch_factor_y; ++o_y)
-                for(o_x = 0; o_x < _stretch_factor_x; ++o_x)
-			putpixel(_ret, _stretch_factor_x * x + o_x, _stretch_factor_y * y + o_y, getpixel(Surface, x, y));
- 
-    return _ret;
+	for (y = 0; y < Surface->h; y++)
+		for (x = 0; x < Surface->w; x++)
+			for (o_y = 0; o_y < _stretch_factor_y; ++o_y)
+				for (o_x = 0; o_x < _stretch_factor_x; ++o_x)
+					putpixel(_ret, _stretch_factor_x * x + o_x, _stretch_factor_y * y + o_y, getpixel(Surface, x, y));
+
+	return _ret;
 }
-
 
 SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 {
@@ -756,15 +754,15 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 	   gdk_pixbuf_save(pixbuf, "videopreview.png", "png", &error, NULL);
 */
 
-	SDL_Surface * loader = SDL_CreateRGBSurfaceFrom(map.data, width, height, 24, GST_ROUND_UP_4(width * 3),
+	SDL_Surface *loader = SDL_CreateRGBSurfaceFrom(map.data, width, height, 24, GST_ROUND_UP_4(width * 3),
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
-                                         0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
+						       0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
 #else
-                                         0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+						       0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
 #endif
-	);
+	    );
 
-	SDL_Surface * converter = ScaleSurface(loader, p2w, p2h);
+	SDL_Surface *converter = ScaleSurface(loader, p2w, p2h);
 	if (!converter) {
 		SDL_FreeSurface(loader);
 		printf("Cannot read image %s ! (converting)\n", filename);
@@ -776,21 +774,21 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 	}
 
 	/*
-	// Save the preview for debugging (or caching?) purposes
-	// Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
-	SDL_LockSurface(converter);
-	error = NULL;
-	pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
-	GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
-	GST_ROUND_UP_4(p2w * 3), NULL, NULL);	// parameter 7 = rowstride
-	gdk_pixbuf_save(pixbuf, "get_image_from_file_converter.png", "png", &error, NULL);
-	if (error != NULL) {
-		g_print("Could not save image preview to file: %s\n", error->message);
-		g_error_free(error);
-		exit(-1);
-	}
-	SDL_UnlockSurface(converter);
-	*/
+	   // Save the preview for debugging (or caching?) purposes
+	   // Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
+	   SDL_LockSurface(converter);
+	   error = NULL;
+	   pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
+	   GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
+	   GST_ROUND_UP_4(p2w * 3), NULL, NULL);        // parameter 7 = rowstride
+	   gdk_pixbuf_save(pixbuf, "get_image_from_file_converter.png", "png", &error, NULL);
+	   if (error != NULL) {
+	   g_print("Could not save image preview to file: %s\n", error->message);
+	   g_error_free(error);
+	   exit(-1);
+	   }
+	   SDL_UnlockSurface(converter);
+	 */
 
 	SDL_FreeSurface(loader);
 
@@ -802,13 +800,13 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 	return converter;
 }
 
-
 // This new thread loads the textures
-void* async_load_textures(void *arg) {
+void *async_load_textures(void *arg)
+{
 	// For each object, load its texture and (if possible) set the dimensions...
 	struct tree_entry *object;
 	// TODO: protect this buffer from overflowing in the heap when the file or pathname is very long
-	unsigned char *fullpath = (unsigned char*) malloc(4096 * sizeof(unsigned char));
+	unsigned char *fullpath = (unsigned char *)malloc(4096 * sizeof(unsigned char));
 	for (object = root; object; object = object->next) {
 		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
 		// Also device files (mode & 0x1F == 2) can be made into a texture, if they are of the correct regtype
@@ -821,62 +819,62 @@ void* async_load_textures(void *arg) {
 			printf("Loading texture of %s\n", fullpath);
 
 			/* else if (temptype == TEXTFILE) {
-				texturewidth = 0;
-				textureheight = 0;
-				textureformat = 0;
-				textureid = 0;
-				c1 = 0;
-				c2 = 0;
-				c3 = 0;
-				fileptr = fopen(fullpath, "r");
-				if (!fileptr) {
-					printf("TEXT FAILED: %s\n", fullpath);
-					texturedata = NULL;
-					temptype = 0;
-				} else {
-					do {
-						c3 = fgetc(fileptr);
-						if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
-							c1++;
-					}
-					while (c3 != EOF);
-					rewind(fileptr);
-					texturedata = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
-					if (!texturedata) {
-						printf("TEXT FAILED: %s\n", fullpath);
-						fclose(fileptr);
-						texturedata = NULL;
-						temptype = 0;
-					} else {
-						temptr = texturedata;
-						texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
-						for (c3 = 0; c3 < 10; c3++) {
-							*temptr = ' ';
-							temptr++;
-						}
-						do {
-							c3 = fgetc(fileptr);
-							if ((c3 != EOF) && (isgraph(c3) || c3 == ' ')) {
-								*temptr = (unsigned char)c3;
-								temptr++;
-								c2++;
-							}
-						}
-						while ((c3 != EOF) && (c2 < c1));
-						for (c3 = 0; c3 < 10; c3++) {
-							*temptr = ' ';
-							temptr++;
-						}
-						*temptr = 0;
-						fclose(fileptr);
-						printf("TEXT: %ld char.\n", c1);
-					}
-				}
-				locsy = 4.5;	// locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
-				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-				locpx = locpz = 0;
-				locpy = locsy - 1;
-			} else   */
+			   texturewidth = 0;
+			   textureheight = 0;
+			   textureformat = 0;
+			   textureid = 0;
+			   c1 = 0;
+			   c2 = 0;
+			   c3 = 0;
+			   fileptr = fopen(fullpath, "r");
+			   if (!fileptr) {
+			   printf("TEXT FAILED: %s\n", fullpath);
+			   texturedata = NULL;
+			   temptype = 0;
+			   } else {
+			   do {
+			   c3 = fgetc(fileptr);
+			   if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
+			   c1++;
+			   }
+			   while (c3 != EOF);
+			   rewind(fileptr);
+			   texturedata = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
+			   if (!texturedata) {
+			   printf("TEXT FAILED: %s\n", fullpath);
+			   fclose(fileptr);
+			   texturedata = NULL;
+			   temptype = 0;
+			   } else {
+			   temptr = texturedata;
+			   texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
+			   for (c3 = 0; c3 < 10; c3++) {
+			   *temptr = ' ';
+			   temptr++;
+			   }
+			   do {
+			   c3 = fgetc(fileptr);
+			   if ((c3 != EOF) && (isgraph(c3) || c3 == ' ')) {
+			   *temptr = (unsigned char)c3;
+			   temptr++;
+			   c2++;
+			   }
+			   }
+			   while ((c3 != EOF) && (c2 < c1));
+			   for (c3 = 0; c3 < 10; c3++) {
+			   *temptr = ' ';
+			   temptr++;
+			   }
+			   *temptr = 0;
+			   fclose(fileptr);
+			   printf("TEXT: %ld char.\n", c1);
+			   }
+			   }
+			   locsy = 4.5; // locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
+			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+			   locpx = locpz = 0;
+			   locpy = locsy - 1;
+			   } else   */
 			if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
 				object->texturesurface = get_image_from_file(fullpath, object->regtype);
 				if (!object->texturesurface) {
@@ -889,25 +887,24 @@ void* async_load_textures(void *arg) {
 					object->textureformat = cglmode;
 					printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, object->texturewidth, object->textureheight);
 					/*if (object->www < object->hhh) {
-						object->locsx = object->locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
-						object->locsy = (object->hhh * (object->locsx)) / www;
-					} else {
-						object->locsy = ((GLfloat) log(((double)hhh / 128) + 1)) + 1;
-						object->locsx = object->locsz = (www * (object->locsy)) / hhh;
-					}
-					object->locsz = 0.2;	// flatscreens!
-					object->locpx = object->locpz = 0;
-					object->locpy = object->locsy - 1;*/
+					   object->locsx = object->locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
+					   object->locsy = (object->hhh * (object->locsx)) / www;
+					   } else {
+					   object->locsy = ((GLfloat) log(((double)hhh / 128) + 1)) + 1;
+					   object->locsx = object->locsz = (www * (object->locsy)) / hhh;
+					   }
+					   object->locsz = 0.2; // flatscreens!
+					   object->locpx = object->locpz = 0;
+					   object->locpy = object->locsy - 1; */
 					// Redraw/retexture this object in the rendering thread
 					object_to_retexture = object;
 				}
 			}
 		}
-	}	// end of directory entry iterator
+	}			// end of directory entry iterator
 	free(fullpath);
 	return NULL;
 }
-
 
 void tdb_gen_list(void)
 {
@@ -1964,7 +1961,6 @@ void leodir(void)
 				printf("This is a v4l file!\n");
 				temptype = VIDEOSOURCEFILE;
 			}
-
 			// Count the number of textures we'll need, so we can allocate them already below
 			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE)
 				TDFSB_TEX_NUM++;
@@ -2091,7 +2087,7 @@ void leodir(void)
 		if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE)
 			help->textureid = TDFSB_TEX_NAMES[c1++];
 	}
-		
+
 /* Creating Display List */
 
 	tdb_gen_list();
@@ -2385,18 +2381,18 @@ void display(void)
 			SDL_LockSurface(object_to_retexture->texturesurface);
 
 			/*
-			// Save the preview for debugging (or caching?) purposes
-			GError *error = NULL;
-			GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(object_to_retexture->texturesurface->pixels,
-			GDK_COLORSPACE_RGB, FALSE, 8, object_to_retexture->texturewidth, object_to_retexture->textureheight,
-			GST_ROUND_UP_4(object_to_retexture->texturewidth * 3), NULL, NULL);	// parameter 7 = rowstride
-			gdk_pixbuf_save(pixbuf, "textureimagepreview.png", "png", &error, NULL);
-			if (error != NULL) {
-				g_print("Could not save image preview to file: %s\n", error->message);
-				g_error_free(error);
-				exit(-1);
-			}
-			*/
+			   // Save the preview for debugging (or caching?) purposes
+			   GError *error = NULL;
+			   GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(object_to_retexture->texturesurface->pixels,
+			   GDK_COLORSPACE_RGB, FALSE, 8, object_to_retexture->texturewidth, object_to_retexture->textureheight,
+			   GST_ROUND_UP_4(object_to_retexture->texturewidth * 3), NULL, NULL);  // parameter 7 = rowstride
+			   gdk_pixbuf_save(pixbuf, "textureimagepreview.png", "png", &error, NULL);
+			   if (error != NULL) {
+			   g_print("Could not save image preview to file: %s\n", error->message);
+			   g_error_free(error);
+			   exit(-1);
+			   }
+			 */
 
 			glBindTexture(GL_TEXTURE_2D, object_to_retexture->textureid);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -2405,7 +2401,7 @@ void display(void)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 			glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) object_to_retexture->textureformat, object_to_retexture->texturewidth, object_to_retexture->textureheight, 0, (GLenum) object_to_retexture->textureformat, GL_UNSIGNED_BYTE, object_to_retexture->texturesurface->pixels);
-			
+
 			SDL_UnlockSurface(object_to_retexture->texturesurface);
 			SDL_FreeSurface(object_to_retexture->texturesurface);
 		}
