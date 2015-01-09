@@ -706,6 +706,7 @@ unsigned char *read_imagefile(unsigned char *filename)
 {
 	SDL_Surface *loader, *converter;
 	unsigned long int memsize;
+	int cc;	// ensure this is a local variable, for threading issues, doesn't help
 
 	loader = IMG_Load(filename);
 	if (!loader) {
@@ -815,6 +816,7 @@ unsigned char *read_imagefile(unsigned char *filename)
 
 // This new thread loads the textures
 void* async_load_textures(void *arg) {
+	sleep(5);	// doesn't help...
 	// For each object, load its texture and (if possible) set the dimensions...
 	struct tree_entry *object;
 	// TODO: protect this buffer from overflowing in the heap when the file or pathname is very long
@@ -838,8 +840,8 @@ void* async_load_textures(void *arg) {
 					object->texturewidth = p2w;
 					object->textureheight = p2h;
 					// To ensure our texture is quite valid...?
-					object->texturewidth = 256;
-					object->textureheight = 256;
+					//object->texturewidth = 256;
+					//object->textureheight = 256;
 					object->textureformat = cglmode;
 /*					if (www < hhh) {
 						locsx = locsz = ((GLfloat) log(((double)www / 512) + 1)) + 1;
@@ -920,7 +922,6 @@ void* async_load_textures(void *arg) {
 					object->texturewidth = p2w;
 					object->textureheight = p2h;
 					object->textureformat = cglmode;
-					object->textureid = 31337;	// this is not used and later gets filled in with the texture id
 					printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, object->texturewidth, object->textureheight);
 					/*if (object->www < object->hhh) {
 						object->locsx = object->locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
@@ -1017,6 +1018,8 @@ void tdb_gen_list(void)
 					glScalef(help->scalex, help->scaley, help->scalez);
 				}
 
+				// Link the texture to the cube
+				printf("Linking texture with id %d to cube for object %s\n", help->textureid, help->name);
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D, help->textureid);
 				if (TDFSB_ICUBE)
@@ -2148,10 +2151,15 @@ void leodir(void)
 		ende(1);
 	}
 	glGenTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
+
 	// Assign them to the directory entry objects
 	c1 = 0;
-	for (help = root; help; help = help->next)
-		help->textureid = TDFSB_TEX_NAMES[c1++];
+	for (help = root; help; help = help->next) {
+		temptype = help->regtype;
+		// TODO: this is also checked somewhere above, can't we do this in the same loop as above instead of a seperate one?
+		if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE)
+			help->textureid = TDFSB_TEX_NAMES[c1++];
+	}
 		
 /* Creating Display List */
 
