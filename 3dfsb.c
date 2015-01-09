@@ -755,7 +755,7 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 	GstBuffer *buffer = gst_sample_get_buffer(sample);
 	gst_buffer_map(buffer, &map, GST_MAP_READ);
 
-	/*
+/*
 	   // Save the preview for debugging (or caching?) purposes
 	   // Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
 	   // Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
@@ -764,7 +764,7 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 	   GDK_COLORSPACE_RGB, FALSE, 8, width, height, // parameter 3 means "has alpha"
 	   GST_ROUND_UP_4(width * 3), NULL, NULL);
 	   gdk_pixbuf_save(pixbuf, "videopreview.png", "png", &error, NULL);
-	 */
+*/
 
 	SDL_Surface * loader = SDL_CreateRGBSurfaceFrom(map.data, width, height, 24, GST_ROUND_UP_4(width * 3),
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
@@ -774,7 +774,6 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 #endif
 	);
 
-	// TODO: this surface seems to have 0x0 dimensions...
 	SDL_Surface * converter = ScaleSurface(loader, p2w, p2h);
 	if (!converter) {
 		SDL_FreeSurface(loader);
@@ -785,6 +784,23 @@ SDL_Surface *read_videoframe(char *filename, unsigned int type)
 		p2h = 0;
 		return NULL;
 	}
+
+	/*
+	// Save the preview for debugging (or caching?) purposes
+	// Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
+	SDL_LockSurface(converter);
+	error = NULL;
+	pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
+	GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
+	GST_ROUND_UP_4(p2w * 3), NULL, NULL);	// parameter 7 = rowstride
+	gdk_pixbuf_save(pixbuf, "read_image_converter.png", "png", &error, NULL);
+	if (error != NULL) {
+		g_print("Could not save image preview to file: %s\n", error->message);
+		g_error_free(error);
+		exit(-1);
+	}
+	SDL_UnlockSurface(converter);
+	*/
 
 	SDL_FreeSurface(loader);
 
@@ -984,10 +1000,9 @@ void* async_load_textures(void *arg) {
 				locpx = locpz = 0;
 				locpy = locsy - 1;
 			} */ else if (object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
-				object->texturedata = read_videoframe(fullpath, object->regtype);
-				if (!object->texturedata) {
+				object->texturesurface = read_videoframe(fullpath, object->regtype);
+				if (!object->texturesurface) {
 					printf("Reading video frame from %s failed\n", fullpath);
-					object->texturedata = NULL;	// superfluous, because it is NULL here because of the if(!locprt) above anyway...
 					//object->scaley = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
 					//object->scalex = scalez = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				} else {
