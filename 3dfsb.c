@@ -136,11 +136,13 @@ struct tree_entry {
 	unsigned int originalheight;
 	unsigned int tombstone;	// object has been deleted
 	unsigned char *texturedata;	/* this can point to the contents of a textfile, or to the data of a texture */
+	SDL_Surface *texturesurface;
 	off_t size;
 	struct tree_entry *next;
 };
 
 struct tree_entry *root, *help, *FMptr, *TDFSB_OBJECT_SELECTED = NULL, *TDFSB_OA = NULL;
+struct tree_entry *object_to_retexture = NULL;
 char *FCptr;
 
 struct stat buf;
@@ -377,6 +379,12 @@ GstBuffer *videobuffer;
 
 // Mimetype database handle
 magic_t magic;
+
+// SDL context switching stuff
+/*SDL_SysWMinfo info;
+Display *sdl_display = NULL;
+Window sdl_win = 0;
+GLXContext sdl_gl_context = NULL;*/
 
 static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 {
@@ -703,7 +711,99 @@ unsigned char *read_videoframe(char *filename, unsigned int type)
 	return ssi;
 }
 
-unsigned char *read_imagefile(unsigned char *filename)
+void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
+{
+    int bpp = surface->format->BytesPerPixel;
+    /* Here p is the address to the pixel we want to set */
+    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+
+    switch(bpp) {
+    case 1:
+        *p = pixel;
+        break;
+
+    case 2:
+        *(Uint16 *)p = pixel;
+        break;
+
+    case 3:
+        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+            p[0] = (pixel >> 16) & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = pixel & 0xff;
+        } else {
+            p[0] = pixel & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = (pixel >> 16) & 0xff;
+        }
+        break;
+
+    case 4:
+        *(Uint32 *)p = pixel;
+        break;
+    }
+}
+
+Uint32 getpixel(SDL_Surface *surface, int x, int y)
+{
+    int bpp = surface->format->BytesPerPixel;
+    /* Here p is the address to the pixel we want to retrieve */
+    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+
+    switch(bpp) {
+    case 1:
+        return *p;
+        break;
+
+    case 2:
+        return *(Uint16 *)p;
+        break;
+
+    case 3:
+        if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
+            return p[0] << 16 | p[1] << 8 | p[2];
+        else
+            return p[0] | p[1] << 8 | p[2] << 16;
+        break;
+
+    case 4:
+        return *(Uint32 *)p;
+        break;
+
+    default:
+        return 0;       /* shouldn't happen, but avoids warnings */
+    }
+}
+
+// Here we do that SDL_BlitSurface of SDL 2.0 does
+SDL_Surface *ScaleSurface(SDL_Surface *Surface, unsigned int Width, unsigned int Height)
+{
+    unsigned int x, y, o_y, o_x;
+
+    if(!Surface || !Width || !Height)
+        return 0;
+     
+    //SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
+    SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
+
+    double _stretch_factor_x = Width / Surface->w;
+    double _stretch_factor_y = Height / Surface->h;
+    printf("ScaleSurface has stretch factores %f and %f\n", _stretch_factor_x, _stretch_factor_y);
+
+    for(y = 0; y < Surface->h; y++)
+        for(x = 0; x < Surface->w; x++)
+            for(o_y = 0; o_y < _stretch_factor_y; ++o_y)
+                for(o_x = 0; o_x < _stretch_factor_x; ++o_x) {
+                    //DrawPixel(_ret, _stretch_factor_x * x + o_x, _stretch_factor_y * y + o_y, ReadPixel(Surface, x, y));
+			putpixel(_ret, _stretch_factor_x * x + o_x, _stretch_factor_y * y + o_y, getpixel(Surface, x, y));
+		}
+ 
+    return _ret;
+}
+
+
+//unsigned char *read_imagefile(unsigned char *filename)
+SDL_Surface *read_imagefile(unsigned char *filename)
 {
 	SDL_Surface *loader, *converter;
 	unsigned long int memsize;
@@ -735,15 +835,17 @@ unsigned char *read_imagefile(unsigned char *filename)
 
 	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
 	p2h = p2w = cc;
-
-	converter = SDL_CreateRGBSurface(SDL_SWSURFACE, www, hhh, 32,
+	cglmode = GL_RGB;
+/*
+	converter = SDL_CreateRGBSurface(SDL_SWSURFACE, p2w, p2h, 32,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
 #else
 					 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
 #endif
 	    );
-
+*/
+	converter = ScaleSurface(loader, p2w, p2h);
 	if (!converter) {
 		SDL_FreeSurface(loader);
 		printf("Cannot read image %s ! (converting)\n", filename);
@@ -754,8 +856,33 @@ unsigned char *read_imagefile(unsigned char *filename)
 		p2h = 0;
 		return NULL;
 	}
-	SDL_BlitSurface(loader, NULL, converter, NULL);
+	//SDL_BlitSurface(loader, NULL, converter, NULL);
+	//SDL_BlitScaled(loader, NULL, converter, NULL);
+
 	SDL_FreeSurface(loader);
+
+	SDL_LockSurface(converter);
+
+	// Save the preview for debugging (or caching?) purposes
+	// Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
+	// Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
+	// Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
+	GError *error = NULL;
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
+	GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
+	GST_ROUND_UP_4(p2w * 3), NULL, NULL);	// parameter 7 = rowstride
+	gdk_pixbuf_save(pixbuf, "read_image.png", "png", &error, NULL);
+	if (error != NULL) {
+		g_print("Could not save image preview to file: %s\n", error->message);
+		g_error_free(error);
+		exit(-1);
+	}
+	SDL_UnlockSurface(converter);
+
+	printf("Returning SDL_Surface converter: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, filename, p2w, p2h);
+	return converter;
+
+
 
 	memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
 	memsize = memsize * 50;		// doesn't help...
@@ -779,6 +906,7 @@ unsigned char *read_imagefile(unsigned char *filename)
 	// Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
 	// Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
 	// Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
+/*
 	GError *error = NULL;
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
 	GDK_COLORSPACE_RGB, TRUE, 8, www, hhh, // parameter 3 means "has alpha", 4 = bits per sample
@@ -789,6 +917,15 @@ unsigned char *read_imagefile(unsigned char *filename)
 		g_error_free(error);
 		exit(-1);
 	}
+*/
+	// We need the context
+/*	SDL_VERSION(&info.version);
+	SDL_GetWMInfo(&info);
+	sdl_display = info.info.x11.gfxdisplay;
+	sdl_win = info.info.x11.window;
+	sdl_gl_context = glXGetCurrentContext ();
+	glXMakeCurrent(sdl_display, None, 0);		// retrieve and turn off sdl opengl context
+*/
 
 	// This crashes, no idea why...
 	// - output buffer is (a lot) bigger than input buffer
@@ -796,7 +933,7 @@ unsigned char *read_imagefile(unsigned char *filename)
 	// - converter->pixels is allocated and filled with RGBA data
 	// - ssi is allocated and surely is big enough
 	// - the input image is correct, it is a RGBA file
-	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, converter->pixels, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
+/*	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, converter->pixels, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
 		SDL_UnlockSurface(converter);
 		SDL_FreeSurface(converter);
 		free(ssi);
@@ -807,7 +944,7 @@ unsigned char *read_imagefile(unsigned char *filename)
 		p2w = 0;
 		p2h = 0;
 		return NULL;
-	}
+	}*/
 
 	// These do not crash:
 	//memcpy(ssi, converter->pixels, 256*256*4);
@@ -825,11 +962,10 @@ unsigned char *read_imagefile(unsigned char *filename)
 	//memcpy(ssi, converter->pixels, memsize);
 	//memcpy(ssi, converter->pixels, 25600*25600*4);
 
+	// This will be done later, after the surface has been used
 	SDL_UnlockSurface(converter);
 	SDL_FreeSurface(converter);
 
-	cglmode = GL_RGBA;
-	printf("IMAGE: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, filename, p2w, p2h);
 	return ssi;
 }
 
@@ -852,8 +988,9 @@ void* async_load_textures(void *arg) {
 			printf("Loading texture of %s\n", fullpath);
 
 			if (object->regtype == IMAGEFILE) {
-				object->texturedata = read_imagefile(fullpath);
-				if (!object->texturedata) {
+				//object->texturedata = read_imagefile(fullpath);
+				object->texturesurface = read_imagefile(fullpath);
+				if (!object->texturesurface) {
 					printf("IMAGE FAILED: %s\n", fullpath);
 				} else {
 					object->texturewidth = p2w;
@@ -871,8 +1008,10 @@ void* async_load_textures(void *arg) {
 					}
 					locsz = 1.44 / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
 					locpx = locpz = 0;
-					locpy = locsy - 1;
-					TDFSB_TEX_NUM++;*/
+					locpy = locsy - 1;*/
+
+					// Redraw/retexture this object in the rendering thread
+					object_to_retexture = object;
 				}
 			} /* else if (temptype == TEXTFILE) {
 				texturewidth = 0;
@@ -980,16 +1119,6 @@ void* async_load_textures(void *arg) {
 				locpy = locsy - 1;
 				printf(" .. done.\n");
 			} */
-			if (object->texturedata != NULL) {
-				printf("Setting texture on object for %s with ID %d\n", object->name, object->textureid);
-				glBindTexture(GL_TEXTURE_2D, object->textureid);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-				glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) object->textureformat, object->texturewidth, object->textureheight, 0, (GLenum) object->textureformat, GL_UNSIGNED_BYTE, object->texturedata);
-			}
 		}
 	}	// end of directory entry iterator
 	free(fullpath);
@@ -2466,6 +2595,41 @@ void display(void)
 		// TODO: add error handling + what if the video is finished?
 	}
 
+	if (object_to_retexture != NULL) {
+		printf("Object %s finished loading, drawing on texture with ID %d\n", object_to_retexture->name, object_to_retexture->textureid);
+		if (object_to_retexture->texturesurface != NULL) {
+			printf("Texturesurface of object is not NULL, setting it...\n");
+
+			SDL_LockSurface(object_to_retexture->texturesurface);
+
+	// Save the preview for debugging (or caching?) purposes
+	// Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
+	// Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
+	// Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
+	GError *error = NULL;
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(object_to_retexture->texturesurface->pixels,
+	GDK_COLORSPACE_RGB, FALSE, 8, object_to_retexture->texturewidth, object_to_retexture->textureheight,
+	GST_ROUND_UP_4(object_to_retexture->texturewidth * 3), NULL, NULL);	// parameter 7 = rowstride
+	gdk_pixbuf_save(pixbuf, "textureimagepreview.png", "png", &error, NULL);
+	if (error != NULL) {
+		g_print("Could not save image preview to file: %s\n", error->message);
+		g_error_free(error);
+		exit(-1);
+	}
+
+
+			glBindTexture(GL_TEXTURE_2D, object_to_retexture->textureid);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+			glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) object_to_retexture->textureformat, object_to_retexture->texturewidth, object_to_retexture->textureheight, 0, (GLenum) object_to_retexture->textureformat, GL_UNSIGNED_BYTE, object_to_retexture->texturesurface->pixels);
+			
+			SDL_UnlockSurface(object_to_retexture->texturesurface);
+		}
+		object_to_retexture = NULL;
+	}
 	if (TDFSB_HAVE_MOUSE) {
 		SDL_WarpMouse(SWX / 2, SWY / 2);
 	}
