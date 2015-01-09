@@ -167,11 +167,10 @@ int downkeybuf = 0;
 
 GLdouble prevlen;
 
-// Number of suffixes
-const int lsuff = 3;
+#define NUMBER_OF_EXTENSIONS	3
 
-char *xsuff[3];
-unsigned int tsuff[3];
+char *xsuff[NUMBER_OF_EXTENSIONS];
+unsigned int tsuff[NUMBER_OF_EXTENSIONS];
 char *nsuff[NUMBER_OF_FILETYPES];
 
 GLfloat fh, fh2, mono;
@@ -477,7 +476,7 @@ int get_file_type(char *fullpath)
 		temptype = PDFFILE;
 	} else {
 		// Some files are not identified by magic_file(), so we fallback to extension-based identification here
-		for (cc = 1; cc < lsuff; cc++) {
+		for (cc = 0; cc < NUMBER_OF_EXTENSIONS; cc++) {
 			char *xsuff_upper = uppercase(xsuff[cc]);
 			char *ext_upper = uppercase(&(fullpath[strlen(fullpath) - strlen(xsuff[cc])]));
 			if (!strncmp(xsuff_upper, ext_upper, strlen(xsuff[cc]))) {
@@ -1168,13 +1167,14 @@ void tdb_gen_list(void)
 
 void set_filetypes(void)
 {
-	/* These filetypes are known to be mis- or non-identified by libmagic, so we fallback to extensions for those */
-	xsuff[0] = "ERROR";
-	tsuff[0] = UNKNOWNFILE;
-	xsuff[1] = ".mp3";	// Some .mp3's are misidentified, they seem to be part of a stream and are missing headers...
-	tsuff[1] = AUDIOFILE;
-	xsuff[2] = ".txt";	// Some .txt's are identified as "application/data"
-	tsuff[2] = TEXTFILE;
+	// These filetypes are known to be mis- or non-identified by libmagic, so we fallback to extensions for those.
+	// We intentionally don't list all possible options here, because we want to have an idea of which fail to identify, and why.
+	xsuff[0] = ".mp3";	// Some .mp3's are misidentified, they seem to be part of a stream and are missing headers...
+	tsuff[0] = AUDIOFILE;
+	xsuff[1] = ".txt";	// Some .txt's are identified as "application/data"
+	tsuff[1] = TEXTFILE;
+	xsuff[2] = ".mp4";	// I had an .mp4 file that was actually detected as an "ISO Media" file...
+	tsuff[2] = VIDEOFILE;
 
 	nsuff[UNKNOWNFILE] = "UNKNOWN";
 	nsuff[IMAGEFILE] = "PICTURE";
