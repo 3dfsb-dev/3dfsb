@@ -126,15 +126,17 @@ struct tree_entry {
 	char *linkpath;
 	unsigned int mode, regtype, rasterx, rasterz;
 	GLfloat posx, posy, posz, scalex, scaley, scalez;
-	/* uni0 = p2w;
-	   uni1 = p2h;
-	   uni2 = cglmode;
-	   uni3 = 31337;        gets filled in with the texture id */
-	unsigned int uniint0, uniint1, uniint2, uniint3;
+	/* texturewidth = p2w = just the next power of two that fits the texture size!
+			// And for for text files, it is the size:  texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
+			// For audio files, it is nothing
+	   textureheight = p2h = just the texture size! 
+	   textureformat = cglmode;
+	   textureid = 31337;        gets filled in with the texture id */
+	unsigned int texturewidth, textureheight, textureformat, textureid;
 	unsigned int originalwidth;
 	unsigned int originalheight;
 	unsigned int tombstone;	// object has been deleted
-	unsigned char *uniptr;	/* this can point to the contents of a textfile, or to the data of a texture */
+	unsigned char *texturedata;	/* this can point to the contents of a textfile, or to the data of a texture */
 	off_t size;
 	struct tree_entry *next;
 };
@@ -145,7 +147,7 @@ char *FCptr;
 struct stat buf;
 
 char temp_trunc[4096];
-char TDFSB_CURRENTPATH[4096], fullpath[4096], yabuf[4096], fpsbuf[12], cfpsbuf[12], throttlebuf[14], ballbuf[20], home[512], flybuf[12], classicbuf[12];
+unsigned char TDFSB_CURRENTPATH[4096], fullpath[4096], yabuf[4096], fpsbuf[12], cfpsbuf[12], throttlebuf[14], ballbuf[20], home[512], flybuf[12], classicbuf[12];
 char TDFSB_CUSTOM_EXECUTE_STRING[4096];
 char TDFSB_CES_TEMP[4096];
 char *alert_kc = "MALFORMED KEYBOARD MAP";
@@ -428,8 +430,8 @@ void ende(int code)
 			FMptr = help;
 			FCptr = help->name;
 			free(FCptr);
-			if (help->uniptr != NULL) {
-				FCptr = (char *)help->uniptr;
+			if (help->texturedata != NULL) {
+				FCptr = (char *)help->texturedata;
 				free(FCptr);
 			}
 			if (help->linkpath != NULL) {
@@ -506,9 +508,9 @@ void play_media()
 		return;		// No video frame received yet
 
 	// now map.data points to the video frame that we saved in on_gst_buffer()
-	glBindTexture(GL_TEXTURE_2D, TDFSB_MEDIA_FILE->uniint3);
+	glBindTexture(GL_TEXTURE_2D, TDFSB_MEDIA_FILE->textureid);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TDFSB_MEDIA_FILE->uniint0, TDFSB_MEDIA_FILE->uniint1, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TDFSB_MEDIA_FILE->texturewidth, TDFSB_MEDIA_FILE->textureheight, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
 
 	// Free up memory again
 	gst_buffer_unmap(videobuffer, &map);
@@ -699,7 +701,7 @@ unsigned char *read_videoframe(char *filename, unsigned int type)
 	return ssi;
 }
 
-unsigned char *read_imagefile(char *filename)
+unsigned char *read_imagefile(unsigned char *filename)
 {
 	SDL_Surface *loader, *converter;
 	unsigned long int memsize;
@@ -788,6 +790,188 @@ unsigned char *read_imagefile(char *filename)
 	return ssi;
 }
 
+// This new thread loads the textures
+void async_load_textures() {
+	// For each object, load its texture and (if possible) set the dimensions...
+	struct tree_entry *object;
+	unsigned char *entry;
+	// TODO: protect this buffer from overflowing in the heap when the file or pathname is very long
+	unsigned char *fullpath = (unsigned char*) malloc(4096 * sizeof(unsigned char));
+	for (object = root; object; object = object->next) {
+		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
+		// Also device files (mode & 0x1F == 2) can be made into a texture, if they are of the correct regtype
+		if ((object->regtype == VIDEOFILE || object->regtype == IMAGEFILE || object->regtype == VIDEOSOURCEFILE) && (((object->mode) & 0x1F) == 0) || ((object->mode) & 0x1F) == 2) {
+			// Needed: fullpath
+			strcpy(fullpath, TDFSB_CURRENTPATH);
+			if (strlen(fullpath) > 1)
+				strcat(fullpath, "/");
+			strcat(fullpath, entry);
+			printf("Loading texture of %s\n", fullpath);
+
+			if ((object->mode & 0x1F) == 1 || (object->mode & 0x1F) == 11) {	// Directory
+				/*temptype = 0;
+				locpx = locpz = locpy = 0;
+				locsx = locsy = locsz = 1;
+				texturedata = NULL;
+				texturewidth = 0;
+				textureheight = 0;
+				textureformat = 0;
+				printf(" .. DIR done.\n");*/
+			} else if (object->regtype == IMAGEFILE) {
+				//object->texturedata = read_imagefile(fullpath);
+				read_imagefile(fullpath);
+				if (!object->texturedata) {
+/*					printf("IMAGE FAILED: %s\n", fullpath);
+					texturedata = NULL;
+					texturewidth = 0;
+					textureheight = 0;
+					textureformat = 0;
+					textureid = 0;
+					temptype = 0;
+					locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
+					locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+					locpx = locpz = 0;
+					locpy = locsy - 1;*/
+				} else {
+/*					texturewidth = p2w;
+					textureheight = p2h;
+					textureformat = cglmode;
+					textureid = 0;
+					printf("IMAGE: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, texturewidth, textureheight);
+					if (www < hhh) {
+						locsx = locsz = ((GLfloat) log(((double)www / 512) + 1)) + 1;
+						locsy = (hhh * (locsx)) / www;
+					} else {
+						locsy = ((GLfloat) log(((double)hhh / 512) + 1)) + 1;
+						locsx = locsz = (www * (locsy)) / hhh;
+					}
+					locsz = 1.44 / (((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1);
+					locpx = locpz = 0;
+					locpy = locsy - 1;
+					TDFSB_TEX_NUM++;*/
+				}
+			} else /*if (temptype == TEXTFILE) {
+				texturewidth = 0;
+				textureheight = 0;
+				textureformat = 0;
+				textureid = 0;
+				c1 = 0;
+				c2 = 0;
+				c3 = 0;
+				fileptr = fopen(fullpath, "r");
+				if (!fileptr) {
+					printf("TEXT FAILED: %s\n", fullpath);
+					texturedata = NULL;
+					temptype = 0;
+				} else {
+					do {
+						c3 = fgetc(fileptr);
+						if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
+							c1++;
+					}
+					while (c3 != EOF);
+					rewind(fileptr);
+					texturedata = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
+					if (!texturedata) {
+						printf("TEXT FAILED: %s\n", fullpath);
+						fclose(fileptr);
+						texturedata = NULL;
+						temptype = 0;
+					} else {
+						temptr = texturedata;
+						texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
+						for (c3 = 0; c3 < 10; c3++) {
+							*temptr = ' ';
+							temptr++;
+						}
+						do {
+							c3 = fgetc(fileptr);
+							if ((c3 != EOF) && (isgraph(c3) || c3 == ' ')) {
+								*temptr = (unsigned char)c3;
+								temptr++;
+								c2++;
+							}
+						}
+						while ((c3 != EOF) && (c2 < c1));
+						for (c3 = 0; c3 < 10; c3++) {
+							*temptr = ' ';
+							temptr++;
+						}
+						*temptr = 0;
+						fclose(fileptr);
+						printf("TEXT: %ld char.\n", c1);
+					}
+				}
+				locsy = 4.5;	// locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
+				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+				locpx = locpz = 0;
+				locpy = locsy - 1;
+			} else */ if (object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
+				object->texturedata = read_videoframe(fullpath, object->regtype);
+				if (!object->texturedata) {
+					printf("Reading video frame from %s failed\n", fullpath);
+					object->texturedata = NULL;	// superfluous, because it is NULL here because of the if(!locprt) above anyway...
+					//object->scaley = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
+					//object->scalex = scalez = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+				} else {
+					object->texturewidth = p2w;
+					object->textureheight = p2h;
+					object->textureformat = cglmode;
+					object->textureid = 31337;	// this is not used and later gets filled in with the texture id
+					printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, object->texturewidth, object->textureheight);
+					/*if (object->www < object->hhh) {
+						object->locsx = object->locsz = ((GLfloat) log(((double)www / 128) + 1)) + 1;
+						object->locsy = (object->hhh * (object->locsx)) / www;
+					} else {
+						object->locsy = ((GLfloat) log(((double)hhh / 128) + 1)) + 1;
+						object->locsx = object->locsz = (www * (object->locsy)) / hhh;
+					}
+					object->locsz = 0.2;	// flatscreens!
+					object->locpx = object->locpz = 0;
+					object->locpy = object->locsy - 1;*/
+					TDFSB_TEX_NUM++;
+				}
+			} else /* if (temptype == AUDIOFILE) {
+				texturewidth = 0;
+				textureheight = 0;
+				textureformat = 0;
+				textureid = 0;
+				c1 = 0;
+				c2 = 0;
+				c3 = 0;
+				texturedata = NULL;
+				locsy = locsx = locsz = ((GLfloat) log(((double)buf.st_size / (65536 * 20) + 1))) + 1;
+				locpx = locpz = 0;
+				locpy = locsy - 1;
+				printf("\n");
+			} else {
+				texturedata = NULL;
+				texturewidth = 0;
+				textureheight = 0;
+				textureformat = 0;
+				textureid = 0;
+				temptype = UNKNOWNFILE;
+				locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
+				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+				locpx = locpz = 0;
+				locpy = locsy - 1;
+				printf(" .. done.\n");
+			} */
+			if (object->texturedata != NULL) {
+				glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+				glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) object->textureformat, object->texturewidth, object->textureheight, 0, (GLenum) object->textureformat, GL_UNSIGNED_BYTE, object->texturedata);
+			}
+		}
+	}	// end of directory entry iterator
+	free(fullpath);
+}
+
+
 void tdb_gen_list(void)
 {
 	int mat_state;
@@ -829,7 +1013,7 @@ void tdb_gen_list(void)
 				}
 
 				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, help->uniint3);
+				glBindTexture(GL_TEXTURE_2D, help->textureid);
 				if (TDFSB_ICUBE)
 					cc1 = 20;
 				else
@@ -1555,7 +1739,7 @@ void reshape(int w, int h)
 	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 }
 
-void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int uni0, unsigned int uni1, unsigned int uni2, unsigned int uni3, unsigned int originalwidth, unsigned int originalheight, unsigned char *locptr, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
+void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int texturewidth, unsigned int textureheight, unsigned int textureformat, unsigned int textureid, unsigned int originalwidth, unsigned int originalheight, unsigned char *texturedata, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
 {
 	char *temp;
 
@@ -1577,10 +1761,10 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		root->linkpath = linkpath;
 		root->mode = mode;
 		root->regtype = type;
-		root->uniint0 = uni0;
-		root->uniint1 = uni1;
-		root->uniint2 = uni2;
-		root->uniint3 = uni3;
+		root->texturewidth = texturewidth;
+		root->textureheight = textureheight;
+		root->textureformat = textureformat;
+		root->textureid = textureid;
 		root->originalwidth = originalwidth;
 		root->originalheight = originalheight;
 		root->tombstone = 0;
@@ -1590,7 +1774,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		root->scalex = scalex;
 		root->scaley = scaley;
 		root->scalez = scalez;
-		root->uniptr = locptr;
+		root->texturedata = texturedata;
 		root->size = size;
 		root->next = NULL;
 	} else {
@@ -1607,10 +1791,10 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		(help->next)->linkpath = linkpath;
 		(help->next)->mode = mode;
 		(help->next)->regtype = type;
-		(help->next)->uniint0 = uni0;
-		(help->next)->uniint1 = uni1;
-		(help->next)->uniint2 = uni2;
-		(help->next)->uniint3 = uni3;
+		(help->next)->texturewidth = texturewidth;
+		(help->next)->textureheight = textureheight;
+		(help->next)->textureformat = textureformat;
+		(help->next)->textureid = textureid;
 		(help->next)->originalwidth = originalwidth;
 		(help->next)->originalheight = originalheight;
 		(help->next)->tombstone = 0;
@@ -1620,7 +1804,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		(help->next)->scalex = scalex;
 		(help->next)->scaley = scaley;
 		(help->next)->scalez = scalez;
-		(help->next)->uniptr = locptr;
+		(help->next)->texturedata = texturedata;
 		(help->next)->size = size;
 		(help->next)->next = NULL;
 	}
@@ -1712,8 +1896,8 @@ char **leoscan(char *ls_path)
 
 void leodir(void)
 {
-	unsigned int mode = 0, temptype = 0, uni0 = 0, uni1 = 0, uni2 = 0, uni3 = 0;
-	unsigned char *locptr, *temptr;
+	unsigned int mode = 0, temptype = 0, texturewidth = 0, textureheight = 0, textureformat = 0, textureid = 0;
+	unsigned char *texturedata, *temptr;
 	char *linkpath;
 	GLfloat locpx, locpy, locpz, locsx, locsy, locsz, maxz, momx, momz, nextz;
 	FILE *fileptr;
@@ -1739,8 +1923,8 @@ void leodir(void)
 			FMptr = help;
 			FCptr = help->name;
 			free(FCptr);
-			if (help->uniptr != NULL) {
-				FCptr = (char *)help->uniptr;
+			if (help->texturedata != NULL) {
+				FCptr = (char *)help->texturedata;
 				free(FCptr);
 			}
 			if (help->linkpath != NULL) {
@@ -1853,7 +2037,7 @@ void leodir(void)
 			locpy = locsy - 1;	// vertical position of the object
 			// Note: locpx (posx) and locpy (posy) are calculated later on
 
-			insert(entry, linkpath, mode, buf.st_size, temptype, uni0, uni1, uni2, uni3, www, hhh, locptr, locpx, locpy, locpz, locsx, locsy, locsz);
+			insert(entry, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, www, hhh, texturedata, locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
 		}
 
@@ -1950,31 +2134,17 @@ void leodir(void)
 			help = NULL;
 	}
 
-/* Creating Texture Names (which get filled in later) */
+/* Creating Texture IDs/Names (which get filled in later, in another thread, function async_load_textures()) */
 	if (!(TDFSB_TEX_NAMES = (GLuint *) malloc((TDFSB_TEX_NUM + 1) * sizeof(GLuint)))) {
 		printf("low mem while alloc texture names\n");
 		ende(1);
 	}
 	glGenTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
-
+	// Assign them to the directory entry objects
 	c1 = 0;
 	for (help = root; help; help = help->next)
-		help->uniint3 = TDFSB_TEX_NAMES[c1++];
+		help->textureid = TDFSB_TEX_NAMES[c1++];
 		
-	/*
-	for (help = root; help; help = help->next) {
-		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
-		// Also device files (mode & 0x1F == 2) can be made into a texture, if they are of the correct regtype
-		if ((help->regtype == VIDEOFILE || help->regtype == IMAGEFILE || help->regtype == VIDEOSOURCEFILE) && (((help->mode) & 0x1F) == 0) || ((help->mode) & 0x1F) == 2) {
-			glBindTexture(GL_TEXTURE_2D, TDFSB_TEX_NAMES[c1]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-			glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) help->uniint2, help->uniint0, help->uniint1, 0, (GLenum) help->uniint2, GL_UNSIGNED_BYTE, help->uniptr);
-	*/
-
 /* Creating Display List */
 
 	tdb_gen_list();
@@ -2435,7 +2605,7 @@ void display(void)
 			}
 		}
 /* animate text files */
-		if ((object->regtype == TEXTFILE) && (object->uniptr) && ((object->mode) & 0x1F) == 0) {
+		if ((object->regtype == TEXTFILE) && (object->texturedata) && ((object->mode) & 0x1F) == 0) {
 			glPushMatrix();
 			if (((object->mode) & 0x20)) {
 				cc = 16;
@@ -2445,9 +2615,9 @@ void display(void)
 				cc = c1 = 1;
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
-			c3 = (int)strlen((char *)object->uniptr);
+			c3 = (int)strlen((char *)object->texturedata);
 			c2 = 0;
-			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((object->uniint2) = (object->uniint2) + (object->uniint0))))), (200 * mz) * cc);
+			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((object->textureformat) = (object->textureformat) + (object->texturewidth))))), (200 * mz) * cc);
 			u = mx - vposx;
 			v = mz - vposz;
 			r = sqrt(u * u + v * v);
@@ -2459,15 +2629,15 @@ void display(void)
 			glTranslatef(+mono / 2, 0, 0);
 			do {
 				glTranslatef(-mono, -150, 0);
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->uniptr[c2 + (object->uniint1)]);
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->texturedata[c2 + (object->textureheight)]);
 				c2++;
 			}
 			while (c2 < c3 && c2 < 10);
-			if (object->uniint2 >= 150) {
-				(object->uniint1) = (object->uniint1) + 1;
-				if ((object->uniint1) >= c3 - 10)
-					(object->uniint1) = 0;
-				(object->uniint2) = 0;
+			if (object->textureformat >= 150) {
+				(object->textureheight) = (object->textureheight) + 1;
+				if ((object->textureheight) >= c3 - 10)
+					(object->textureheight) = 0;
+				(object->textureformat) = 0;
 			}
 			glPopMatrix();
 		}
@@ -3173,11 +3343,11 @@ int speckey(int key)
 
 					gchar *descr;
 					if (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE) {
-						descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
+						descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
 					} else if (TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE) {
 						descr = g_strdup_printf("uridecodebin uri=%s ! audioconvert ! playsink", uri);
 					} else if (TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE) {
-						descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", fullpath, TDFSB_OBJECT_SELECTED->uniint0, TDFSB_OBJECT_SELECTED->uniint1);
+						descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", fullpath, TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
 					}
 					// Use this for pulseaudio:
 					// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=3dfsb", uri);
