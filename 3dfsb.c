@@ -814,6 +814,7 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 	unsigned long int memsize;
 	int cc;	// ensure this is a local variable, for threading issues, doesn't help
 	unsigned char *ssi;     // the final image to return
+	unsigned int bps;
 
 	loader = IMG_Load(filename);
 	if (!loader) {
@@ -838,7 +839,14 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		return NULL;
 	}
 
-/*
+	// PNG images often have 32 bits per pixel, for the alpha channel
+	bps = loader->format->BitsPerPixel;
+	if (bps > 24) {
+		cglmode = GL_RGBA;
+	} else {
+		cglmode = GL_RGB;
+	}
+
 	SDL_LockSurface(loader);
 	GError *error = NULL;
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(loader->pixels,
@@ -851,11 +859,9 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		exit(-1);
 	}
 	SDL_UnlockSurface(loader);
-*/
 
 	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
 	p2h = p2w = cc;
-	cglmode = GL_RGB;
 
 /*
 	converter = SDL_CreateRGBSurface(SDL_SWSURFACE, p2w, p2h, 24,
@@ -899,7 +905,6 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 
 	SDL_FreeSurface(loader);
 
-	/*
 	// Save the preview for debugging (or caching?) purposes
 	SDL_LockSurface(converter);
 	error = NULL;
@@ -913,7 +918,6 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		exit(-1);
 	}
 	SDL_UnlockSurface(converter);
-	*/
 
 	printf("Returning SDL_Surface converter: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, filename, p2w, p2h);
 	return converter;
