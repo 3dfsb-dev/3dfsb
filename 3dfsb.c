@@ -783,15 +783,15 @@ SDL_Surface *ScaleSurface(SDL_Surface *Surface, double Width, double Height)
     if(!Surface || !Width || !Height)
         return 0;
      
-    //SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
-	//SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 32,
+    SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
+	/* SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 32,
 	SDL_Surface *_ret = SDL_CreateRGBSurface(SDL_SWSURFACE, Width, Height, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 					 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
 #else
 					 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
 #endif
-	    );
+	    ); */
 
     double _stretch_factor_x = Width / Surface->w;
     double _stretch_factor_y = Height / Surface->h;
@@ -838,6 +838,7 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		return NULL;
 	}
 
+/*
 	SDL_LockSurface(loader);
 	GError *error = NULL;
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(loader->pixels,
@@ -850,7 +851,7 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		exit(-1);
 	}
 	SDL_UnlockSurface(loader);
-
+*/
 
 	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
 	p2h = p2w = cc;
@@ -898,7 +899,7 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 
 	SDL_FreeSurface(loader);
 
-
+	/*
 	// Save the preview for debugging (or caching?) purposes
 	SDL_LockSurface(converter);
 	error = NULL;
@@ -912,6 +913,7 @@ SDL_Surface *read_imagefile(unsigned char *filename)
 		exit(-1);
 	}
 	SDL_UnlockSurface(converter);
+	*/
 
 	printf("Returning SDL_Surface converter: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, filename, p2w, p2h);
 	return converter;
