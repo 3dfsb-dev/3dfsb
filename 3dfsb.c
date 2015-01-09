@@ -53,8 +53,8 @@
 
 #include <magic.h>
 
-// For saving pixbuf's to a file for debugging, not needed currently
-//#include <gtk/gtk.h>
+// For saving pixbuf's to a file for debugging
+#include <gtk/gtk.h>
 
 
 #ifndef _GLUfuncptr
@@ -758,6 +758,7 @@ unsigned char *read_imagefile(unsigned char *filename)
 	SDL_FreeSurface(loader);
 
 	memsize = (unsigned long int)ceil((double)(p2w * p2h * 4));
+	memsize = memsize * 50;		// doesn't help...
 
 	printf("\n - SDL image allocating %lu bytes of memory for a texture of %lux%lu\n", memsize, p2w, p2h);
 
@@ -774,12 +775,28 @@ unsigned char *read_imagefile(unsigned char *filename)
 
 	SDL_LockSurface(converter);
 
+	// Save the preview for debugging (or caching?) purposes
+	// Note: gstreamer video buffers have a stride that is rounded up to the nearest multiple of 4
+	// Damn, the resulting image barely resembles the correct one... it has a pattern of Red Green Blue Black dots instead of B B B B
+	// Usually this indicates some kind of RGBA/RGB mismatch, but I can't find it...
+	GError *error = NULL;
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
+	GDK_COLORSPACE_RGB, TRUE, 8, www, hhh, // parameter 3 means "has alpha", 4 = bits per sample
+	GST_ROUND_UP_4(www * 4), NULL, NULL);	// parameter 7 = rowstride
+	gdk_pixbuf_save(pixbuf, "imagepreview.png", "png", &error, NULL);
+	if (error != NULL) {
+		g_print("Could not save image preview to file: %s\n", error->message);
+		g_error_free(error);
+		exit(-1);
+	}
+
 	// This crashes, no idea why...
-	// - output buffer is bigger than input buffer
+	// - output buffer is (a lot) bigger than input buffer
 	// - input buffer does not get read beyond the end, because www x hhh pixels get read from converter->pixels
-	// - converter->pixels is allocated
-	// - ssi is allocated
-	/*if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, converter->pixels, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
+	// - converter->pixels is allocated and filled with RGBA data
+	// - ssi is allocated and surely is big enough
+	// - the input image is correct, it is a RGBA file
+	if (gluScaleImage(GL_RGBA, www, hhh, GL_UNSIGNED_BYTE, converter->pixels, p2w, p2h, GL_UNSIGNED_BYTE, ssi)) {
 		SDL_UnlockSurface(converter);
 		SDL_FreeSurface(converter);
 		free(ssi);
@@ -790,12 +807,12 @@ unsigned char *read_imagefile(unsigned char *filename)
 		p2w = 0;
 		p2h = 0;
 		return NULL;
-	}*/
+	}
 
 	// These do not crash:
 	//memcpy(ssi, converter->pixels, 256*256*4);
 	//memcpy(ssi, converter->pixels, 2560*2560*4);
-	memcpy(ssi, converter->pixels, www*hhh*4);
+	//memcpy(ssi, converter->pixels, www*hhh*4);
 
 	// I know that ssi is big enough, so it must be that converter->pixels is too small to read more than www*hhh*4 bytes from...
 	// But the scale operation above IS not reading more than www*hhh*4 bytes, right...?!
@@ -818,7 +835,7 @@ unsigned char *read_imagefile(unsigned char *filename)
 
 // This new thread loads the textures
 void* async_load_textures(void *arg) {
-	sleep(5);	// doesn't help...
+	//sleep(5);	// doesn't help...
 	// For each object, load its texture and (if possible) set the dimensions...
 	struct tree_entry *object;
 	// TODO: protect this buffer from overflowing in the heap when the file or pathname is very long
@@ -2216,6 +2233,7 @@ void leodir(void)
 		printf("Can't create thread :[%s]", strerror(err));
 	else
 		printf("Thread created successfully\n");
+	//sleep(5);	// doesn't help...
 
 	return;
 }

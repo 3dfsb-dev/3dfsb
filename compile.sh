@@ -27,6 +27,10 @@ SDL_LIBS=$($SDL_CONFIG --libs);		# Example: -L/usr/lib/x86_64-linux-gnu -lSDL
 GSTREAMER_CFLAGS=$(pkg-config --cflags gstreamer-1.0)	# Example: -pthread -I/usr/local/include/gstreamer-1.0 -I/usr/local/lib/gstreamer-1.0/include -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
 GSTREAMER_LIBS=$(pkg-config --libs gstreamer-1.0)	# Example: -L/usr/local/lib -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0
 
+# GTK is for debugging purposes (dumping an image to a file)
+GTK_CFLAGS=$(pkg-config --cflags gtk+-2.0)
+GTK_LIBS=$(pkg-config --libs gtk+-2.0)
+
 OTHER_LIBS=$(pkg-config --libs glu)
 
 NOPKGCONFIG_LIBS="-lglut -lmagic -lm"
@@ -45,7 +49,7 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 
     gccopt="-g"		# debugging info by default
 
-    gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $NOPKGCONFIG_LIBS
+    gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
     echo "BeOS detected.";
     echo "compiling...";
