@@ -35,6 +35,13 @@ OTHER_LIBS=$(pkg-config --libs glu SDL_stretch)
 
 NOPKGCONFIG_LIBS="-lglut -lmagic -lm"
 
+echo "Converting built-in images to XPM format with imagemagick's convert..."
+convert images/icon_pdf.png images/icon_pdf.xpm		# Probably not needed: --background none 
+if [ $? -ne 0 ]; then
+	echo "ERROR converting built-in images to XPM format..."
+	exit 1
+fi
+
 if uname -s | grep -i -c "LINUX" > /dev/null; then 
     echo "GNU/Linux detected.";
     echo "compiling...";
@@ -49,13 +56,7 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 
     gccopt="-g"		# debugging info by default
 
-    if ! uname -m | grep 64; then
-	    objcopy --input binary --output elf32-i386 --binary-architecture i386 images/icon_pdf.png icon_pdf.o
-    else
-            # The --binary-architecture i386 is correct here
-	    objcopy --input binary --output elf64-x86-64 --binary-architecture i386 images/icon_pdf.png icon_pdf.o
-    fi
-    gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c icon_pdf.o -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
+    gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
     echo "BeOS detected.";
     echo "compiling...";
