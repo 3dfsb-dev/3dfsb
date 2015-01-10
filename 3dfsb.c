@@ -17,9 +17,9 @@
 
 /***************************************************************************
     Everything here is released under the GPL and maintained by Tom Van Braeckel.
-    I would like to invite everyone to make improvements so if you have bugreports,
-    additional code, bugfixes, comments, suggestions, questions, testing reports,
-    quality measures or something similar, do get in touch!
+    Help is welcome. I would like to invite everyone to make improvements so
+    if you have bugreports, additional code, bugfixes, comments, suggestions,
+    questions, testing reports, quality measures or something similar, do get in touch!
  ***************************************************************************/
 
 #include <stdlib.h>
@@ -809,7 +809,7 @@ void *async_load_textures(void *arg)
 	for (object = root; object; object = object->next) {
 		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
 		// Also device files (mode & 0x1F == 2) can be made into a texture, if they are of the correct regtype
-		if ((object->regtype == VIDEOFILE || object->regtype == IMAGEFILE || object->regtype == VIDEOSOURCEFILE) && (((object->mode) & 0x1F) == 0) || ((object->mode) & 0x1F) == 2) {
+		if ((object->regtype == TEXTFILE || object->regtype == VIDEOFILE || object->regtype == IMAGEFILE || object->regtype == VIDEOSOURCEFILE) && (((object->mode) & 0x1F) == 0) || ((object->mode) & 0x1F) == 2) {
 			// Needed: fullpath
 			strcpy(fullpath, TDFSB_CURRENTPATH);
 			if (strlen(fullpath) > 1)
@@ -817,64 +817,64 @@ void *async_load_textures(void *arg)
 			strcat(fullpath, object->name);
 			printf("Loading texture of %s\n", fullpath);
 
-			/* else if (temptype == TEXTFILE) {
-			   texturewidth = 0;
-			   textureheight = 0;
-			   textureformat = 0;
-			   textureid = 0;
-			   c1 = 0;
-			   c2 = 0;
-			   c3 = 0;
-			   fileptr = fopen(fullpath, "r");
-			   if (!fileptr) {
-			   printf("TEXT FAILED: %s\n", fullpath);
-			   texturedata = NULL;
-			   temptype = 0;
-			   } else {
-			   do {
-			   c3 = fgetc(fileptr);
-			   if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
-			   c1++;
-			   }
-			   while (c3 != EOF);
-			   rewind(fileptr);
-			   texturedata = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
-			   if (!texturedata) {
-			   printf("TEXT FAILED: %s\n", fullpath);
-			   fclose(fileptr);
-			   texturedata = NULL;
-			   temptype = 0;
-			   } else {
-			   temptr = texturedata;
-			   texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
-			   for (c3 = 0; c3 < 10; c3++) {
-			   *temptr = ' ';
-			   temptr++;
-			   }
-			   do {
-			   c3 = fgetc(fileptr);
-			   if ((c3 != EOF) && (isgraph(c3) || c3 == ' ')) {
-			   *temptr = (unsigned char)c3;
-			   temptr++;
-			   c2++;
-			   }
-			   }
-			   while ((c3 != EOF) && (c2 < c1));
-			   for (c3 = 0; c3 < 10; c3++) {
-			   *temptr = ' ';
-			   temptr++;
-			   }
-			   *temptr = 0;
-			   fclose(fileptr);
-			   printf("TEXT: %ld char.\n", c1);
-			   }
-			   }
-			   locsy = 4.5; // locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
-			   locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-			   locpx = locpz = 0;
-			   locpy = locsy - 1;
-			   } else   */
-			if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
+			if (object->regtype == TEXTFILE) {
+				/*
+				   texturewidth = 0;
+				   textureheight = 0;
+				   textureformat = 0;
+				   textureid = 0;
+				   c1 = 0;
+				   c2 = 0;
+				   c3 = 0; */
+				FILE *fileptr = fopen(fullpath, "r");
+				if (!fileptr) {
+					printf("TEXT FAILED: %s\n", fullpath);
+					object->texturedata = NULL;
+					object->regtype = 0;
+				} else {
+					do {
+						c3 = fgetc(fileptr);
+						if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
+							c1++;
+					}
+					while (c3 != EOF);
+					rewind(fileptr);
+					object->texturedata = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
+					if (!object->texturedata) {
+						printf("TEXT FAILED: %s\n", fullpath);
+						fclose(fileptr);
+						object->texturedata = NULL;
+						object->regtype = 0;
+					} else {
+						unsigned char *temptr = object->texturedata;
+						object->texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
+						for (c3 = 0; c3 < 10; c3++) {
+							*temptr = ' ';
+							temptr++;
+						}
+						do {
+							c3 = fgetc(fileptr);
+							if ((c3 != EOF) && (isgraph(c3) || c3 == ' ')) {
+								*temptr = (unsigned char)c3;
+								temptr++;
+								c2++;
+							}
+						}
+						while ((c3 != EOF) && (c2 < c1));
+						for (c3 = 0; c3 < 10; c3++) {
+							*temptr = ' ';
+							temptr++;
+						}
+						*temptr = 0;
+						fclose(fileptr);
+						printf("TEXT: %ld char.\n", c1);
+					}
+				}
+				object->scaley = 4.5;	// locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
+				object->scalex = object->scalez = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+				// Redraw/retexture this object in the rendering thread
+				//object_to_retexture = object;
+			} else if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
 				object->texturesurface = get_image_from_file(fullpath, object->regtype);
 				if (!object->texturesurface) {
 					printf("Reading video frame from %s failed\n", fullpath);
@@ -1711,6 +1711,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		root->scaley = scaley;
 		root->scalez = scalez;
 		root->texturedata = texturedata;
+		root->texturesurface = NULL;	// this gets filled in later
 		root->size = size;
 		root->next = NULL;
 	} else {
@@ -1741,6 +1742,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		(help->next)->scaley = scaley;
 		(help->next)->scalez = scalez;
 		(help->next)->texturedata = texturedata;
+		(help->next)->texturesurface = NULL;
 		(help->next)->size = size;
 		(help->next)->next = NULL;
 	}
@@ -1833,10 +1835,8 @@ char **leoscan(char *ls_path)
 void leodir(void)
 {
 	unsigned int mode = 0, temptype = 0, texturewidth = 0, textureheight = 0, textureformat = 0, textureid = 0;
-	unsigned char *texturedata, *temptr;
 	char *linkpath;
 	GLfloat locpx, locpy, locpz, locsx, locsy, locsz, maxz, momx, momz, nextz;
-	FILE *fileptr;
 	char **entry_list, *entry;
 	unsigned long int n;
 
@@ -1971,11 +1971,9 @@ void leodir(void)
 			locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 			locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
 			locpy = locsy - 1;	// vertical position of the object
-			// Note: locpx (posx) and locpy (posy) are calculated later on
+			// Note: locpx (posx) and locpz (posz) are calculated later on, when the grid size is determined
 
-			// For now, no textures are loaded yet
-			texturedata = NULL;
-			insert(entry, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, www, hhh, texturedata, locpx, locpy, locpz, locsx, locsy, locsz);
+			insert(entry, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, www, hhh, NULL /* no textures loaded yet */ , locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
 		}
 
