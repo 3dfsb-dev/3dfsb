@@ -1,3 +1,10 @@
+Next version (unreleased)
+*************************
+
+Major changes
+-------------
+- No more waiting screens: fly into your directories instantly, with file previews being loaded asynchronously in the background
+
 Version 1.0 (07-01-2015)
 ************************
 
