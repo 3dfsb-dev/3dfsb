@@ -887,22 +887,41 @@ void *async_load_textures(void *arg)
 				} else if (object->regtype == PDFFILE) {
 					// Just show the PDF logo
 					//object->texturesurface = get_image_from_file("images/icon_pdf.png", IMAGEFILE);
-					SDL_Surface * loader = IMG_ReadXPMFromArray(icon_pdf);
+					SDL_Surface *loader = IMG_ReadXPMFromArray(icon_pdf);
 					SDL_PixelFormat RGBAFormat;
-       RGBAFormat.palette = 0; RGBAFormat.colorkey = 0; RGBAFormat.alpha = 0;
-    RGBAFormat.BitsPerPixel = 32; RGBAFormat.BytesPerPixel = 4;
-       #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    RGBAFormat.Rmask = 0xFF000000; RGBAFormat.Rshift =  0; RGBAFormat.Rloss = 0;
-    RGBAFormat.Gmask = 0x00FF0000; RGBAFormat.Gshift =  8; RGBAFormat.Gloss = 0;
-    RGBAFormat.Bmask = 0x0000FF00; RGBAFormat.Bshift = 16; RGBAFormat.Bloss = 0;
-    RGBAFormat.Amask = 0x000000FF; RGBAFormat.Ashift = 24; RGBAFormat.Aloss = 0;
+					RGBAFormat.palette = 0;
+					RGBAFormat.colorkey = 0;
+					RGBAFormat.alpha = 0;
+					RGBAFormat.BitsPerPixel = 32;
+					RGBAFormat.BytesPerPixel = 4;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+					RGBAFormat.Rmask = 0xFF000000;
+					RGBAFormat.Rshift = 0;
+					RGBAFormat.Rloss = 0;
+					RGBAFormat.Gmask = 0x00FF0000;
+					RGBAFormat.Gshift = 8;
+					RGBAFormat.Gloss = 0;
+					RGBAFormat.Bmask = 0x0000FF00;
+					RGBAFormat.Bshift = 16;
+					RGBAFormat.Bloss = 0;
+					RGBAFormat.Amask = 0x000000FF;
+					RGBAFormat.Ashift = 24;
+					RGBAFormat.Aloss = 0;
 #else
-    RGBAFormat.Rmask = 0x000000FF; RGBAFormat.Rshift = 24; RGBAFormat.Rloss = 0;
-    RGBAFormat.Gmask = 0x0000FF00; RGBAFormat.Gshift = 16; RGBAFormat.Gloss = 0;
-    RGBAFormat.Bmask = 0x00FF0000; RGBAFormat.Bshift =  8; RGBAFormat.Bloss = 0;
-    RGBAFormat.Amask = 0xFF000000; RGBAFormat.Ashift =  0; RGBAFormat.Aloss = 0;
+					RGBAFormat.Rmask = 0x000000FF;
+					RGBAFormat.Rshift = 24;
+					RGBAFormat.Rloss = 0;
+					RGBAFormat.Gmask = 0x0000FF00;
+					RGBAFormat.Gshift = 16;
+					RGBAFormat.Gloss = 0;
+					RGBAFormat.Bmask = 0x00FF0000;
+					RGBAFormat.Bshift = 8;
+					RGBAFormat.Bloss = 0;
+					RGBAFormat.Amask = 0xFF000000;
+					RGBAFormat.Ashift = 0;
+					RGBAFormat.Aloss = 0;
 #endif
-       object->texturesurface = SDL_ConvertSurface(loader, &RGBAFormat, SDL_SWSURFACE);
+					object->texturesurface = SDL_ConvertSurface(loader, &RGBAFormat, SDL_SWSURFACE);
 					object->textureformat = GL_RGBA;
 					object->originalwidth = 512;
 					object->originalheight = 512;
@@ -914,7 +933,7 @@ void *async_load_textures(void *arg)
 					/* Ugly dirty global variables */
 					object->texturewidth = object->texturesurface->w;
 					object->textureheight = object->texturesurface->h;
-					printf("Video: %ldx%ld %s TEXTURE: %dx%d\n", www, hhh, fullpath, object->texturewidth, object->textureheight);
+					printf("Original dimensions: %ldx%ld %s TEXTURE: %dx%d\n", object->originalwidth, object - originalheight, fullpath, object->texturewidth, object->textureheight);
 					if (object->originalwidth < object->originalheight) {
 						object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
 						object->scaley = (object->originalheight * (object->scalex)) / www;
@@ -2001,7 +2020,7 @@ void leodir(void)
 
 			// Setting some default scale (before having read the file) and position
 			// Note: locpx (posx) and locpz (posz) are calculated later on, when the grid size is determined
-			if ((mode & 0x1F) == 1) {       // Is it a directory?
+			if ((mode & 0x1F) == 1) {	// Is it a directory?
 				locpy = 0;
 			} else {
 				// Setting some temporary parameters for dummy objects; the real data file loading will happen later on
