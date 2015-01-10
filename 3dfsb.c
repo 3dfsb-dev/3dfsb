@@ -813,7 +813,6 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 // This new thread loads the textures
 void *async_load_textures(void *arg)
 {
-	//sleep(0.5);	// wait for the list of objects to be finalized
 	// For each object, load its texture and (if possible) set the dimensions...
 	struct tree_entry *object;
 	for (object = root; object; object = object->next) {
