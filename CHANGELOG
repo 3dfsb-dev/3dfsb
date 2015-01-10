@@ -5,6 +5,10 @@ Major changes
 -------------
 - No more waiting screens: fly into your directories instantly, with file previews being loaded asynchronously in the background
 
+Minor changes
+-------------
+- More graphics: PDF files now have a PDF icon to show their type, instead of being a boring old gray box
+
 Version 1.0 (07-01-2015)
 ************************
 
