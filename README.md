@@ -140,8 +140,14 @@ You may change these by editing ~/.3dfsb
 Dependencies
 ============
 
-Needed Libraries:
+Compilation libraries:
+----------------------
+You need imagemagick's "mogrify" tool to convert the built-in image files to pnm files.
 
+Hint: sudo apt-get install imagemagick
+
+Development libraries:
+----------------------
 You may need to install 'devel' packages of these
 libraries in order to get the necessary .h files
 and the sdl-config script.
@@ -154,7 +160,7 @@ and the sdl-config script.
 
 On Ubuntu, you can install all build-time dependencies with:
 
-sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2-dev libxi-dev libxmu-dev libmagic-dev
+sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2-dev libxi-dev libxmu-dev libmagic-dev imagemagick
 
 For GStreamer, you need:
 sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev

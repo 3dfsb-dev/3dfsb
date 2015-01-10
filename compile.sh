@@ -35,8 +35,8 @@ OTHER_LIBS=$(pkg-config --libs glu SDL_stretch)
 
 NOPKGCONFIG_LIBS="-lglut -lmagic -lm"
 
-echo "Converting built-in images to XPM format with imagemagick's convert..."
-convert images/icon_pdf.png images/icon_pdf.xpm		# Probably not needed: --background none 
+echo "Converting built-in images to XPM format with imagemagick's 'mogrify' tool..."
+mogrify -format xpm images/*.png
 if [ $? -ne 0 ]; then
 	echo "ERROR converting built-in images to XPM format..."
 	exit 1
