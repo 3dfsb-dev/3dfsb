@@ -134,7 +134,7 @@ struct tree_entry {
 	unsigned int originalwidth;
 	unsigned int originalheight;
 	unsigned int tombstone;	// object has been deleted
-	unsigned char *texturedata;	/* this can point to the contents of a textfile */
+	unsigned char *textfilecontents;	/* this can point to the contents of a textfile */
 	SDL_Surface *texturesurface;
 	off_t size;
 	struct tree_entry *next;
@@ -430,8 +430,8 @@ void ende(int code)
 			FMptr = help;
 			FCptr = help->name;
 			free(FCptr);
-			if (help->texturedata != NULL) {
-				FCptr = (char *)help->texturedata;
+			if (help->textfilecontents != NULL) {
+				FCptr = (char *)help->textfilecontents;
 				free(FCptr);
 			}
 			// Free up any texturesurface's that are set
@@ -841,12 +841,12 @@ void *async_load_textures(void *arg)
 					}
 					while (c3 != EOF);
 					rewind(fileptr);
-					object->texturedata = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
-					if (!object->texturedata) {
+					object->textfilecontents = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
+					if (!object->textfilecontents) {
 						printf("TEXT FAILED: %s\n", fullpath);
 						fclose(fileptr);
 					} else {
-						unsigned char *temptr = object->texturedata;
+						unsigned char *temptr = object->textfilecontents;
 						object->texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
 						for (c3 = 0; c3 < 10; c3++) {
 							*temptr = ' ';
@@ -1710,7 +1710,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		root->scalex = scalex;
 		root->scaley = scaley;
 		root->scalez = scalez;
-		root->texturedata = NULL;
+		root->textfilecontents = NULL;
 		root->texturesurface = NULL;	// this gets filled in later
 		root->size = size;
 		root->next = NULL;
@@ -1741,7 +1741,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		(help->next)->scalex = scalex;
 		(help->next)->scaley = scaley;
 		(help->next)->scalez = scalez;
-		(help->next)->texturedata = NULL;
+		(help->next)->textfilecontents = NULL;
 		(help->next)->texturesurface = NULL;
 		(help->next)->size = size;
 		(help->next)->next = NULL;
@@ -1859,8 +1859,8 @@ void leodir(void)
 			FMptr = help;
 			FCptr = help->name;
 			free(FCptr);
-			if (help->texturedata != NULL) {
-				FCptr = (char *)help->texturedata;
+			if (help->textfilecontents != NULL) {
+				FCptr = (char *)help->textfilecontents;
 				free(FCptr);
 			}
 			// Free up any texturesurface's that are set
@@ -2591,7 +2591,7 @@ void display(void)
 			}
 		}
 /* animate text files */
-		if ((object->regtype == TEXTFILE) && (object->texturedata) && ((object->mode) & 0x1F) == 0) {
+		if ((object->regtype == TEXTFILE) && (object->textfilecontents) && ((object->mode) & 0x1F) == 0) {
 			glPushMatrix();
 			if (((object->mode) & 0x20)) {
 				cc = 16;
@@ -2601,7 +2601,7 @@ void display(void)
 				cc = c1 = 1;
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
-			c3 = (int)strlen((char *)object->texturedata);
+			c3 = (int)strlen((char *)object->textfilecontents);
 			c2 = 0;
 			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((object->textureformat) = (object->textureformat) + (object->texturewidth))))), (200 * mz) * cc);
 			u = mx - vposx;
@@ -2615,7 +2615,7 @@ void display(void)
 			glTranslatef(+mono / 2, 0, 0);
 			do {
 				glTranslatef(-mono, -150, 0);
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->texturedata[c2 + (object->textureheight)]);
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->textfilecontents[c2 + (object->textureheight)]);
 				c2++;
 			}
 			while (c2 < c3 && c2 < 10);
