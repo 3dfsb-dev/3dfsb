@@ -1999,13 +1999,16 @@ void leodir(void)
 			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE)
 				TDFSB_TEX_NUM++;
 
-/*  + Setting Parameters */
-
-			// Setting some temporary parameters for dummy objects; the real data file loading will happen later on
-			locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-			locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
-			locpy = locsy - 1;	// vertical position of the object
+			// Setting some default scale (before having read the file) and position
 			// Note: locpx (posx) and locpz (posz) are calculated later on, when the grid size is determined
+			if ((mode & 0x1F) == 1) {       // Is it a directory?
+				locpy = 0;
+			} else {
+				// Setting some temporary parameters for dummy objects; the real data file loading will happen later on
+				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+				locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
+				locpy = locsy - 1;	// vertical position of the object
+			}
 
 			insert(entry, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, www, hhh, locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
