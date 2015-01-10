@@ -381,6 +381,9 @@ GstBuffer *videobuffer;
 // Mimetype database handle
 magic_t magic;
 
+// Asynchronous texture loading
+pthread_t async_load_textures_thread_id;
+
 static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 {
 	switch (GST_MESSAGE_TYPE(msg)) {
@@ -810,25 +813,24 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 // This new thread loads the textures
 void *async_load_textures(void *arg)
 {
+	//sleep(0.5);	// wait for the list of objects to be finalized
 	// For each object, load its texture and (if possible) set the dimensions...
 	struct tree_entry *object;
-	// TODO: protect this buffer from overflowing in the heap when the file or pathname is very long
-	unsigned char *fullpath = (unsigned char *)malloc(4096 * sizeof(unsigned char));
 	for (object = root; object; object = object->next) {
 		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
 		// Also device files (mode & 0x1F == 2) can be made into a texture, if they are of the correct regtype
 		if ((object->regtype == TEXTFILE || object->regtype == VIDEOFILE || object->regtype == IMAGEFILE || object->regtype == PDFFILE || object->regtype == VIDEOSOURCEFILE) && (((object->mode) & 0x1F) == 0) || ((object->mode) & 0x1F) == 2) {
-			// Needed: fullpath
-			strcpy(fullpath, TDFSB_CURRENTPATH);
-			if (strlen(fullpath) > 1)
-				strcat(fullpath, "/");
-			strcat(fullpath, object->name);
-			printf("Loading texture of %s\n", fullpath);
+			unsigned char async_fullpath[4096] = { 0 };	// allocate on the stack for automatic free'ing
+			strcpy(async_fullpath, TDFSB_CURRENTPATH);
+			if (strlen(async_fullpath) > 1)
+				strcat(async_fullpath, "/");
+			strcat(async_fullpath, object->name);
+			printf("Loading texture of %s\n", async_fullpath);
 
 			if (object->regtype == TEXTFILE) {
-				FILE *fileptr = fopen(fullpath, "r");
+				FILE *fileptr = fopen(async_fullpath, "r");
 				if (!fileptr) {
-					printf("TEXT FAILED: %s\n", fullpath);
+					printf("TEXT FAILED: %s\n", async_fullpath);
 				} else {
 					do {
 						c3 = fgetc(fileptr);
@@ -839,7 +841,7 @@ void *async_load_textures(void *arg)
 					rewind(fileptr);
 					object->textfilecontents = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
 					if (!object->textfilecontents) {
-						printf("TEXT FAILED: %s\n", fullpath);
+						printf("TEXT FAILED: %s\n", async_fullpath);
 						fclose(fileptr);
 					} else {
 						unsigned char *temptr = object->textfilecontents;
@@ -872,7 +874,7 @@ void *async_load_textures(void *arg)
 				//object_to_retexture = object;
 			} else {
 				if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
-					object->texturesurface = get_image_from_file(fullpath, object->regtype);
+					object->texturesurface = get_image_from_file(async_fullpath, object->regtype);
 					object->originalwidth = www;
 					object->originalheight = hhh;
 					object->textureformat = cglmode;
@@ -921,12 +923,12 @@ void *async_load_textures(void *arg)
 				}
 
 				if (!object->texturesurface) {
-					printf("Reading texturesurface from %s failed\n", fullpath);
+					printf("Reading texturesurface from %s failed\n", async_fullpath);
 				} else {
 					/* Ugly dirty global variables */
 					object->texturewidth = object->texturesurface->w;
 					object->textureheight = object->texturesurface->h;
-					printf("Original dimensions: %ldx%ld %s TEXTURE: %dx%d\n", object->originalwidth, object->originalheight, fullpath, object->texturewidth, object->textureheight);
+					printf("Original dimensions: %ldx%ld %s TEXTURE: %dx%d\n", object->originalwidth, object->originalheight, async_fullpath, object->texturewidth, object->textureheight);
 					if (object->originalwidth < object->originalheight) {
 						object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
 						object->scaley = (object->originalheight * (object->scalex)) / www;
@@ -942,7 +944,6 @@ void *async_load_textures(void *arg)
 			}
 		}
 	}			// end of directory entry iterator
-	free(fullpath);
 	return NULL;
 }
 
@@ -987,7 +988,7 @@ void tdb_gen_list(void)
 				}
 
 				// Link the texture to the cube
-				printf("Linking texture with id %d to cube for object %s\n", help->textureid, help->name);
+				//printf("Linking texture with id %d to cube for object %s\n", help->textureid, help->name);
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D, help->textureid);
 				if (TDFSB_ICUBE)
@@ -1885,6 +1886,9 @@ void leodir(void)
 	c1 = 0;
 	c2 = 0;
 /* cleaning up */
+
+	pthread_cancel(async_load_textures_thread_id);
+
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
 		free(TDFSB_TEX_NAMES);
@@ -2182,8 +2186,7 @@ void leodir(void)
 	TDFSB_ANIM_STATE = 0;
 
 	// Start a new thread that loads the textures (of images and video files) and sets them
-	pthread_t thread_id;
-	int err = pthread_create(&thread_id, NULL, &async_load_textures, NULL);
+	int err = pthread_create(&async_load_textures_thread_id, NULL, &async_load_textures, NULL);
 	if (err != 0)
 		printf("Can't create thread :[%s]", strerror(err));
 	else
