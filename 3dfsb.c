@@ -134,7 +134,7 @@ struct tree_entry {
 	unsigned int originalwidth;
 	unsigned int originalheight;
 	unsigned int tombstone;	// object has been deleted
-	unsigned char *texturedata;	/* this can point to the contents of a textfile, or to the data of a texture */
+	unsigned char *texturedata;	/* this can point to the contents of a textfile */
 	SDL_Surface *texturesurface;
 	off_t size;
 	struct tree_entry *next;
@@ -433,6 +433,10 @@ void ende(int code)
 			if (help->texturedata != NULL) {
 				FCptr = (char *)help->texturedata;
 				free(FCptr);
+			}
+			// Free up any texturesurface's that are set
+			if (help->texturesurface != NULL) {
+				SDL_FreeSurface(help->texturesurface);
 			}
 			if (help->linkpath != NULL) {
 				FCptr = help->linkpath;
@@ -829,8 +833,6 @@ void *async_load_textures(void *arg)
 				FILE *fileptr = fopen(fullpath, "r");
 				if (!fileptr) {
 					printf("TEXT FAILED: %s\n", fullpath);
-					object->texturedata = NULL;
-					object->regtype = 0;
 				} else {
 					do {
 						c3 = fgetc(fileptr);
@@ -843,8 +845,6 @@ void *async_load_textures(void *arg)
 					if (!object->texturedata) {
 						printf("TEXT FAILED: %s\n", fullpath);
 						fclose(fileptr);
-						object->texturedata = NULL;
-						object->regtype = 0;
 					} else {
 						unsigned char *temptr = object->texturedata;
 						object->texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
@@ -1675,7 +1675,7 @@ void reshape(int w, int h)
 	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 }
 
-void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int texturewidth, unsigned int textureheight, unsigned int textureformat, unsigned int textureid, unsigned int originalwidth, unsigned int originalheight, unsigned char *texturedata, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
+void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int texturewidth, unsigned int textureheight, unsigned int textureformat, unsigned int textureid, unsigned int originalwidth, unsigned int originalheight, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
 {
 	char *temp;
 
@@ -1710,7 +1710,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		root->scalex = scalex;
 		root->scaley = scaley;
 		root->scalez = scalez;
-		root->texturedata = texturedata;
+		root->texturedata = NULL;
 		root->texturesurface = NULL;	// this gets filled in later
 		root->size = size;
 		root->next = NULL;
@@ -1741,7 +1741,7 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 		(help->next)->scalex = scalex;
 		(help->next)->scaley = scaley;
 		(help->next)->scalez = scalez;
-		(help->next)->texturedata = texturedata;
+		(help->next)->texturedata = NULL;
 		(help->next)->texturesurface = NULL;
 		(help->next)->size = size;
 		(help->next)->next = NULL;
@@ -1863,6 +1863,10 @@ void leodir(void)
 				FCptr = (char *)help->texturedata;
 				free(FCptr);
 			}
+			// Free up any texturesurface's that are set
+			if (help->texturesurface != NULL) {
+				SDL_FreeSurface(help->texturesurface);
+			}
 			if (help->linkpath != NULL) {
 				FCptr = help->linkpath;
 				free(FCptr);
@@ -1973,7 +1977,7 @@ void leodir(void)
 			locpy = locsy - 1;	// vertical position of the object
 			// Note: locpx (posx) and locpz (posz) are calculated later on, when the grid size is determined
 
-			insert(entry, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, www, hhh, NULL /* no textures loaded yet */ , locpx, locpy, locpz, locsx, locsy, locsz);
+			insert(entry, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, www, hhh, locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
 		}
 
