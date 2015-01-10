@@ -437,6 +437,7 @@ void ende(int code)
 			// Free up any texturesurface's that are set
 			if (help->texturesurface != NULL) {
 				SDL_FreeSurface(help->texturesurface);
+				help->texturesurface = NULL;
 			}
 			if (help->linkpath != NULL) {
 				FCptr = help->linkpath;
@@ -813,7 +814,7 @@ void *async_load_textures(void *arg)
 	for (object = root; object; object = object->next) {
 		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
 		// Also device files (mode & 0x1F == 2) can be made into a texture, if they are of the correct regtype
-		if ((object->regtype == TEXTFILE || object->regtype == VIDEOFILE || object->regtype == IMAGEFILE || object->regtype == VIDEOSOURCEFILE) && (((object->mode) & 0x1F) == 0) || ((object->mode) & 0x1F) == 2) {
+		if ((object->regtype == TEXTFILE || object->regtype == VIDEOFILE || object->regtype == IMAGEFILE || object->regtype == PDFFILE || object->regtype == VIDEOSOURCEFILE) && (((object->mode) & 0x1F) == 0) || ((object->mode) & 0x1F) == 2) {
 			// Needed: fullpath
 			strcpy(fullpath, TDFSB_CURRENTPATH);
 			if (strlen(fullpath) > 1)
@@ -874,10 +875,16 @@ void *async_load_textures(void *arg)
 				object->scalex = object->scalez = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
 				// Redraw/retexture this object in the rendering thread
 				//object_to_retexture = object;
-			} else if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
-				object->texturesurface = get_image_from_file(fullpath, object->regtype);
+			} else {
+				if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
+					object->texturesurface = get_image_from_file(fullpath, object->regtype);
+				} else if (object->regtype == PDFFILE) {
+					// Just show the PDF logo
+					object->texturesurface = get_image_from_file("images/icon_pdf.png", IMAGEFILE);
+				}
+
 				if (!object->texturesurface) {
-					printf("Reading video frame from %s failed\n", fullpath);
+					printf("Reading texturesurface from %s failed\n", fullpath);
 				} else {
 					/* Ugly dirty global variables */
 					object->texturewidth = p2w;
@@ -927,8 +934,8 @@ void tdb_gen_list(void)
 				glutSolidSphere(0.5, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
-		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE))) {	// Regular file, except VIDEOSOURCEFILE's
-			if (((help->regtype == IMAGEFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) {
+		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE))) {	// Regular file, except VIDEOSOURCEFILE's, which are character devices
+			if (((help->regtype == IMAGEFILE) || (help->regtype == PDFFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -1866,6 +1873,7 @@ void leodir(void)
 			// Free up any texturesurface's that are set
 			if (help->texturesurface != NULL) {
 				SDL_FreeSurface(help->texturesurface);
+				help->texturesurface = NULL;
 			}
 			if (help->linkpath != NULL) {
 				FCptr = help->linkpath;
@@ -1966,7 +1974,7 @@ void leodir(void)
 				temptype = VIDEOSOURCEFILE;
 			}
 			// Count the number of textures we'll need, so we can allocate them already below
-			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE)
+			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE)
 				TDFSB_TEX_NUM++;
 
 /*  + Setting Parameters */
@@ -2086,7 +2094,7 @@ void leodir(void)
 	for (help = root; help; help = help->next) {
 		temptype = help->regtype;
 		// TODO: this is also checked somewhere above, can't we do this in the same loop as above instead of a seperate one?
-		if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE)
+		if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE)
 			help->textureid = TDFSB_TEX_NAMES[c1++];
 	}
 
@@ -2234,7 +2242,7 @@ void approach(void)
 		break;
 
 	case 2:
-		if ((TDFSB_OA->regtype == IMAGEFILE) || (TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE)) {
+		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE) {
 			if (TDFSB_ANIM_COUNT) {
 				smoox += TDFSB_OA_DX;
 				tposx = smoox;
@@ -2407,6 +2415,7 @@ void display(void)
 
 			SDL_UnlockSurface(object_to_retexture->texturesurface);
 			SDL_FreeSurface(object_to_retexture->texturesurface);
+			object_to_retexture->texturesurface = NULL;
 		}
 		object_to_retexture = NULL;
 	}
@@ -2534,7 +2543,7 @@ void display(void)
 				} else {
 					glRotated(fmod(315 - asin(u / r) * (180 / PI), 360), 0, 1, 0);
 				}
-				if (((object->mode) == 0x00) && ((object->regtype) == IMAGEFILE))
+				if (((object->mode) == 0x00) && ((object->regtype) == IMAGEFILE || object->regtype == PDFFILE))
 					glRotatef(-45, 0, 1, 0);
 				if (!((object->mode) & 0x20)) {
 					glTranslatef((object->scalex) + 1, 1.5, (object->scalez) + 1);

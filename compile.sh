@@ -49,7 +49,13 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 
     gccopt="-g"		# debugging info by default
 
-    gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
+    if ! uname -m | grep 64; then
+	    objcopy --input binary --output elf32-i386 --binary-architecture i386 images/icon_pdf.png icon_pdf.o
+    else
+            # The --binary-architecture i386 is correct here
+	    objcopy --input binary --output elf64-x86-64 --binary-architecture i386 images/icon_pdf.png icon_pdf.o
+    fi
+    gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c icon_pdf.o -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
     echo "BeOS detected.";
     echo "compiling...";
