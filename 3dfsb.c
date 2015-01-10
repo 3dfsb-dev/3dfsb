@@ -826,14 +826,6 @@ void *async_load_textures(void *arg)
 			printf("Loading texture of %s\n", fullpath);
 
 			if (object->regtype == TEXTFILE) {
-				/*
-				   texturewidth = 0;
-				   textureheight = 0;
-				   textureformat = 0;
-				   textureid = 0;
-				   c1 = 0;
-				   c2 = 0;
-				   c3 = 0; */
 				FILE *fileptr = fopen(fullpath, "r");
 				if (!fileptr) {
 					printf("TEXT FAILED: %s\n", fullpath);
@@ -885,8 +877,9 @@ void *async_load_textures(void *arg)
 					object->originalheight = hhh;
 					object->textureformat = cglmode;
 				} else if (object->regtype == PDFFILE) {
-					// Just show the PDF logo
-					//object->texturesurface = get_image_from_file("images/icon_pdf.png", IMAGEFILE);
+					// Show the PDF logo
+					// This is also possible:
+					// object->texturesurface = get_image_from_file("images/icon_pdf.png", IMAGEFILE);
 					SDL_Surface *loader = IMG_ReadXPMFromArray(icon_pdf);
 					SDL_PixelFormat RGBAFormat;
 					RGBAFormat.palette = 0;
@@ -933,7 +926,7 @@ void *async_load_textures(void *arg)
 					/* Ugly dirty global variables */
 					object->texturewidth = object->texturesurface->w;
 					object->textureheight = object->texturesurface->h;
-					printf("Original dimensions: %ldx%ld %s TEXTURE: %dx%d\n", object->originalwidth, object - originalheight, fullpath, object->texturewidth, object->textureheight);
+					printf("Original dimensions: %ldx%ld %s TEXTURE: %dx%d\n", object->originalwidth, object->originalheight, fullpath, object->texturewidth, object->textureheight);
 					if (object->originalwidth < object->originalheight) {
 						object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
 						object->scaley = (object->originalheight * (object->scalex)) / www;
@@ -2569,7 +2562,7 @@ void display(void)
 		if (TDFSB_FILENAMES) {
 			glPushMatrix();
 			if (!((object->mode) & 0x20))
-				glTranslatef(mx, my, mz);
+				glTranslatef(mx, my + 1, mz);
 			else
 				glTranslatef(mx, 1.5, mz);
 
