@@ -44,7 +44,7 @@ fi
 
 if uname -s | grep -i -c "LINUX" > /dev/null; then 
     echo "GNU/Linux detected.";
-    echo "compiling...";
+    echo -n "Compiling...";
     # On Linux, pkg-config is easier to use than sdl-config...
     SDL_CFLAGS=$(pkg-config --cflags SDL_image);	# Example: -D_GNU_SOURCE=1 -D_REENTRANT -I/usr/include/SDL 
     SDL_LIBS=$(pkg-config --libs SDL_image);		# Example: -lSDL_image -lSDL 
@@ -57,6 +57,8 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
     gccopt="-g"		# debugging info by default
 
     gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
+    echo "done."
+    echo "Now run the 3D File System Browser with ./3dfsb"
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
     echo "BeOS detected.";
     echo "compiling...";
