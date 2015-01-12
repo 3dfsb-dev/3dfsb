@@ -2433,8 +2433,11 @@ void display(void)
 		// TODO: add error handling + what if the video is finished?
 	}
 
+	// TODO: fix race condition where this display() function is not called
+	// after several objects have been loaded (which can take *less* than
+	// 16 ms...)
 	if (object_to_retexture != NULL) {
-		//printf("Object %s finished loading, drawing on texture ID %d\n", object_to_retexture->name, object_to_retexture->textureid);
+		printf("Object %s finished loading, drawing on texture ID %d\n", object_to_retexture->name, object_to_retexture->textureid);
 		tdb_gen_list();	// Recalculate the blocks, because the scale of the object_to_retexture has been corrected
 		if (object_to_retexture->texturesurface != NULL) {
 			//printf("Texturesurface of object is not NULL, setting it...\n");
