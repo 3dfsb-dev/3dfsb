@@ -117,8 +117,8 @@ static GLuint TDFSB_HelpList = 0;
 static GLuint TDFSB_SolidList = 0;
 static GLuint TDFSB_BlendList = 0;
 
-unsigned long int DRN;
-unsigned int DRNratio;
+unsigned long int total_objects_in_grid;
+unsigned int total_objects_in_grid_ratio;
 GLdouble mx, my, mz, r, u, v;
 
 struct tree_entry {
@@ -429,7 +429,7 @@ void ende(int code)
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
 		free(TDFSB_TEX_NAMES);
-	if (DRN != 0) {
+	if (total_objects_in_grid != 0) {
 		help = root;
 		while (help) {
 			//printf("Freeing %s\n", help->name);
@@ -453,7 +453,7 @@ void ende(int code)
 			free(FMptr);
 		}
 		root = NULL;
-		DRN = 0;
+		total_objects_in_grid = 0;
 	}
 	SDL_Quit();
 	exit(code);
@@ -1898,7 +1898,7 @@ void leodir(void)
 
 	cleanup_media_player();	// stop any playing media
 
-	if (DRN != 0) {
+	if (total_objects_in_grid != 0) {
 		help = root;
 		while (help) {
 			FMptr = help;
@@ -1921,7 +1921,7 @@ void leodir(void)
 			free(FMptr);
 		}
 		root = NULL;
-		DRN = 0;
+		total_objects_in_grid = 0;
 	}
 
 /* analyzing new directory */
@@ -1931,7 +1931,7 @@ void leodir(void)
 		entry = entry_list[n++];
 		linkpath = NULL;
 		if (entry && ((TDFSB_SHOW_DOTFILES || entry[0] != '.') || !strcmp(entry, ".."))) {
-			DRN++;
+			total_objects_in_grid++;
 			temptype = 0;
 			linkpath = NULL;
 			strcpy(fullpath, TDFSB_CURRENTPATH);
@@ -2036,7 +2036,7 @@ void leodir(void)
 
 /* calculate object's x,z positions (y is altitude and stays untouched here) */
 
-	DRNratio = (int)sqrt((double)DRN);
+	total_objects_in_grid_ratio = (int)sqrt((double)total_objects_in_grid);
 	help = root;
 	cc = 0;
 	maxz = 0;
@@ -2044,11 +2044,11 @@ void leodir(void)
 	momz = 0;
 	nextz = 0;
 
-	for (c2 = 0; c2 <= DRNratio; c2++) {
+	for (c2 = 0; c2 <= total_objects_in_grid_ratio; c2++) {
 		momz += maxz + nextz + 2 * (log(help->scalez + 1)) + 4;
 		maxz = 0;
 		momx = 0;
-		for (c1 = 0; c1 <= DRNratio; c1++) {
+		for (c1 = 0; c1 <= total_objects_in_grid_ratio; c1++) {
 			if (help->scalez > maxz) {
 				maxz = help->scalez;
 			}
@@ -2067,7 +2067,7 @@ void leodir(void)
 			break;
 		FMptr = help;
 		nextz = 0;
-		for (c1 = 0; c1 <= DRNratio; c1++) {
+		for (c1 = 0; c1 <= total_objects_in_grid_ratio; c1++) {
 			if (FMptr->scalez > nextz)
 				nextz = FMptr->scalez;
 			FMptr = FMptr->next;
