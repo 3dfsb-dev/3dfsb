@@ -273,6 +273,18 @@ static GLfloat verTex2[] = {
 
 /*      Texture      Normals         Vertex        */
 
+
+// Used both for the on-screen display and for the console help text
+#define	STATIC_HELP_TEXT "Esc           quit   F1/F2    speed +/-\n" \
+"Mouse move    look   F3/F4      rot +/-\n" \
+"UP         forward   F5/F6  ball detail\n" \
+"DOWN      backward   F7/F8  max fps +/-\n" \
+"L/R arrow   strafe   F9     change tool\n" \
+"PgUp/Down or MMB+Mouse move up/downward\n" \
+"HOME     start pos   END    ground zero\n" \
+"LMB  select object  + RMB|CTRL approach\n" \
+"+ENTER  play media or enter directory\n\n" \
+
 unsigned char TDFSB_KC_FLY, TDFSB_KC_HELP, TDFSB_KC_HOME;
 unsigned char TDFSB_KC_FS, TDFSB_KC_DOT, TDFSB_KC_RELM;
 unsigned char TDFSB_KC_RL, TDFSB_KC_CDU, TDFSB_KC_IMBR;
@@ -655,8 +667,8 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
 		// Idea for speedup: set queue-size to 1 instead of 2
 	}
-	printf("gst-launch-1.0 %s\n", descr);
-	pipeline = gst_parse_launch(descr, &error);
+	//printf("gst-launch-1.0 %s\n", descr);
+	pipeline = (GstPipeline*)(gst_parse_launch(descr, &error));
 
 	if (error != NULL) {
 		g_print("could not construct pipeline: %s\n", error->message);
@@ -668,7 +680,7 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 	sink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
 
 	/* set to PAUSED to make the first frame arrive in the sink */
-	ret = gst_element_set_state(pipeline, GST_STATE_PAUSED);
+	ret = gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
 	switch (ret) {
 	case GST_STATE_CHANGE_FAILURE:
 		g_print("failed to play the file\n");
@@ -685,7 +697,7 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 	/* This can block for up to 5 seconds. If your machine is really overloaded,
 	 * it might time out before the pipeline prerolled and we generate an error. A
 	 * better way is to run a mainloop and catch errors there. */
-	ret = gst_element_get_state(pipeline, NULL, NULL, 5 * GST_SECOND);
+	ret = gst_element_get_state(GST_ELEMENT(pipeline), NULL, NULL, 5 * GST_SECOND);
 	if (ret == GST_STATE_CHANGE_FAILURE) {
 		g_print("failed to play the file\n");
 		//exit(-1);
@@ -693,7 +705,7 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 
 	if (type == VIDEOFILE) {	// VIDEOSOURCEFILE's and IMAGEFILE's cannot be seeked
 		/* get the duration */
-		gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration);
+		gst_element_query_duration(GST_ELEMENT(pipeline), GST_FORMAT_TIME, &duration);
 
 		if (duration != -1)
 			/* we have a duration, seek to 5% */
@@ -706,7 +718,7 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 		 * by seeking to somewhere else we have a bigger chance of getting something
 		 * more interesting. An optimisation would be to detect black images and then
 		 * seek a little more */
-		gst_element_seek_simple(pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH, position);
+		gst_element_seek_simple(GST_ELEMENT(pipeline), GST_FORMAT_TIME, GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH, position);
 	}
 
 	/* get the preroll buffer from appsink, this block untils appsink really
@@ -930,7 +942,7 @@ void *async_load_textures(void *arg)
 					/* Ugly dirty global variables */
 					object->texturewidth = object->texturesurface->w;
 					object->textureheight = object->texturesurface->h;
-					printf("Original dimensions: %ldx%ld %s TEXTURE: %dx%d\n", object->originalwidth, object->originalheight, async_fullpath, object->texturewidth, object->textureheight);
+					printf("Original dimensions: %dx%d %s TEXTURE: %dx%d\n", object->originalwidth, object->originalheight, async_fullpath, object->texturewidth, object->textureheight);
 					if (object->originalwidth < object->originalheight) {
 						object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
 						object->scaley = (object->originalheight * (object->scalex)) / www;
@@ -1268,19 +1280,12 @@ void setup_help(void)
 	help_copy = (char *)malloc(1024 * sizeof(char));
 	tmpstr = (char *)malloc(64 * sizeof(char));
 
-	if (!(help_str && help_copy && tmpstr)) {
+	if (!(help_copy && tmpstr)) {
 		printf("Malloc Failure setup_help \n");
 		exit(1);
 	}
 
-	strcpy(help_str, "Esc           quit   F1/F2    speed +/-\n");
-	strcat(help_str, "Mouse move    look   F3/F4      rot +/-\n");
-	strcat(help_str, "UP         forward   F5/F6  ball detail\n");
-	strcat(help_str, "DOWN      backward   F7/F8  max fps +/-\n");
-	strcat(help_str, "L/R arrow   strafe   F9     change tool\n");
-	strcat(help_str, "HOME     start pos   END    ground zero   \n");
-	strcat(help_str, "LMB  select object  + RMB|CTRL approach\n");
-	strcat(help_str, "+ENTER  play media or enter directory\n");
+	strcat(help_str, STATIC_HELP_TEXT);
 
 	sprintf(tmpstr, "\"%c\"      filenames   \"%c\"   ground cross\n", TDFSB_KC_NAME, TDFSB_KC_GCR);
 	strcat(help_str, tmpstr);
@@ -1318,7 +1323,6 @@ void setup_help(void)
 	sprintf(tmpstr, "\"%c|%c\"                  Forward|Backward\n", TDFSB_KC_FORWARD, TDFSB_KC_BACKWARD);
 	strcat(help_str, tmpstr);
 
-	strcat(help_str, "PgUp/Down or MMB+Mouse move up/downward\n");
 
 }
 
@@ -3210,7 +3214,7 @@ int speckey(int key)
 				if (TDFSB_CSE_FLAG)
 					snprintf(TDFSB_CES_TEMP, 4096, TDFSB_CUSTOM_EXECUTE_STRING, fullpath);
 				else
-					snprintf(TDFSB_CES_TEMP, 4096, TDFSB_CUSTOM_EXECUTE_STRING);
+					strncpy(TDFSB_CES_TEMP, TDFSB_CUSTOM_EXECUTE_STRING, 4096);
 			}
 			system(TDFSB_CES_TEMP);
 			printf("EXECUTE COMMAND: %s\n", TDFSB_CES_TEMP);
@@ -3539,7 +3543,7 @@ int keyboard(unsigned char key)
 			TDFSB_SHOW_HELP = 1 - TDFSB_SHOW_HELP;
 			if (TDFSB_SHOW_HELP) {
 				printf("\n=======================================\n");
-				printf(help_str);
+				puts(help_str);
 				printf("=======================================\n\n");
 			}
 		}
