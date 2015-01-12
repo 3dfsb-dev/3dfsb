@@ -144,7 +144,6 @@ struct tree_entry {
 };
 
 struct tree_entry *root, *help, *FMptr, *TDFSB_OBJECT_SELECTED = NULL, *TDFSB_OA = NULL;
-struct tree_entry *object_to_retexture = NULL;
 char *FCptr;
 
 struct stat buf;
@@ -383,6 +382,8 @@ magic_t magic;
 
 // Asynchronous texture loading
 pthread_t async_load_textures_thread_id;
+
+GAsyncQueue *loaded_textures_queue = NULL;
 
 static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
 {
@@ -939,8 +940,9 @@ void *async_load_textures(void *arg)
 					}
 					object->posy = object->scaley - 1;	// vertical position of the object
 					object->scalez = 0.5;	// flatscreens instead of the default ugly big square blocks
-					// Redraw/retexture this object in the rendering thread
-					object_to_retexture = object;
+
+					// Add to queue to redraw/retexture this object in the rendering thread
+					g_async_queue_push(loaded_textures_queue, object);
 				}
 			}
 		}
@@ -1707,6 +1709,9 @@ void init(void)
 	glEnable(GL_LIGHT0);
 
 	mono = glutStrokeWidth(GLUT_STROKE_MONO_ROMAN, 'W');
+
+	// Initialize the textures queue
+	loaded_textures_queue = g_async_queue_new();
 }
 
 void reshape(int w, int h)
@@ -2428,10 +2433,8 @@ void display(void)
 		play_media();
 		// TODO: add error handling + what if the video is finished?
 	}
-
-	// TODO: fix race condition where this display() function is not called
-	// after several objects have been loaded (which can take *less* than
-	// 16 ms...)
+	// Check and try to retexture objects if needed
+	struct tree_entry *object_to_retexture = g_async_queue_try_pop(loaded_textures_queue);
 	if (object_to_retexture != NULL) {
 		printf("Object %s finished loading, drawing on texture ID %d\n", object_to_retexture->name, object_to_retexture->textureid);
 		tdb_gen_list();	// Recalculate the blocks, because the scale of the object_to_retexture has been corrected
