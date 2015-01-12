@@ -1886,7 +1886,7 @@ void leodir(void)
 	unsigned int mode = 0, temptype = 0, texturewidth = 0, textureheight = 0, textureformat = 0, textureid = 0;
 	char *linkpath;
 	GLfloat locpx = 0, locpy = 0, locpz = 0;
-	GLfloat locsx = 0, locsy = 0, locsz = 0;	// Don't leave these uninitialized, because they are not always set for the first object (for root, so "..")
+	GLfloat locsx = 1, locsy = 1, locsz = 1;	// Don't leave these uninitialized, because they are not always set for the first object (for root, so "..")
 	GLfloat maxz = 0, momx = 0, momz = 0;
 	GLfloat nextz = 0;
 	char **entry_list, *entry;
@@ -2568,8 +2568,6 @@ void display(void)
 		if (object->tombstone)
 			continue;	// Skip files that are tombstoned
 
-		// How can it be that object is NULL when we call tdb_gen_list()
-		// The for loop condition above should exclude that...
 		mx = object->posx;
 		mz = object->posz;
 		my = object->posy;
@@ -2606,9 +2604,12 @@ void display(void)
 				}
 			}
 
+			// TODO: the ".." entry's font is too small...
 			glScalef(0.005, 0.005, 0.005);
 
 			if (!((object->mode) & 0x20)) {
+				// Why are these colors so high, instead of the default 1.0, 1.0, 1.0?
+				//printf("setting color to %d,%d,%d\n", TDFSB_FN_R, TDFSB_FN_G, TDFSB_FN_B);
 				glColor4f(TDFSB_FN_R, TDFSB_FN_G, TDFSB_FN_B, 1.0);
 				glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->name) / 2, 0, 0);
 				for (c2 = 0; c2 < object->namelen; c2++)
