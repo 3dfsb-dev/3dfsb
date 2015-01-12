@@ -2083,8 +2083,6 @@ void leodir(void)
 
 	/* Calculate Ground Grid */
 	// Calculate the X and Z spacing of the grid lines depending on the maximum size of the items to display in the grid
-	// TODO: this uses help->scalex and help->scalez, which can have pretty bizarre values here,
-	// which makes some objects or some gridlines or the north pole end up somewhere far way...
 	TDFSB_MAXX = TDFSB_MAXZ = 0;
 	help = root;
 	while (help) {
@@ -2167,10 +2165,6 @@ void leodir(void)
 		if (strcmp(help->name, "..") == 0) {
 			TDFSB_NORTH_X = help->posx;
 			TDFSB_NORTH_Z = help->posz;
-			// TODO: the north pole sometimes ends up at a very high X
-			// At these times, the grid is also very far away...
-			// TDFSB_NORTH_X = 10;
-			// TDFSB_NORTH_Z = 5;
 			printf(" * (%f,%f) is the Northpole.\n", TDFSB_NORTH_X, TDFSB_NORTH_Z);
 		}
 	}
