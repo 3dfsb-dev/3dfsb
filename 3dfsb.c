@@ -1878,7 +1878,10 @@ void leodir(void)
 {
 	unsigned int mode = 0, temptype = 0, texturewidth = 0, textureheight = 0, textureformat = 0, textureid = 0;
 	char *linkpath;
-	GLfloat locpx, locpy, locpz, locsx, locsy, locsz, maxz, momx, momz, nextz;
+	GLfloat locpx = 0, locpy = 0, locpz = 0;
+	GLfloat locsx = 0, locsy = 0, locsz = 0;	// Don't leave these uninitialized, because they are not always set for the first object (for root, so "..")
+	GLfloat maxz = 0, momx = 0, momz = 0;
+	GLfloat nextz = 0;
 	char **entry_list, *entry;
 	unsigned long int n;
 
