@@ -276,8 +276,8 @@ static GLfloat verTex2[] = {
 
 // Used both for the on-screen display and for the console help text
 #define	STATIC_HELP_TEXT \
-"3D File System Browser with a priority on fun :-)\n" \
-"-------------------------------------------------\n" \
+"3D File System Browser\n" \
+"----------------------\n" \
 "Esc           quit   F1/F2    speed +/-\n" \
 "Mouse move    look   F3/F4      rot +/-\n" \
 "UP         forward   F5/F6  ball detail\n" \
