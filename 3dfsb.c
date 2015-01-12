@@ -1276,11 +1276,11 @@ void setup_help(void)
 	strcpy(help_str, "Esc           quit   F1/F2    speed +/-\n");
 	strcat(help_str, "Mouse move    look   F3/F4      rot +/-\n");
 	strcat(help_str, "UP         forward   F5/F6  ball detail\n");
-	strcat(help_str, "DOWN      backward   HOME     start pos\n");
-	strcat(help_str, "L/R     step aside   LMB  select object\n");
-	strcat(help_str, "END    ground zero   +RMB|CTRL appr.obj\n");
-	strcat(help_str, "F7/F8  max fps +/-   +ENTER  play media\n");
-	strcat(help_str, "F9     change tool\n");
+	strcat(help_str, "DOWN      backward   F7/F8  max fps +/-\n");
+	strcat(help_str, "L/R arrow   strafe   F9     change tool\n");
+	strcat(help_str, "HOME     start pos   END    ground zero   \n");
+	strcat(help_str, "LMB  select object  + RMB|CTRL approach\n");
+	strcat(help_str, "+ENTER  play media or enter directory\n");
 
 	sprintf(tmpstr, "\"%c\"      filenames   \"%c\"   ground cross\n", TDFSB_KC_NAME, TDFSB_KC_GCR);
 	strcat(help_str, tmpstr);
