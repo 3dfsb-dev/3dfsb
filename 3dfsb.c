@@ -180,7 +180,7 @@ GLfloat fh, fh2, mono;
 int SWX, SWY, PWX, PWY, aSWX, aSWY, aPWX, aPWY, PWD;
 GLdouble centX, centY;
 int TDFSB_SHADE = 1, TDFSB_FILENAMES = 2, TDFSB_ICUBE = 1, TDFSB_SHOW_DISPLAY = 3, TDFSB_XL_DISPLAY = 45, TDFSB_HAVE_MOUSE = 1, TDFSB_ANIM_COUNT = 0, TDFSB_DIR_ALPHASORT = 1, TDFSB_OBJECT_SEARCH = 0;
-int TDFSB_SPEED_DISPLAY = 200, TDFSB_SHOW_DOTFILES = 0, TDFSB_SHOW_CROSSHAIR = 0, TDFSB_FULLSCREEN = 0, TDFSB_SHOW_HELP = 0, TDFSB_GROUND_CROSS = 0, TDFSB_NOTIFY;
+int TDFSB_SPEED_DISPLAY = 200, TDFSB_SHOW_DOTFILES = 0, TDFSB_SHOW_CROSSHAIR = 0, TDFSB_FULLSCREEN = 0, TDFSB_SHOW_HELP = 1, TDFSB_GROUND_CROSS = 0, TDFSB_NOTIFY;
 int TDFSB_CONFIG_FULLSCREEN = 0, TDFSB_SHOW_FPS = 0, TDFSB_ANIM_STATE = 0, TDFSB_MODE_FLY = 0, TDFSB_FLY_DISPLAY = 0, TDFSB_CLASSIC_NAV = 0, TDFSB_CLASSIC_DISPLAY = 0, TDFSB_ALERT_KC = 0;
 int TDFSB_SHOW_THROTTLE = 0, TDFSB_SHOW_BALL = 0;
 int TDFSB_FPS_CONFIG = 0, TDFSB_FPS_CACHE = 0, TDFSB_FPS_REAL = 0, TDFSB_FPS_DISP = 0, TDFSB_FPS_DT = 1000, TDFSB_SHOW_CONFIG_FPS = 0;
@@ -275,7 +275,10 @@ static GLfloat verTex2[] = {
 
 
 // Used both for the on-screen display and for the console help text
-#define	STATIC_HELP_TEXT "Esc           quit   F1/F2    speed +/-\n" \
+#define	STATIC_HELP_TEXT \
+"3D File System Browser with a priority on fun :-)\n" \
+"-------------------------------------------------\n" \
+"Esc           quit   F1/F2    speed +/-\n" \
 "Mouse move    look   F3/F4      rot +/-\n" \
 "UP         forward   F5/F6  ball detail\n" \
 "DOWN      backward   F7/F8  max fps +/-\n" \
@@ -881,7 +884,7 @@ void *async_load_textures(void *arg)
 					}
 				}
 				object->scaley = 4.5;	// locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
-				object->scalex = object->scalez = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
+				object->scalex = object->scalez = ((GLfloat) log(((double)buf.st_size / 81920) + 1)) + 1;
 				// Not necessary to retexture the object
 				// explicitly, because the animation of the
 				// text is read from the buffer at every
@@ -959,6 +962,7 @@ void *async_load_textures(void *arg)
 			}
 		}
 	}			// end of directory entry iterator
+	printf("Finished loading all textures, texture loading thread exiting...\n");
 	return NULL;
 }
 
@@ -1308,21 +1312,20 @@ void setup_help(void)
 	sprintf(tmpstr, "\"%c\"        shading   \"%c\"         flying\n", TDFSB_KC_SHD, TDFSB_KC_FLY);
 	strcat(help_str, tmpstr);
 
-	sprintf(tmpstr, "\"%c\"      show help   \"%c\"  print GL info\n", TDFSB_KC_HELP, TDFSB_KC_INFO);
-	strcat(help_str, tmpstr);
-
 	sprintf(tmpstr, "\"%c\"      jump home   \"%c\"    classic nav\n", TDFSB_KC_HOME, TDFSB_KC_CLASS);
 	strcat(help_str, tmpstr);
 
 	sprintf(tmpstr, "\"%c\"    save config   \"%c\"   fps throttle\n", TDFSB_KC_SAVE, TDFSB_KC_FTH);
 	strcat(help_str, tmpstr);
 
-	sprintf(tmpstr, " \n\"%c|%c|%c|%c\"            Up|Down|Left|Right\n", TDFSB_KC_UP, TDFSB_KC_DOWN, TDFSB_KC_LEFT, TDFSB_KC_RIGHT);
+	sprintf(tmpstr, " \"%c|%c|%c|%c\"            Up|Down|Left|Right\n", TDFSB_KC_UP, TDFSB_KC_DOWN, TDFSB_KC_LEFT, TDFSB_KC_RIGHT);
 	strcat(help_str, tmpstr);
 
-	sprintf(tmpstr, "\"%c|%c\"                  Forward|Backward\n", TDFSB_KC_FORWARD, TDFSB_KC_BACKWARD);
+	sprintf(tmpstr, "\"%c|%c\"                  Forward|Backward\n\n", TDFSB_KC_FORWARD, TDFSB_KC_BACKWARD);
 	strcat(help_str, tmpstr);
 
+	sprintf(tmpstr, "\"%c\"  print GL info    \"%c\" show/hide help\n", TDFSB_KC_INFO, TDFSB_KC_HELP);
+	strcat(help_str, tmpstr);
 
 }
 
@@ -2035,8 +2038,8 @@ void leodir(void)
 				locpy = 0;
 			} else {
 				// Setting some temporary parameters for dummy objects; the real data file loading will happen later on
-				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-				locsy = ((GLfloat) log(((double)buf.st_size / 1024) + 1)) + 1;
+				locsx = locsz = ((GLfloat) log(((double)buf.st_size / 81920) + 1)) + 1;
+				locsy = ((GLfloat) log(((double)buf.st_size / 10240) + 1)) + 1;
 				locpy = locsy - 1;	// vertical position of the object
 			}
 
