@@ -869,8 +869,10 @@ void *async_load_textures(void *arg)
 				}
 				object->scaley = 4.5;	// locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
 				object->scalex = object->scalez = ((GLfloat) log(((double)buf.st_size / 8192) + 1)) + 1;
-				// Redraw/retexture this object in the rendering thread
-				//object_to_retexture = object;
+				// Not necessary to retexture the object
+				// explicitly, because the animation of the
+				// text is read from the buffer at every
+				// displayed frame anyway...
 			} else {
 				if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
 					object->texturesurface = get_image_from_file(async_fullpath, object->regtype);
