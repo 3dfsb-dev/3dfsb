@@ -2625,6 +2625,9 @@ static void display(void)
 		}
 /* animate text files */
 		if ((object->regtype == TEXTFILE) && (object->textfilecontents) && ((object->mode) & 0x1F) == 0) {
+			// Note: every frame, we increment this, and if it is bigger than a threshold (150),
+			// we move the pointer in the file (stored in object->textureheight)
+			object->textureformat = object->textureformat + 10;
 			glPushMatrix();
 			if (((object->mode) & 0x20)) {
 				cc = 16;
@@ -2635,9 +2638,7 @@ static void display(void)
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
 			c3 = (int)strlen((char *)object->textfilecontents);
-			// Warning, here be dragons!
-			// textureformat is incremented with the texturewidth here!
-			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((object->textureformat) = (object->textureformat) + (object->texturewidth))))), (200 * mz) * cc);
+			glTranslatef((200 * mx) * cc, -100 * c1 + 1500 + object->textureformat, (200 * mz) * cc);
 			u = mx - vposx;
 			v = mz - vposz;
 			r = sqrt(u * u + v * v);
