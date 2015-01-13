@@ -850,6 +850,12 @@ void *async_load_textures(void *arg)
 				if (!fileptr) {
 					printf("TEXT FAILED: %s\n", async_fullpath);
 				} else {
+					object->textfilecontents = (char *)malloc(1000 * sizeof(unsigned char));
+					fread(object->textfilecontents, sizeof(char), 1000, fileptr);
+					fclose(fileptr);
+
+					/*
+					// Do all sorts of bizarre operations on the file contents, filtering out stuff etc...
 					do {
 						c3 = fgetc(fileptr);
 						if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
@@ -882,7 +888,7 @@ void *async_load_textures(void *arg)
 							temptr++;
 						}
 						*temptr = 0;
-						fclose(fileptr);
+						fclose(fileptr);	// TODO: this crashes, seems already free'd...?!
 						printf("TEXT: %ld char.\n", c1);
 					}
 				}
@@ -892,6 +898,9 @@ void *async_load_textures(void *arg)
 				// explicitly, because the animation of the
 				// text is read from the buffer at every
 				// displayed frame anyway...
+				// TODO: there is a crashing problem...
+				*/
+				}
 			} else {
 				if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
 					object->texturesurface = get_image_from_file(async_fullpath, object->regtype);
@@ -2450,6 +2459,7 @@ void display(void)
 	}
 	// Check and try to retexture objects if needed
 	struct tree_entry *object_to_retexture = g_async_queue_try_pop(loaded_textures_queue);
+	// TODO: from time to time, object_to_retexture contains not NULL, but some garbage data...
 	if (object_to_retexture != NULL) {
 		printf("Object %s finished loading, drawing on texture ID %d\n", object_to_retexture->name, object_to_retexture->textureid);
 		tdb_gen_list();	// Recalculate the blocks, because the scale of the object_to_retexture has been corrected
