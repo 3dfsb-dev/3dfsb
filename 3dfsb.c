@@ -2690,6 +2690,8 @@ void display(void)
 			glColor4f(1.0, 1.0, 0.0, 1.0);
 			c3 = (int)strlen((char *)object->textfilecontents);
 			c2 = 0;
+			// Warning, here be dragons!
+			// textureformat is incremented with the texturewidth here!
 			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((object->textureformat) = (object->textureformat) + (object->texturewidth))))), (200 * mz) * cc);
 			u = mx - vposx;
 			v = mz - vposz;
