@@ -71,8 +71,8 @@
 #define PI  3.14159
 #define SQF 0.70710
 
-#define NUMBER_OF_FILETYPES	8
-#define	UNKNOWNFILE	0
+#define NUMBER_OF_FILETYPES	9
+#define	DIRECTORY	0
 #define	IMAGEFILE	1
 #define	TEXTFILE	2
 #define	PDFFILE		3
@@ -80,6 +80,7 @@
 #define	VIDEOFILE	5
 #define	AUDIOFILE	6
 #define	VIDEOSOURCEFILE	7
+#define	UNKNOWNFILE	8
 
 #define	MIME_AUDIO	"audio/"
 #define	MIME_IMAGE	"image/"
@@ -1240,7 +1241,7 @@ void set_filetypes(void)
 	xsuff[2] = ".mp4";	// I had an .mp4 file that was actually detected as an "ISO Media" file...
 	tsuff[2] = VIDEOFILE;
 
-	nsuff[UNKNOWNFILE] = "UNKNOWN";
+	nsuff[DIRECTORY] = "DIRECTORY";
 	nsuff[IMAGEFILE] = "PICTURE";
 	nsuff[TEXTFILE] = "TEXT";
 	nsuff[PDFFILE] = "PDF";
@@ -1248,6 +1249,7 @@ void set_filetypes(void)
 	nsuff[VIDEOFILE] = "VIDEO";
 	nsuff[AUDIOFILE] = "AUDIO-MP3";
 	nsuff[VIDEOSOURCEFILE] = "VIDEOSOURCE";
+	nsuff[UNKNOWNFILE] = "UNKNOWN";
 }
 
 void setup_kc(void)
@@ -2029,6 +2031,8 @@ void leodir(void)
 			} else if (((mode & 0x1F) == 2) && strncmp(fullpath, PATH_DEV_V4L, strlen(PATH_DEV_V4L)) == 0) {
 				printf("This is a v4l file!\n");
 				temptype = VIDEOSOURCEFILE;
+			} else if ((mode & 0x01) == 1) {
+				temptype = DIRECTORY;
 			}
 			// Count the number of textures we'll need, so we can allocate them already below
 			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE)
@@ -2288,7 +2292,7 @@ void ground(void)
 void approach(void)
 {
 	switch (TDFSB_ANIM_STATE) {
-	case 1:
+	case 1:		// Approach vposx,uposy,vposz until we are close in either dimension
 		vposx = vposx + TDFSB_OA_DX;
 		uposy = vposy = vposy + TDFSB_OA_DY;
 		vposz = vposz + TDFSB_OA_DZ;
@@ -2302,7 +2306,7 @@ void approach(void)
 		break;
 
 	case 2:
-		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE) {
+		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE) {		// If we have a texture
 			if (TDFSB_ANIM_COUNT) {
 				smoox += TDFSB_OA_DX;
 				tposx = smoox;
@@ -2321,19 +2325,21 @@ void approach(void)
 				TDFSB_OA_DZ = (TDFSB_OA->posz + TDFSB_OA->scalex + 2 - vposz) / 50;
 				TDFSB_OA_DX = (TDFSB_OA->posx + TDFSB_OA->scalex + 6 - vposx) / 50;
 			}
+		} else if (TDFSB_OA->regtype == TEXTFILE) {	// If we don't have a texture, it might be a textfile
+			TDFSB_ANIM_COUNT = 50;
+			TDFSB_ANIM_STATE = 3;
+			TDFSB_OA_DZ = (TDFSB_OA->posz + TDFSB_OA->scalez + 4 - vposz) / 50;
+			TDFSB_OA_DX = (TDFSB_OA->posx + TDFSB_OA->scalex + 4 - vposx) / 50;
+		} else if (TDFSB_OA->regtype == DIRECTORY) {
+			TDFSB_ANIM_COUNT = 50;
+			TDFSB_ANIM_STATE = 3;
 		} else {
-			if (TDFSB_OA->regtype == TEXTFILE) {
-				TDFSB_ANIM_COUNT = 50;
-				TDFSB_ANIM_STATE = 3;
-				TDFSB_OA_DZ = (TDFSB_OA->posz + TDFSB_OA->scalez + 4 - vposz) / 50;
-				TDFSB_OA_DX = (TDFSB_OA->posx + TDFSB_OA->scalex + 4 - vposx) / 50;
-			} else {
-				TDFSB_ANIM_COUNT = 0;
-				TDFSB_ANIM_STATE = 0;
-				stop_move();
-				TDFSB_FUNC_IDLE = stillDisplay;
-			}
+			TDFSB_ANIM_COUNT = 0;
+			TDFSB_ANIM_STATE = 0;
+			stop_move();
+			TDFSB_FUNC_IDLE = stillDisplay;
 		}
+
 		break;
 
 	case 3:
@@ -3351,9 +3357,14 @@ int speckey(int key)
 				stop_move();
 				TDFSB_OA = TDFSB_OBJECT_SELECTED;
 				TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
-				if (!((TDFSB_OA->mode) & 0x20))
-					TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
-				else
+				if (!((TDFSB_OA->mode) & 0x20))	{ // if not a symlink
+					if (TDFSB_OA->regtype == DIRECTORY) {
+						// Fly straight into directories
+						//TDFSB_OA_DY = TDFSB_OA->posy + TDFSB_OA->scaley;
+						TDFSB_OA_DY = TDFSB_OA->posy;
+					} else
+						TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
+				} else
 					TDFSB_OA_DY = (5 - vposy) / 100;
 				TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
 				TDFSB_ANIM_STATE = 1;
