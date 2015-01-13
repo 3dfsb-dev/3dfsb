@@ -75,8 +75,7 @@
 // Note: __attribute__ ((unused)) also works but is gcc specific
 #define UNUSED(x) (void)(x)
 
-/* #define PI 3.1415926535897932384626433832795029 this is too accurate.. yes, really :)  */
-#define PI  3.14159
+#define PI  3.141599265
 #define SQF 0.70710
 
 #define NUMBER_OF_FILETYPES	9
@@ -3318,7 +3317,7 @@ static int speckey(int key)
 				if (!((TDFSB_OA->mode) & 0x20)) {	// if not a symlink
 					if (TDFSB_OA->regtype == DIRECTORY) {
 						// Fly straight into directories
-						//TDFSB_OA_DY = TDFSB_OA->posy + TDFSB_OA->scaley;
+						//TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley - vposy) / 100;
 						TDFSB_OA_DY = TDFSB_OA->posy;
 					} else
 						TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
@@ -3357,7 +3356,6 @@ static int speckey(int key)
 					GstBus *bus = NULL;
 					GstElement *fakesink = NULL;
 
-					// create a new pipeline
 					GError *error = NULL;
 					gchar *uri = gst_filename_to_uri(fullpath, &error);
 					if (error != NULL) {
@@ -3390,9 +3388,6 @@ static int speckey(int key)
 
 					bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
 					gst_bus_add_signal_watch(bus);
-					/* For later: g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), loop);
-					   g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
-					   g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop); */
 					gst_bus_enable_sync_message_emission(bus);
 					gst_object_unref(bus);
 
