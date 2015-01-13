@@ -49,9 +49,9 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
     SDL_CFLAGS=$(pkg-config --cflags SDL_image);	# Example: -D_GNU_SOURCE=1 -D_REENTRANT -I/usr/include/SDL 
     SDL_LIBS=$(pkg-config --libs SDL_image);		# Example: -lSDL_image -lSDL 
 
-    #warnings="-Wall"
+    warnings="-std=c99 -pedantic -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes"
 
-    # This works fine in the first steps, but then fails in a way very similar to how it fails on pluto
+    # This fails
     #gccopt="-static -static-libgcc"
 
     gccopt="-g"		# debugging info by default

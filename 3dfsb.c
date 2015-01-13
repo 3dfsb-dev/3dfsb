@@ -36,8 +36,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include <gst/gst.h>
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -49,12 +47,18 @@
 #include <GL/glx.h>
 #include "SDL/SDL_syswm.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
 #include <gst/gst.h>
+#pragma GCC diagnostic pop
 
 #include <magic.h>
 
 // For saving pixbuf's to a file for debugging
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-prototypes"
 #include <gtk/gtk.h>
+#pragma GCC diagnostic pop
 
 // Icons
 #include "images/icon_pdf.xpm"
@@ -66,6 +70,10 @@
 #ifdef PI
 #undef PI
 #endif
+
+// To fix warnings about unused variables
+// Note: __attribute__ ((unused)) also works but is gcc specific
+#define UNUSED(x) (void)(x)
 
 /* #define PI 3.1415926535897932384626433832795029 this is too accurate.. yes, really :)  */
 #define PI  3.14159
@@ -103,13 +111,13 @@ int bpp = 0, rgb_size[3];
 GLUquadricObj *aua1, *aua2;
 SDL_TimerID TDFSB_TIMER_ID;
 void (*TDFSB_FUNC_IDLE) (void), (*TDFSB_FUNC_DISP) (void);
-void (*TDFSB_FUNC_MOUSE) (int button, int state, int x, int y), (*TDFSB_FUNC_MOTION) (int x, int y);
+void (*TDFSB_FUNC_MOUSE) (int button, int state), (*TDFSB_FUNC_MOTION) (int x, int y);
 int (*TDFSB_FUNC_KEY) (unsigned char key);
 int (*TDFSB_FUNC_UPKEY) (unsigned char key);
 
 unsigned long int www, hhh, p2w, p2h, cglmode;
 
-long int c1, c2, c3, c4, cc, cc1, cc2, cc3, cc4;
+long int c1, c3, c4, cc, cc1, cc2, cc3, cc4;
 
 static GLuint TDFSB_DisplayLists = 0;
 static GLuint TDFSB_CylinderList = 0;
@@ -144,13 +152,12 @@ struct tree_entry {
 	struct tree_entry *next;
 };
 
-struct tree_entry *root, *help, *FMptr, *TDFSB_OBJECT_SELECTED = NULL, *TDFSB_OA = NULL;
+struct tree_entry *root, *FMptr, *TDFSB_OBJECT_SELECTED = NULL, *TDFSB_OA = NULL;
 char *FCptr;
 
-struct stat buf;
-
 char temp_trunc[4096];
-unsigned char TDFSB_CURRENTPATH[4096], fullpath[4096], yabuf[4096], fpsbuf[12], cfpsbuf[12], throttlebuf[14], ballbuf[20], home[512], flybuf[12], classicbuf[12];
+char TDFSB_CURRENTPATH[4096], fullpath[4096], yabuf[4096], fpsbuf[12], cfpsbuf[12], throttlebuf[14], ballbuf[20], flybuf[12], classicbuf[12];
+//char home[512];
 char TDFSB_CUSTOM_EXECUTE_STRING[4096];
 char TDFSB_CES_TEMP[4096];
 char *alert_kc = "MALFORMED KEYBOARD MAP";
@@ -208,7 +215,8 @@ GLfloat TDFSB_STEPX, TDFSB_STEPZ;
 GLfloat TDFSB_GG_R = 0.2, TDFSB_GG_G = 0.2, TDFSB_GG_B = 0.6;
 GLfloat TDFSB_BG_R = 0.0, TDFSB_BG_G = 0.0, TDFSB_BG_B = 0.0;
 GLfloat TDFSB_FN_R = 1.0, TDFSB_FN_G = 1.0, TDFSB_FN_B = 1.0;
-GLint TDFSB_BALL_DETAIL = 8, TDFSB_WAS_NOREAD = 0, TDFSB_MAX_TEX_SIZE = 0, temp;
+GLint TDFSB_BALL_DETAIL = 8, TDFSB_WAS_NOREAD = 0;
+unsigned int TDFSB_MAX_TEX_SIZE = 0;
 GLfloat mousesense = 1.5;
 GLfloat mousespeed = 1.0;	// 1-20, with 1 being maximum
 GLfloat headspeed = 2.0;	// 1.1-2.0, with 2.0 being maximum
@@ -276,7 +284,6 @@ static GLfloat verTex2[] = {
 
 /*      Texture      Normals         Vertex        */
 
-
 // Used both for the on-screen display and for the console help text
 #define	STATIC_HELP_TEXT \
 "3D File System Browser\n" \
@@ -323,7 +330,7 @@ const char *TDFSB_KEYLIST_NAMES[] = { "KeyFlying", "KeyHelp", "KeyJumpHome",
 	"KeyRight", "KeySaveConfig", "KeyFPSThrottle"
 };
 
-int TDFSB_KEYLIST_NUM = 26;
+unsigned int TDFSB_KEYLIST_NUM = 26;
 
 char *tdfsb_comment[] = { "detail level of the spheres, must be at least 4",
 	"directory to start, absolute path",
@@ -355,7 +362,7 @@ char *param[] = { "BallDetail", "StartDir", "MaxTexSize", "WindowWidth", "Window
 	"MoveVelocity", "LookVelocity", "NameRed", "NameGreen", "NameBlue", "LiftSteps", "CustomExecuteString"
 };
 
-void *value[] = { &TDFSB_BALL_DETAIL, &TDFSB_CURRENTPATH, &TDFSB_MAX_TEX_SIZE, &SWX, &SWY, &PWX, &PWY,
+void *param_value[] = { &TDFSB_BALL_DETAIL, &TDFSB_CURRENTPATH, &TDFSB_MAX_TEX_SIZE, &SWX, &SWY, &PWX, &PWY,
 	&PWD, &TDFSB_GG_R, &TDFSB_GG_G, &TDFSB_GG_B,
 	&TDFSB_ICUBE, &TDFSB_SHOW_DOTFILES, &TDFSB_DIR_ALPHASORT,
 	&TDFSB_BG_R, &TDFSB_BG_G, &TDFSB_BG_B,
@@ -374,19 +381,18 @@ char *pdef[] = { "20", "/", "0", "1024", "768", "1024", "768",
 	"1.0", "1.0", "1.0",	// TDFSB_FB_R/G/B
 	"1", "cd \"%s\"; xterm&"
 };
-int type[] = { 1, 2, 1, 1, 1, 1, 1, 1, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 5, 4, 4, 4, 4, 1, 3, 3, 3, 3, 3, 1, 2 };	/* 1=int 2=string 3=float 4=boolean 5=keyboard */
+int param_type[] = { 1, 2, 1, 1, 1, 1, 1, 1, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 5, 4, 4, 4, 4, 1, 3, 3, 3, 3, 3, 1, 2 };	/* 1=int 2=string 3=float 4=boolean 5=keyboard */
 
-int paracnt = 31;
+unsigned int paracnt = 31;
 
-void display(void);
-void warpdisplay(void);
-int keyboard(unsigned char key);
-int keyboardup(unsigned char key);
-int keyfinder(unsigned char key);
-int keyupfinder(unsigned char key);
-int speckey(int key);
-int specupkey(int key);
-void stillDisplay(void);
+static void display(void);
+static int keyboard(unsigned char key);
+static int keyboardup(unsigned char key);
+static int keyfinder(unsigned char key);
+static int keyupfinder(unsigned char key);
+static int speckey(int key);
+static int specupkey(int key);
+static void stillDisplay(void);
 
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
@@ -403,33 +409,18 @@ pthread_t async_load_textures_thread_id;
 
 GAsyncQueue *loaded_textures_queue = NULL;
 
-static gboolean sync_bus_call(GstBus * bus, GstMessage * msg, gpointer data)
-{
-	switch (GST_MESSAGE_TYPE(msg)) {
-	case GST_MESSAGE_NEED_CONTEXT:
-		{
-			const gchar *context_type;
-
-			gst_message_parse_context_type(msg, &context_type);
-			g_print("got need context %s, this usually never gets called and stuff related to this was removed...\n", context_type);
-			exit(6);
-
-			break;
-		}
-	default:
-		break;
-	}
-	return FALSE;
-}
-
 /* fakesink handoff callback */
 static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, gpointer data)
 {
+	UNUSED(fakesink);
+	UNUSED(pad);
+	UNUSED(data);
+
 	framecounter++;
 	videobuffer = buf;
 }
 
-void cleanup_media_player()
+static void cleanup_media_player(void)
 {
 	TDFSB_MEDIA_FILE = NULL;	// Set this to NULL, because the later functions check it to know what they should display
 	if (pipeline && GST_IS_ELEMENT(pipeline)) {
@@ -439,8 +430,10 @@ void cleanup_media_player()
 	}
 }
 
-void ende(int code)
+static void ende(int code)
 {
+	struct tree_entry *help;
+
 	cleanup_media_player();
 
 	magic_close(magic);	// Mimetype database
@@ -478,20 +471,23 @@ void ende(int code)
 	exit(code);
 }
 
-char *uppercase(char *str)
+static char *uppercase(char *str)
 {
 	char *newstr, *p;
 	p = newstr = strdup(str);
-	while ((*p++ = toupper(*p))) ;
+	while (*p) {
+		*p = (char)toupper(*p);
+		p++;
+	}
 
 	return newstr;
 }
 
-int get_file_type(char *fullpath)
+static int get_file_type(char *filename)
 {
 	unsigned int temptype = 0;	// temptype needs to be 0 to check if we found a match later on!
-	unsigned int cc;
-	const char *mime = magic_file(magic, fullpath);
+	unsigned int extensionnr;
+	const char *mime = magic_file(magic, filename);
 
 	//printf("Got mimetype: %s\n", mime);
 	if (!strncmp(mime, MIME_TEXT, 5)) {
@@ -506,11 +502,11 @@ int get_file_type(char *fullpath)
 		temptype = PDFFILE;
 	} else {
 		// Some files are not identified by magic_file(), so we fallback to extension-based identification here
-		for (cc = 0; cc < NUMBER_OF_EXTENSIONS; cc++) {
-			char *xsuff_upper = uppercase(xsuff[cc]);
-			char *ext_upper = uppercase(&(fullpath[strlen(fullpath) - strlen(xsuff[cc])]));
-			if (!strncmp(xsuff_upper, ext_upper, strlen(xsuff[cc]))) {
-				temptype = tsuff[cc];
+		for (extensionnr = 0; extensionnr < NUMBER_OF_EXTENSIONS; extensionnr++) {
+			char *xsuff_upper = uppercase(xsuff[extensionnr]);
+			char *ext_upper = uppercase(&(filename[strlen(filename) - strlen(xsuff[extensionnr])]));
+			if (!strncmp(xsuff_upper, ext_upper, strlen(xsuff[extensionnr]))) {
+				temptype = tsuff[extensionnr];
 				break;
 			}
 		}
@@ -521,7 +517,7 @@ int get_file_type(char *fullpath)
 	return temptype;
 }
 
-void play_media()
+static void play_media(void)
 {
 	// Ensure we don't refresh the texture if nothing changed
 	if (framecounter == displayedframenumber) {
@@ -548,13 +544,13 @@ void play_media()
 
 }
 
-void putpixel(SDL_Surface * surface, int x, int y, Uint32 pixel)
+static void putpixel(SDL_Surface * surface, int x, int y, Uint32 pixel)
 {
-	int bpp = surface->format->BytesPerPixel;
+	int surface_bpp = surface->format->BytesPerPixel;
 	/* Here p is the address to the pixel we want to set */
-	Uint8 *p = (Uint8 *) surface->pixels + y * surface->pitch + x * bpp;
+	Uint8 *p = (Uint8 *) surface->pixels + y * surface->pitch + x * surface_bpp;
 
-	switch (bpp) {
+	switch (surface_bpp) {
 	case 1:
 		*p = pixel;
 		break;
@@ -581,13 +577,13 @@ void putpixel(SDL_Surface * surface, int x, int y, Uint32 pixel)
 	}
 }
 
-Uint32 getpixel(SDL_Surface * surface, int x, int y)
+static Uint32 getpixel(SDL_Surface * surface, int x, int y)
 {
-	int bpp = surface->format->BytesPerPixel;
+	int surface_bpp = surface->format->BytesPerPixel;
 	/* Here p is the address to the pixel we want to retrieve */
-	Uint8 *p = (Uint8 *) surface->pixels + y * surface->pitch + x * bpp;
+	Uint8 *p = (Uint8 *) surface->pixels + y * surface->pitch + x * surface_bpp;
 
-	switch (bpp) {
+	switch (surface_bpp) {
 	case 1:
 		return *p;
 		break;
@@ -613,9 +609,9 @@ Uint32 getpixel(SDL_Surface * surface, int x, int y)
 }
 
 // Here we do that SDL_BlitSurface of SDL 2.0 does
-SDL_Surface *ScaleSurface(SDL_Surface * Surface, double Width, double Height)
+static SDL_Surface *ScaleSurface(SDL_Surface * Surface, double Width, double Height)
 {
-	unsigned int x, y, o_y, o_x;
+	int x, y, o_y, o_x;
 
 	if (!Surface || !Width || !Height)
 		return 0;
@@ -643,9 +639,9 @@ SDL_Surface *ScaleSurface(SDL_Surface * Surface, double Width, double Height)
 	return _ret;
 }
 
-SDL_Surface *get_image_from_file(char *filename, unsigned int type)
+static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 {
-	if (type != VIDEOFILE && type != VIDEOSOURCEFILE && type != IMAGEFILE) {
+	if (filetype != VIDEOFILE && filetype != VIDEOSOURCEFILE && filetype != IMAGEFILE) {
 		printf("Error: get_image_from_file can only handle VIDEOFILE, VIDEOSOURCFILE and IMAGEFILE's!\n");
 		return NULL;
 	}
@@ -667,14 +663,14 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 		exit(1);
 	}
 
-	if (type == VIDEOFILE || type == IMAGEFILE) {
+	if (filetype == VIDEOFILE || filetype == IMAGEFILE) {
 		descr = g_strdup_printf("uridecodebin uri=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", uri);
-	} else if (type == VIDEOSOURCEFILE) {
+	} else if (filetype == VIDEOSOURCEFILE) {
 		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
 		// Idea for speedup: set queue-size to 1 instead of 2
 	}
 	//printf("gst-launch-1.0 %s\n", descr);
-	pipeline = (GstPipeline*)(gst_parse_launch(descr, &error));
+	pipeline = (GstPipeline *) (gst_parse_launch(descr, &error));
 
 	if (error != NULL) {
 		g_print("could not construct pipeline: %s\n", error->message);
@@ -709,7 +705,7 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 		//exit(-1);
 	}
 
-	if (type == VIDEOFILE) {	// VIDEOSOURCEFILE's and IMAGEFILE's cannot be seeked
+	if (filetype == VIDEOFILE) {	// VIDEOSOURCEFILE's and IMAGEFILE's cannot be seeked
 		/* get the duration */
 		gst_element_query_duration(GST_ELEMENT(pipeline), GST_FORMAT_TIME, &duration);
 
@@ -765,8 +761,9 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 	hhh = height;
 	// find the smallest square texture size that's a power of two and fits around the image width/height
 	// Example: image is 350x220 => texture size will be 512x512
-	for (cc = 1; (cc < www || cc < hhh) && cc < TDFSB_MAX_TEX_SIZE; cc *= 2) ;
-	p2h = p2w = cc;
+	unsigned long int max;
+	for (max = 1; (max < www || max < hhh) && max < TDFSB_MAX_TEX_SIZE; max *= 2) ;
+	p2h = p2w = max;
 	cglmode = GL_RGB;	// We set this globally here, and it is used somewhere later in the code that calls get_image_from_file()
 
 	GstBuffer *buffer = gst_sample_get_buffer(sample);
@@ -830,155 +827,108 @@ SDL_Surface *get_image_from_file(char *filename, unsigned int type)
 }
 
 // This new thread loads the textures
-void *async_load_textures(void *arg)
+static void *async_load_textures(void *arg)
 {
+	UNUSED(arg);
+
 	// For each object, load its texture and (if possible) set the dimensions...
 	struct tree_entry *object;
 	for (object = root; object; object = object->next) {
-		// "((help->mode) & 0x1F) == 0" means "only for regular files" (which is already established, at this point...)
-		// Also device files (mode & 0x1F == 2) can be made into a texture, if they are of the correct regtype
-		if ((object->regtype == TEXTFILE || object->regtype == VIDEOFILE || object->regtype == IMAGEFILE || object->regtype == PDFFILE || object->regtype == VIDEOSOURCEFILE) && (((object->mode) & 0x1F) == 0) || ((object->mode) & 0x1F) == 2) {
-			unsigned char async_fullpath[4096] = { 0 };	// allocate on the stack for automatic free'ing
-			strcpy(async_fullpath, TDFSB_CURRENTPATH);
-			if (strlen(async_fullpath) > 1)
-				strcat(async_fullpath, "/");
-			strcat(async_fullpath, object->name);
-			printf("Loading texture of %s\n", async_fullpath);
 
-			if (object->regtype == TEXTFILE) {
-				FILE *fileptr = fopen(async_fullpath, "r");
-				if (!fileptr) {
-					printf("TEXT FAILED: %s\n", async_fullpath);
-				} else {
-					object->textfilecontents = (char *)malloc(1000 * sizeof(unsigned char));
-					fread(object->textfilecontents, sizeof(char), 1000, fileptr);
-					fclose(fileptr);
+		// For regular files or device files (because the others don't have textures (yet),
+		// but I think these can be either symlinks or real files because of the way this "mode" property is devised...
+		if ((((object->mode) & 0x1F) != 0) && ((object->mode) & 0x1F) != 2)
+			continue;
 
-					/*
-					// Do all sorts of bizarre operations on the file contents, filtering out stuff etc...
-					do {
-						c3 = fgetc(fileptr);
-						if ((c3 != EOF) && (isgraph(c3) || c3 == ' '))
-							c1++;
-					}
-					while (c3 != EOF);
-					rewind(fileptr);
-					object->textfilecontents = (unsigned char *)malloc((c1 + 21) * sizeof(unsigned char));
-					if (!object->textfilecontents) {
-						printf("TEXT FAILED: %s\n", async_fullpath);
-						fclose(fileptr);
-					} else {
-						unsigned char *temptr = object->textfilecontents;
-						object->texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
-						for (c3 = 0; c3 < 10; c3++) {
-							*temptr = ' ';
-							temptr++;
-						}
-						do {
-							c3 = fgetc(fileptr);
-							if ((c3 != EOF) && (isgraph(c3) || c3 == ' ')) {
-								*temptr = (unsigned char)c3;
-								temptr++;
-								c2++;
-							}
-						}
-						while ((c3 != EOF) && (c2 < c1));
-						for (c3 = 0; c3 < 10; c3++) {
-							*temptr = ' ';
-							temptr++;
-						}
-						*temptr = 0;
-						fclose(fileptr);	// TODO: this crashes, seems already free'd...?!
-						printf("TEXT: %ld char.\n", c1);
-					}
-				}
-				object->scaley = 4.5;	// locsy=((GLfloat)log(((double)buf.st_size/1024)+1))+1;
-				object->scalex = object->scalez = ((GLfloat) log(((double)buf.st_size / 81920) + 1)) + 1;
-				// Not necessary to retexture the object
-				// explicitly, because the animation of the
-				// text is read from the buffer at every
-				// displayed frame anyway...
-				// TODO: there is a crashing problem...
-				*/
-				}
+		char async_fullpath[4096] = { 0 };	// allocate on the stack for automatic free'ing
+		strcpy(async_fullpath, TDFSB_CURRENTPATH);
+		if (strlen(async_fullpath) > 1)
+			strcat(async_fullpath, "/");
+		strcat(async_fullpath, object->name);
+		printf("Loading texture of %s\n", async_fullpath);
+
+		if (object->regtype == TEXTFILE) {
+			FILE *fileptr = fopen(async_fullpath, "r");
+			if (!fileptr) {
+				printf("TEXT FAILED: %s\n", async_fullpath);
 			} else {
-				if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
-					object->texturesurface = get_image_from_file(async_fullpath, object->regtype);
-					object->originalwidth = www;
-					object->originalheight = hhh;
-					object->textureformat = cglmode;
-				} else if (object->regtype == PDFFILE) {
-					// Show the PDF logo
-					// This is also possible:
-					// object->texturesurface = get_image_from_file("images/icon_pdf.png", IMAGEFILE);
-					SDL_Surface *loader = IMG_ReadXPMFromArray(icon_pdf);
-					SDL_PixelFormat RGBAFormat;
-					RGBAFormat.palette = 0;
-					RGBAFormat.colorkey = 0;
-					RGBAFormat.alpha = 0;
-					RGBAFormat.BitsPerPixel = 32;
-					RGBAFormat.BytesPerPixel = 4;
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-					RGBAFormat.Rmask = 0xFF000000;
-					RGBAFormat.Rshift = 0;
-					RGBAFormat.Rloss = 0;
-					RGBAFormat.Gmask = 0x00FF0000;
-					RGBAFormat.Gshift = 8;
-					RGBAFormat.Gloss = 0;
-					RGBAFormat.Bmask = 0x0000FF00;
-					RGBAFormat.Bshift = 16;
-					RGBAFormat.Bloss = 0;
-					RGBAFormat.Amask = 0x000000FF;
-					RGBAFormat.Ashift = 24;
-					RGBAFormat.Aloss = 0;
-#else
-					RGBAFormat.Rmask = 0x000000FF;
-					RGBAFormat.Rshift = 24;
-					RGBAFormat.Rloss = 0;
-					RGBAFormat.Gmask = 0x0000FF00;
-					RGBAFormat.Gshift = 16;
-					RGBAFormat.Gloss = 0;
-					RGBAFormat.Bmask = 0x00FF0000;
-					RGBAFormat.Bshift = 8;
-					RGBAFormat.Bloss = 0;
-					RGBAFormat.Amask = 0xFF000000;
-					RGBAFormat.Ashift = 0;
-					RGBAFormat.Aloss = 0;
-#endif
-					object->texturesurface = SDL_ConvertSurface(loader, &RGBAFormat, SDL_SWSURFACE);
-					object->textureformat = GL_RGBA;
-					object->originalwidth = 512;
-					object->originalheight = 512;
-				}
-
-				if (!object->texturesurface) {
-					printf("Reading texturesurface from %s failed\n", async_fullpath);
-				} else {
-					/* Ugly dirty global variables */
-					object->texturewidth = object->texturesurface->w;
-					object->textureheight = object->texturesurface->h;
-					printf("Original dimensions: %dx%d %s TEXTURE: %dx%d\n", object->originalwidth, object->originalheight, async_fullpath, object->texturewidth, object->textureheight);
-					if (object->originalwidth < object->originalheight) {
-						object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
-						object->scaley = (object->originalheight * (object->scalex)) / www;
-					} else {
-						object->scaley = ((GLfloat) log(((double)object->originalheight / 128) + 1)) + 1;
-						object->scalex = object->scalez = (object->originalwidth * (object->scaley)) / object->originalheight;
-					}
-					object->posy = object->scaley - 1;	// vertical position of the object
-					object->scalez = 0.5;	// flatscreens instead of the default ugly big square blocks
-
-					// Add to queue to redraw/retexture this object in the rendering thread
-					g_async_queue_push(loaded_textures_queue, object);
-				}
+				object->textfilecontents = (unsigned char *)malloc(1000 * sizeof(unsigned char));
+				fread(object->textfilecontents, sizeof(char), 1000, fileptr);
+				fclose(fileptr);
 			}
+		} else if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
+			object->texturesurface = get_image_from_file(async_fullpath, object->regtype);
+			object->originalwidth = www;
+			object->originalheight = hhh;
+			object->textureformat = cglmode;
+		} else if (object->regtype == PDFFILE) {
+			// Show the PDF logo
+			// This is also possible:
+			// object->texturesurface = get_image_from_file("images/icon_pdf.png", IMAGEFILE);
+			SDL_Surface *loader = IMG_ReadXPMFromArray(icon_pdf);
+			SDL_PixelFormat RGBAFormat;
+			RGBAFormat.palette = 0;
+			RGBAFormat.colorkey = 0;
+			RGBAFormat.alpha = 0;
+			RGBAFormat.BitsPerPixel = 32;
+			RGBAFormat.BytesPerPixel = 4;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+			RGBAFormat.Rmask = 0xFF000000;
+			RGBAFormat.Rshift = 0;
+			RGBAFormat.Rloss = 0;
+			RGBAFormat.Gmask = 0x00FF0000;
+			RGBAFormat.Gshift = 8;
+			RGBAFormat.Gloss = 0;
+			RGBAFormat.Bmask = 0x0000FF00;
+			RGBAFormat.Bshift = 16;
+			RGBAFormat.Bloss = 0;
+			RGBAFormat.Amask = 0x000000FF;
+			RGBAFormat.Ashift = 24;
+			RGBAFormat.Aloss = 0;
+#else
+			RGBAFormat.Rmask = 0x000000FF;
+			RGBAFormat.Rshift = 24;
+			RGBAFormat.Rloss = 0;
+			RGBAFormat.Gmask = 0x0000FF00;
+			RGBAFormat.Gshift = 16;
+			RGBAFormat.Gloss = 0;
+			RGBAFormat.Bmask = 0x00FF0000;
+			RGBAFormat.Bshift = 8;
+			RGBAFormat.Bloss = 0;
+			RGBAFormat.Amask = 0xFF000000;
+			RGBAFormat.Ashift = 0;
+			RGBAFormat.Aloss = 0;
+#endif
+			object->texturesurface = SDL_ConvertSurface(loader, &RGBAFormat, SDL_SWSURFACE);
+			object->textureformat = GL_RGBA;
+			object->originalwidth = 512;
+			object->originalheight = 512;
+		}
+
+		if (object->texturesurface) {
+			/* Ugly dirty global variables */
+			object->texturewidth = object->texturesurface->w;
+			object->textureheight = object->texturesurface->h;
+			printf("Original dimensions: %dx%d %s TEXTURE: %dx%d\n", object->originalwidth, object->originalheight, async_fullpath, object->texturewidth, object->textureheight);
+			if (object->originalwidth < object->originalheight) {
+				object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
+				object->scaley = (object->originalheight * (object->scalex)) / www;
+			} else {
+				object->scaley = ((GLfloat) log(((double)object->originalheight / 128) + 1)) + 1;
+				object->scalex = object->scalez = (object->originalwidth * (object->scaley)) / object->originalheight;
+			}
+			object->posy = object->scaley - 1;	// vertical position of the object
+			object->scalez = 0.5;	// flatscreens instead of the default ugly big square blocks
+
+			// Add to queue to redraw/retexture this object in the rendering thread
+			g_async_queue_push(loaded_textures_queue, object);
 		}
 	}			// end of directory entry iterator
 	printf("Finished loading all textures, texture loading thread exiting...\n");
 	return NULL;
 }
 
-void tdb_gen_list(void)
+static void tdb_gen_list(void)
 {
 	int mat_state;
 	struct tree_entry *help;
@@ -1239,7 +1189,7 @@ void tdb_gen_list(void)
 	glEndList();
 }
 
-void set_filetypes(void)
+static void set_filetypes(void)
 {
 	// These filetypes are known to be mis- or non-identified by libmagic, so we fallback to extensions for those.
 	// We intentionally don't list all possible options here, because we want to have an idea of which fail to identify, and why.
@@ -1261,7 +1211,7 @@ void set_filetypes(void)
 	nsuff[UNKNOWNFILE] = "UNKNOWN";
 }
 
-void setup_kc(void)
+static void setup_kc(void)
 {
 	TDFSB_KC_FLY = ' ';
 	TDFSB_KC_HELP = 'h';
@@ -1291,7 +1241,7 @@ void setup_kc(void)
 	TDFSB_KC_BACKWARD = 'w';
 }
 
-void setup_help(void)
+static void setup_help(void)
 {
 	help_str = (char *)malloc(1024 * sizeof(char));
 	help_copy = (char *)malloc(1024 * sizeof(char));
@@ -1342,14 +1292,13 @@ void setup_help(void)
 
 }
 
-int setup_config(void)
+static int setup_config(void)
 {
 	FILE *config;
 	char conf_line[2048], conf_param[256], conf_value[1024], homefile[256];
-	int x, y, zzz;
+	unsigned int x, y, zzz;
 
-	strcpy(home, getenv("HOME"));
-	strcpy(homefile, home);
+	strcpy(homefile, getenv("HOME"));
 	if (homefile[strlen(homefile) - 1] == '/')
 		strcat(homefile, ".3dfsb");
 	else
@@ -1393,24 +1342,24 @@ int setup_config(void)
 
 			for (x = 0; x < paracnt; x++)
 				if (!strncmp(param[x], conf_param, strlen(param[x]))) {
-					if (type[x] == 1) {
-						*(int *)value[x] = atoi(conf_value);
-						printf(" * Read \"%d\" for %s\n", *(int *)value[x], param[x]);
-					} else if (type[x] == 2) {
+					if (param_type[x] == 1) {
+						*(int *)param_value[x] = atoi(conf_value);
+						printf(" * Read \"%d\" for %s\n", *(int *)param_value[x], param[x]);
+					} else if (param_type[x] == 2) {
 						while (conf_value[strlen(conf_value) - 1] == ' ' || conf_value[strlen(conf_value) - 1] == '\t')
 							conf_value[strlen(conf_value) - 1] = '\0';
-						strcpy((char *)value[x], conf_value);
-						printf(" * Read \"%s\" for %s\n", (char *)value[x], param[x]);
-					} else if (type[x] == 3) {
-						*(GLfloat *) value[x] = (GLfloat) atof(conf_value);
-						printf(" * Read \"%f\" for %s\n", *(GLfloat *) value[x], param[x]);
-					} else if (type[x] == 4) {
+						strcpy((char *)param_value[x], conf_value);
+						printf(" * Read \"%s\" for %s\n", (char *)param_value[x], param[x]);
+					} else if (param_type[x] == 3) {
+						*(GLfloat *) param_value[x] = (GLfloat) atof(conf_value);
+						printf(" * Read \"%f\" for %s\n", *(GLfloat *) param_value[x], param[x]);
+					} else if (param_type[x] == 4) {
 						if ((strstr(conf_value, "yes")) || (strstr(conf_value, "on")) || (strstr(conf_value, "1")) || (strstr(conf_value, "true")))
-							*(GLint *) value[x] = 1;
+							*(GLint *) param_value[x] = 1;
 						else
-							*(GLint *) value[x] = 0;
-						printf(" * Read \"%d\" for %s\n", *(GLint *) value[x], param[x]);
-					} else if (type[x] == 5) {
+							*(GLint *) param_value[x] = 0;
+						printf(" * Read \"%d\" for %s\n", *(GLint *) param_value[x], param[x]);
+					} else if (param_type[x] == 5) {
 						if (strlen(conf_value) == 3) {
 							if (conf_value[0] == '"' && conf_value[2] == '"' && isgraph(conf_value[1]))
 								for (x = 0; x < TDFSB_KEYLIST_NUM; x++)
@@ -1522,7 +1471,7 @@ int setup_config(void)
 		}
 
 		if (realpath(TDFSB_CURRENTPATH, &temp_trunc[0]) != &temp_trunc[0])
-			if (realpath(home, &temp_trunc[0]) != &temp_trunc[0])
+			if (realpath(getenv("HOME"), &temp_trunc[0]) != &temp_trunc[0])
 				strcpy(&temp_trunc[0], "/");
 		strcpy(TDFSB_CURRENTPATH, temp_trunc);
 
@@ -1544,7 +1493,7 @@ int setup_config(void)
 		if ((config = fopen(homefile, "w"))) {
 			fprintf(config, "# 3DFSB Example Config File\n\n");
 			for (x = 0; x < paracnt; x++)
-				if (type[x] != 5)
+				if (param_type[x] != 5)
 					fprintf(config, "%-18s = %-6s # %s\n", param[x], pdef[x], tdfsb_comment[x]);
 
 			fprintf(config, "\n# Key bindings\n\n");
@@ -1559,14 +1508,13 @@ int setup_config(void)
 	}
 }
 
-void save_config(void)
+static void save_config(void)
 {
 	FILE *config;
 	char homefile[256];
-	int x;
+	unsigned int x;
 
-	strcpy(home, getenv("HOME"));
-	strcpy(homefile, home);
+	strcpy(homefile, getenv("HOME"));
 	if (homefile[strlen(homefile) - 1] == '/')
 		strcat(homefile, ".3dfsb");
 	else
@@ -1575,14 +1523,14 @@ void save_config(void)
 	if ((config = fopen(homefile, "w"))) {
 		fprintf(config, "# TDFSB Saved Config File\n\n");
 		for (x = 0; x < paracnt; x++) {
-			if (type[x] == 1)
-				fprintf(config, "%-18s = %-6d \t# %s\n", param[x], *(int *)value[x], tdfsb_comment[x]);
-			else if (type[x] == 2)
-				fprintf(config, "%-18s = %s \t# %s\n", param[x], (char *)value[x], tdfsb_comment[x]);
-			else if (type[x] == 3)
-				fprintf(config, "%-18s = %f \t# %s\n", param[x], *(GLfloat *) value[x], tdfsb_comment[x]);
-			else if (type[x] == 4)
-				fprintf(config, "%-18s = %s \t# %s\n", param[x], *(int *)value[x] ? "yes" : "no", tdfsb_comment[x]);
+			if (param_type[x] == 1)
+				fprintf(config, "%-18s = %-6d \t# %s\n", param[x], *(int *)param_value[x], tdfsb_comment[x]);
+			else if (param_type[x] == 2)
+				fprintf(config, "%-18s = %s \t# %s\n", param[x], (char *)param_value[x], tdfsb_comment[x]);
+			else if (param_type[x] == 3)
+				fprintf(config, "%-18s = %f \t# %s\n", param[x], *(GLfloat *) param_value[x], tdfsb_comment[x]);
+			else if (param_type[x] == 4)
+				fprintf(config, "%-18s = %s \t# %s\n", param[x], *(int *)param_value[x] ? "yes" : "no", tdfsb_comment[x]);
 		}
 
 		fprintf(config, "\n# Key bindings\n\n");
@@ -1595,7 +1543,7 @@ void save_config(void)
 
 }
 
-void viewm(void)
+static void viewm(void)
 {
 	if ((centY = (asin(-tposy)) * (((double)SWY) / PI)) > SWY / 2)
 		centY = SWY / 2;
@@ -1608,35 +1556,28 @@ void viewm(void)
 		centX = -(GLdouble) acos(tposx / ((GLdouble) cos((((double)centY) / (double)((double)SWY / PI))))) * (GLdouble) ((GLdouble) SWX / mousesense / PI);
 }
 
-void check_still(void)
+static void check_still(void)
 {
 	if (!(forwardkeybuf + backwardkeybuf + leftkeybuf + rightkeybuf + upkeybuf + downkeybuf))
 		TDFSB_FUNC_IDLE = stillDisplay;
 }
 
-void stop_move(void)
+static void stop_move(void)
 {
 	forwardkeybuf = backwardkeybuf = leftkeybuf = rightkeybuf = upkeybuf = downkeybuf = 0;
 }
 
-Uint32 fps_timer(int val, int no)
+static Uint32 fps_timer(void)
 {
 	sprintf(fpsbuf, "FPS: %d", (int)((1000 * TDFSB_FPS_DISP) / TDFSB_FPS_DT) - 1);
 	TDFSB_FPS_DISP = 0;
 	return (TDFSB_FPS_DT);
 }
 
-void errglu(GLenum errorCode)
+static void init(void)
 {
-	const GLubyte *estring;
+	unsigned int charpos;
 
-	estring = gluErrorString(errorCode);
-	printf("QE: %s\n", estring);
-	ende(1);
-}
-
-void init(void)
-{
 	TDFSB_DisplayLists = glGenLists(3);
 	TDFSB_CylinderList = TDFSB_DisplayLists + 0;
 	TDFSB_HelpList = TDFSB_DisplayLists + 1;
@@ -1646,7 +1587,6 @@ void init(void)
 
 /* building audio object */
 	aua2 = gluNewQuadric();
-	gluQuadricCallback(aua2, GLU_ERROR, (_GLUfuncptr) errglu);
 	gluQuadricDrawStyle(aua2, GLU_FILL);
 	gluQuadricNormals(aua2, GLU_SMOOTH);
 	glNewList(TDFSB_AudioList, GL_COMPILE);
@@ -1660,7 +1600,6 @@ void init(void)
 
 /* building  Textfilecylinder */
 	aua1 = gluNewQuadric();
-	gluQuadricCallback(aua1, GLU_ERROR, (_GLUfuncptr) errglu);
 	gluQuadricDrawStyle(aua1, GLU_FILL);
 	gluQuadricNormals(aua1, GLU_SMOOTH);
 	glNewList(TDFSB_CylinderList, GL_COMPILE);
@@ -1682,8 +1621,8 @@ void init(void)
 		cnt++;
 		glTranslatef(-prevlen, -14 / 0.09, 0);
 		c3 = (int)strlen(tmpstr);
-		for (c2 = 0; c2 < c3; c2++) {
-			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, tmpstr[c2]);
+		for (charpos = 0; charpos < c3; charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, tmpstr[charpos]);
 		}
 		prevlen = c3 * 104.76;
 		tmpstr = strtok(NULL, "\n");
@@ -1734,7 +1673,7 @@ void init(void)
 	loaded_textures_queue = g_async_queue_new();
 }
 
-void reshape(int w, int h)
+static void reshape(int w, int h)
 {
 	centY = ((((GLdouble) h) * centY) / ((GLdouble) SWY));
 	centX = ((((GLdouble) w) * centX) / ((GLdouble) SWX));
@@ -1744,9 +1683,10 @@ void reshape(int w, int h)
 	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 }
 
-void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int texturewidth, unsigned int textureheight, unsigned int textureformat, unsigned int textureid, unsigned int originalwidth, unsigned int originalheight, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
+static void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int texturewidth, unsigned int textureheight, unsigned int textureformat, unsigned int textureid, unsigned int originalwidth, unsigned int originalheight, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
 {
 	char *temp;
+	struct tree_entry *help;
 
 	temp = (char *)malloc(strlen(value) + 1);
 	if (temp == NULL) {
@@ -1817,12 +1757,13 @@ void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned
 	}
 }
 
-char **leoscan(char *ls_path)
+static char **leoscan(char *ls_path)
 {
 	DIR *ls_dir;
 	struct dirent *ls_ent;
 	char *ls_tmp, *ls_swap, **ls_entlist;
-	unsigned long int count, ls, lsc;
+	signed long int count;
+	unsigned long int ls, lsc;
 
 	ls_dir = opendir(ls_path);
 
@@ -1901,7 +1842,7 @@ char **leoscan(char *ls_path)
 	return (ls_entlist);
 }
 
-void leodir(void)
+static void leodir(void)
 {
 	unsigned int mode = 0, temptype = 0, texturewidth = 0, textureheight = 0, textureformat = 0, textureid = 0;
 	char *linkpath;
@@ -1911,10 +1852,12 @@ void leodir(void)
 	GLfloat nextz = 0;
 	char **entry_list, *entry;
 	unsigned long int n;
+	struct stat buf;
+	struct tree_entry *help;
 
 	printf("------------------DIRECTORY %s\n", TDFSB_CURRENTPATH);
 	c1 = 0;
-	c2 = 0;
+
 /* cleaning up */
 
 	pthread_cancel(async_load_textures_thread_id);
@@ -2076,7 +2019,8 @@ void leodir(void)
 	momz = 0;
 	nextz = 0;
 
-	for (c2 = 0; c2 <= total_objects_in_grid_ratio; c2++) {
+	unsigned int rowpos;	// position in the current row
+	for (rowpos = 0; rowpos <= total_objects_in_grid_ratio; rowpos++) {
 		momz += maxz + nextz + 2 * (log(help->scalez + 1)) + 4;
 		maxz = 0;
 		momx = 0;
@@ -2088,7 +2032,7 @@ void leodir(void)
 			help->posx = momx;
 			help->posz = momz;
 			help->rasterx = c1;
-			help->rasterz = c2;
+			help->rasterz = rowpos;
 			momx = momx + (help->scalex);
 			help = help->next;
 			if (!help)
@@ -2230,7 +2174,7 @@ void leodir(void)
 
 /* TDFSB IDLE FUNCTIONS */
 
-void move(void)
+static void move(void)
 {
 	if (upkeybuf) {
 		uposy = vposy = vposy + 1 / mousespeed;
@@ -2268,12 +2212,12 @@ void move(void)
 	TDFSB_FUNC_DISP();
 }
 
-void stillDisplay(void)
+static void stillDisplay(void)
 {
 	TDFSB_FUNC_DISP();
 }
 
-void startstillDisplay(void)
+static void startstillDisplay(void)
 {
 	if (TDFSB_CONFIG_FULLSCREEN)
 		keyboard(TDFSB_KC_FS);
@@ -2282,7 +2226,7 @@ void startstillDisplay(void)
 	TDFSB_FUNC_DISP();
 }
 
-void ground(void)
+static void ground(void)
 {
 	if (TDFSB_ANIM_STATE) {
 		uposy = vposy -= TDFSB_OA_DY;
@@ -2298,7 +2242,7 @@ void ground(void)
 }
 
 /* Fly to an object */
-void approach(void)
+static void approach(void)
 {
 	switch (TDFSB_ANIM_STATE) {
 	case 1:		// Approach vposx,uposy,vposz until we are close in either dimension
@@ -2315,7 +2259,7 @@ void approach(void)
 		break;
 
 	case 2:
-		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE) {		// If we have a texture
+		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE) {	// If we have a texture
 			if (TDFSB_ANIM_COUNT) {
 				smoox += TDFSB_OA_DX;
 				tposx = smoox;
@@ -2394,16 +2338,17 @@ void approach(void)
 
 }
 
-void nullDisplay(void)
+static void nullDisplay(void)
 {
 
 	TDFSB_FUNC_DISP();
 
 }
 
-void noDisplay(void)
+static void noDisplay(void)
 {
 	char warpmess[] = "WARPING...";
+	unsigned int charpos;
 
 	stop_move();
 	SDL_WarpMouse(SWX / 2, SWY / 2);
@@ -2419,8 +2364,8 @@ void noDisplay(void)
 	strcpy(fullpath, warpmess);
 	c3 = (int)strlen(fullpath);
 	glScalef(0.15, 0.15, 0.15);
-	for (c2 = 0; c2 < c3; c2++) {
-		glutStrokeCharacter(GLUT_STROKE_ROMAN, fullpath[c2]);
+	for (charpos = 0; charpos < c3; charpos++) {
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, fullpath[charpos]);
 	}
 	glEnable(GL_LIGHTING);
 	SDL_GL_SwapBuffers();
@@ -2431,7 +2376,7 @@ void noDisplay(void)
 }
 
 // When a user points to and clicks on an object, the tool is applied on it
-void apply_tool_on_object(struct tree_entry *object)
+static void apply_tool_on_object(struct tree_entry *object)
 {
 	if (CURRENT_TOOL == TOOL_WEAPON) {
 		// printf("TODO: Start some animation on the object to show it is being deleted ");
@@ -2444,11 +2389,12 @@ void apply_tool_on_object(struct tree_entry *object)
 /* The scene consists of some pre-made static elements (SolidList and BlendList)
  * on top of which some dynamic things are drawn (such as audio animation and textfile contents).
  * Textures are set and updated on the solids for displaying video. */
-void display(void)
+static void display(void)
 {
 	double odist, vlen, senx, seny, senz, find_dist;
 	struct tree_entry *find_entry;
 	struct tree_entry *object;
+	unsigned int charpos;
 
 	find_entry = NULL;
 	find_dist = 10000000;
@@ -2637,23 +2583,23 @@ void display(void)
 				//printf("setting color to %d,%d,%d\n", TDFSB_FN_R, TDFSB_FN_G, TDFSB_FN_B);
 				glColor4f(TDFSB_FN_R, TDFSB_FN_G, TDFSB_FN_B, 1.0);
 				glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->name) / 2, 0, 0);
-				for (c2 = 0; c2 < object->namelen; c2++)
-					glutStrokeCharacter(GLUT_STROKE_ROMAN, object->name[c2]);
+				for (charpos = 0; charpos < object->namelen; charpos++)
+					glutStrokeCharacter(GLUT_STROKE_ROMAN, object->name[charpos]);
 			} else {
 				fh = ((((GLfloat) spin) - 180) / 360);
 				if (fh < 0) {
 					fh = fabs(fh);
 					glColor4f(1 - (fh), 1 - (fh), 1 - (fh), 1.0);
 					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->name) / 2, 0, 0);
-					for (c2 = 0; c2 < object->namelen; c2++)
-						glutStrokeCharacter(GLUT_STROKE_ROMAN, object->name[c2]);
+					for (charpos = 0; charpos < object->namelen; charpos++)
+						glutStrokeCharacter(GLUT_STROKE_ROMAN, object->name[charpos]);
 
 				} else {
 					fh = fabs(fh);
 					glColor4f(0.85 - (fh), 1 - (fh), 1 - (fh), 1.0);
 					glTranslatef(-glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)object->linkpath) / 2, 0, 0);
-					for (c2 = 0; c2 < strlen(object->linkpath); c2++)
-						glutStrokeCharacter(GLUT_STROKE_ROMAN, object->linkpath[c2]);
+					for (charpos = 0; charpos < strlen(object->linkpath); charpos++)
+						glutStrokeCharacter(GLUT_STROKE_ROMAN, object->linkpath[charpos]);
 				}
 			}
 			glPopMatrix();
@@ -2689,7 +2635,7 @@ void display(void)
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
 			c3 = (int)strlen((char *)object->textfilecontents);
-			c2 = 0;
+			charpos = 0;
 			// Warning, here be dragons!
 			// textureformat is incremented with the texturewidth here!
 			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((object->textureformat) = (object->textureformat) + (object->texturewidth))))), (200 * mz) * cc);
@@ -2704,10 +2650,10 @@ void display(void)
 			glTranslatef(+mono / 2, 0, 0);
 			do {
 				glTranslatef(-mono, -150, 0);
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->textfilecontents[c2 + (object->textureheight)]);
-				c2++;
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->textfilecontents[charpos + (object->textureheight)]);
+				charpos++;
 			}
-			while (c2 < c3 && c2 < 10);
+			while (charpos < c3 && charpos < 10);
 			if (object->textureformat >= 150) {
 				(object->textureheight) = (object->textureheight) + 1;
 				if ((object->textureheight) >= c3 - 10)
@@ -2888,8 +2834,8 @@ void display(void)
 		glTranslatef(10 + TDFSB_XL_DISPLAY, 18, 1);
 		glColor3f(0.4, 0.8, 0.6);
 		glScalef(0.14, 0.14, 1);
-		for (c2 = 0; c2 < c3; c2++) {
-			glutStrokeCharacter(GLUT_STROKE_ROMAN, fullpath[c2]);
+		for (charpos = 0; charpos < c3; charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_ROMAN, fullpath[charpos]);
 		}
 
 		glPopMatrix();
@@ -2909,8 +2855,8 @@ void display(void)
 			glTranslatef(10, SWY - 18, 0);
 			glScalef(0.12, 0.12, 1);
 			glColor3f(0.5, 1.0, 0.25);
-			for (c2 = 0; c2 < strlen(TDFSB_OBJECT_SELECTED->name); c2++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[c2]);
+			for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
 			}
 			glPopMatrix();
 		} else if (TDFSB_SHOW_FPS) {
@@ -2918,8 +2864,8 @@ void display(void)
 			glTranslatef(10, SWY - 18, 0);
 			glScalef(0.12, 0.12, 1);
 			glColor3f(0.4, 0.8, 0.6);
-			for (c2 = 0; c2 < strlen(fpsbuf); c2++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, fpsbuf[c2]);
+			for (charpos = 0; charpos < strlen(fpsbuf); charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, fpsbuf[charpos]);
 			}
 			glPopMatrix();
 		}
@@ -2928,8 +2874,8 @@ void display(void)
 			glTranslatef(10, SWY - 36, 0);
 			glScalef(0.12, 0.12, 1);
 			glColor3f(0.4, 0.8, 0.6);
-			for (c2 = 0; c2 < strlen(cfpsbuf); c2++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, cfpsbuf[c2]);
+			for (charpos = 0; charpos < strlen(cfpsbuf); charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, cfpsbuf[charpos]);
 			}
 			glPopMatrix();
 			TDFSB_SHOW_CONFIG_FPS--;
@@ -2939,8 +2885,8 @@ void display(void)
 			glTranslatef(10, SWY - 54, 0);
 			glScalef(0.12, 0.12, 1);
 			glColor3f(0.4, 0.8, 0.6);
-			for (c2 = 0; c2 < strlen(throttlebuf); c2++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, throttlebuf[c2]);
+			for (charpos = 0; charpos < strlen(throttlebuf); charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, throttlebuf[charpos]);
 			}
 			glPopMatrix();
 			TDFSB_SHOW_THROTTLE--;
@@ -2950,8 +2896,8 @@ void display(void)
 			glTranslatef(10, SWY - 72, 0);
 			glScalef(0.12, 0.12, 1);
 			glColor3f(0.4, 0.8, 0.6);
-			for (c2 = 0; c2 < strlen(ballbuf); c2++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ballbuf[c2]);
+			for (charpos = 0; charpos < strlen(ballbuf); charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ballbuf[charpos]);
 			}
 			glPopMatrix();
 			TDFSB_SHOW_BALL--;
@@ -2961,8 +2907,8 @@ void display(void)
 			glTranslatef(SWX - 104.76 * 11 * 0.1, SWY - 18, 0);
 			glScalef(0.10, 0.10, 1);
 			glColor3f(0.6, 0.4, 0.0);
-			for (c2 = 0; c2 < 11; c2++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, flybuf[c2]);
+			for (charpos = 0; charpos < 11; charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, flybuf[charpos]);
 			}
 			glPopMatrix();
 			TDFSB_FLY_DISPLAY--;
@@ -2972,8 +2918,8 @@ void display(void)
 			glTranslatef(SWX - 104.76 * 12 * 0.1, SWY - 36, 0);
 			glScalef(0.10, 0.10, 1);
 			glColor3f(0.5, 0.5, 0.0);
-			for (c2 = 0; c2 < 11; c2++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, classicbuf[c2]);
+			for (charpos = 0; charpos < 11; charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, classicbuf[charpos]);
 			}
 			glPopMatrix();
 			TDFSB_CLASSIC_DISPLAY--;
@@ -3023,16 +2969,16 @@ void display(void)
 		glTranslatef(SWX / 2 - 104.76 * strlen(alert_kc) * 0.1 * 0.5, SWY / 4 + 9, 0);
 		glScalef(0.10, 0.10, 1);
 		glColor3f(1.0, 0.25, 0.25);
-		for (c2 = 0; c2 < strlen(alert_kc); c2++) {
-			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, alert_kc[c2]);
+		for (charpos = 0; charpos < strlen(alert_kc); charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, alert_kc[charpos]);
 		}
 		glPopMatrix();
 		glPushMatrix();
 		glTranslatef(SWX / 2 - 104.76 * strlen(alert_kc2) * 0.1 * 0.5, SWY / 4 - 9, 0);
 		glScalef(0.10, 0.10, 1);
 		glColor3f(1.0, 0.25, 0.25);
-		for (c2 = 0; c2 < strlen(alert_kc2); c2++) {
-			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, alert_kc2[c2]);
+		for (charpos = 0; charpos < strlen(alert_kc2); charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, alert_kc2[charpos]);
 		}
 		glPopMatrix();
 		TDFSB_ALERT_KC--;
@@ -3078,7 +3024,7 @@ void display(void)
 		TDFSB_FPS_DISP++;
 }
 
-void MouseMove(int x, int y)
+static void MouseMove(int x, int y)
 {
 	if (!TDFSB_ANIM_STATE) {
 		centX = centX - (GLdouble) (headspeed * (floor(((double)SWX) / 2) - (double)x));
@@ -3093,7 +3039,7 @@ void MouseMove(int x, int y)
 	}
 }
 
-void MouseLift(int x, int y)
+static void MouseLift(int x, int y)
 {
 	if (!TDFSB_ANIM_STATE) {
 		uposy += ((GLfloat) ((GLfloat) (SWY / 2) - (GLfloat) y) / 25);
@@ -3110,7 +3056,7 @@ void MouseLift(int x, int y)
 	}
 }
 
-void mouse(int button, int state, int x, int y)
+static void mouse(int button, int state)
 {
 	if (TDFSB_ANIM_STATE)
 		return;		// We don't react to mouse buttons when we are in animation state, such as flying somewhere
@@ -3210,7 +3156,7 @@ void mouse(int button, int state, int x, int y)
 	}
 }
 
-int speckey(int key)
+static int speckey(int key)
 {
 	if (!TDFSB_ANIM_STATE) {
 
@@ -3369,7 +3315,7 @@ int speckey(int key)
 				stop_move();
 				TDFSB_OA = TDFSB_OBJECT_SELECTED;
 				TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
-				if (!((TDFSB_OA->mode) & 0x20))	{ // if not a symlink
+				if (!((TDFSB_OA->mode) & 0x20)) {	// if not a symlink
 					if (TDFSB_OA->regtype == DIRECTORY) {
 						// Fly straight into directories
 						//TDFSB_OA_DY = TDFSB_OA->posy + TDFSB_OA->scaley;
@@ -3410,7 +3356,6 @@ int speckey(int key)
 
 					GstBus *bus = NULL;
 					GstElement *fakesink = NULL;
-					GstState state;
 
 					// create a new pipeline
 					GError *error = NULL;
@@ -3449,7 +3394,6 @@ int speckey(int key)
 					   g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
 					   g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop); */
 					gst_bus_enable_sync_message_emission(bus);
-					g_signal_connect(bus, "sync-message", G_CALLBACK(sync_bus_call), NULL);
 					gst_object_unref(bus);
 
 					fakesink = gst_bin_get_by_name(GST_BIN(pipeline), "fakesink0");
@@ -3479,7 +3423,7 @@ int speckey(int key)
 	return (0);
 }
 
-int specupkey(int key)
+static int specupkey(int key)
 {
 	if (!TDFSB_ANIM_STATE) {
 		if (key == SDLK_UP) {
@@ -3508,19 +3452,20 @@ int specupkey(int key)
 		return (0);
 }
 
-int keyfinder(unsigned char key)
+static int keyfinder(unsigned char key)
 {
 	TDFSB_KEY_FINDER = key;
 	return (0);
 }
 
-int keyupfinder(unsigned char key)
+static int keyupfinder(unsigned char key)
 {
+	UNUSED(key);		// Can't change the function signature because keyfinder() *does* need the key
 	TDFSB_KEY_FINDER = 0;
 	return (0);
 }
 
-int keyboardup(unsigned char key)
+static int keyboardup(unsigned char key)
 {
 	if (!TDFSB_ANIM_STATE) {
 		if (key == TDFSB_KC_FORWARD) {
@@ -3549,7 +3494,7 @@ int keyboardup(unsigned char key)
 		return (0);
 }
 
-int keyboard(unsigned char key)
+static int keyboard(unsigned char key)
 {
 
 	if (!TDFSB_ANIM_STATE) {
@@ -3655,10 +3600,10 @@ int keyboard(unsigned char key)
 
 		else if (key == TDFSB_KC_INFO) {
 			printf("\n");
-			printf("GL_RENDERER   = %s\n", (char *)glGetString(GL_RENDERER));
-			printf("GL_VERSION    = %s\n", (char *)glGetString(GL_VERSION));
-			printf("GL_VENDOR     = %s\n", (char *)glGetString(GL_VENDOR));
-			printf("GL_EXTENSIONS = %s\n", (char *)glGetString(GL_EXTENSIONS));
+			printf("GL_RENDERER   = %s\n", (const char *)glGetString(GL_RENDERER));
+			printf("GL_VERSION    = %s\n", (const char *)glGetString(GL_VERSION));
+			printf("GL_VENDOR     = %s\n", (const char *)glGetString(GL_VENDOR));
+			printf("GL_EXTENSIONS = %s\n", (const char *)glGetString(GL_EXTENSIONS));
 			printf("\n");
 			printf("Max Texture %d x %d \n", (int)TDFSB_MAX_TEX_SIZE, (int)TDFSB_MAX_TEX_SIZE);
 			printf("\n");
@@ -3725,7 +3670,7 @@ int keyboard(unsigned char key)
 		}
 
 		else if (key == TDFSB_KC_HOME) {
-			strcpy(TDFSB_CURRENTPATH, home);
+			strcpy(TDFSB_CURRENTPATH, getenv("HOME"));
 			TDFSB_FUNC_IDLE = nullDisplay;
 			TDFSB_FUNC_DISP = noDisplay;
 		}
@@ -3828,7 +3773,7 @@ int main(int argc, char **argv)
 	if (argc == 3) {
 		if ((!strcmp(argv[1], "--dir") || !strcmp(argv[1], "-D"))) {
 			if (realpath(argv[2], &temp_trunc[0]) != &temp_trunc[0])
-				if (realpath(home, &temp_trunc[0]) != &temp_trunc[0])
+				if (realpath(getenv("HOME"), &temp_trunc[0]) != &temp_trunc[0])
 					strcpy(&temp_trunc[0], "/");
 			strcpy(TDFSB_CURRENTPATH, temp_trunc);
 		} else {
@@ -3838,7 +3783,7 @@ int main(int argc, char **argv)
 	}
 
 	if (strlen(TDFSB_CURRENTPATH) < 1)
-		if (realpath(home, &temp_trunc[0]) != &temp_trunc[0])
+		if (realpath(getenv("HOME"), &temp_trunc[0]) != &temp_trunc[0])
 			strcpy(&temp_trunc[0], "/");
 	strcpy(TDFSB_CURRENTPATH, temp_trunc);
 
@@ -3905,9 +3850,10 @@ int main(int argc, char **argv)
 	TDFSB_FUNC_KEY = keyboard;
 	TDFSB_FUNC_UPKEY = keyboardup;
 
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &temp);
-	if (TDFSB_MAX_TEX_SIZE > temp || TDFSB_MAX_TEX_SIZE == 0)
-		TDFSB_MAX_TEX_SIZE = temp;
+	GLint max_texture_size;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);	// OpenGL does not have a glGetUIntegerv(), which would be more correct
+	if (TDFSB_MAX_TEX_SIZE > (unsigned int)max_texture_size || TDFSB_MAX_TEX_SIZE == 0)
+		TDFSB_MAX_TEX_SIZE = max_texture_size;
 
 	glViewport(0, 0, SWX, SWY);
 
@@ -3936,7 +3882,7 @@ int main(int argc, char **argv)
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
 				if (TDFSB_FUNC_MOUSE)
-					TDFSB_FUNC_MOUSE(event.button.button, event.button.state, event.button.x, event.button.y);
+					TDFSB_FUNC_MOUSE(event.button.button, event.button.state);
 				break;
 			case SDL_KEYDOWN:
 				if (speckey(event.key.keysym.sym))
