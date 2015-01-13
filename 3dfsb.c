@@ -2635,7 +2635,6 @@ static void display(void)
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
 			c3 = (int)strlen((char *)object->textfilecontents);
-			charpos = 0;
 			// Warning, here be dragons!
 			// textureformat is incremented with the texturewidth here!
 			glTranslatef((200 * mx) * cc, (-100 * (c1) + 1500 + ((GLfloat) (((object->textureformat) = (object->textureformat) + (object->texturewidth))))), (200 * mz) * cc);
@@ -2648,6 +2647,7 @@ static void display(void)
 				glRotated(fmod(0 - asin(u / r) * (180 / PI), 360), 0, 1, 0);
 			}
 			glTranslatef(+mono / 2, 0, 0);
+			charpos = 0;
 			do {
 				glTranslatef(-mono, -150, 0);
 				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->textfilecontents[charpos + (object->textureheight)]);
