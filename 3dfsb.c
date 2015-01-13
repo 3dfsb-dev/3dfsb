@@ -2663,8 +2663,7 @@ static void display(void)
 			glPopMatrix();
 		}
 		c1++;
-
-	}
+	}	// end of for loop over directory entry objects
 
 /* animate audio file */
 	if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == AUDIOFILE) {
