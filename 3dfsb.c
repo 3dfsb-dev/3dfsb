@@ -613,7 +613,7 @@ static SDL_Surface *ScaleSurface(SDL_Surface * Surface, double Width, double Hei
 {
 	int x, y, o_y, o_x;
 
-	if (!Surface || (Width<0.1) || (Height<0.1))
+	if (!Surface || (Width < 0.1) || (Height < 0.1))
 		return 0;
 
 	SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
@@ -2663,7 +2663,7 @@ static void display(void)
 			glPopMatrix();
 		}
 		c1++;
-	}	// end of for loop over directory entry objects
+	}			// end of for loop over directory entry objects
 
 /* animate audio file */
 	if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == AUDIOFILE) {
@@ -3889,7 +3889,7 @@ int main(int argc, char **argv)
 				break;
 			case SDL_KEYUP:
 				if (specupkey(event.key.keysym.sym))
-					TDFSB_FUNC_UPKEY((unsigned char)(event.key.keysym.sym & 0x7F));		// no unicode for key up's
+					TDFSB_FUNC_UPKEY((unsigned char)(event.key.keysym.sym & 0x7F));	// no unicode for key up's
 				break;
 			default:
 				break;
