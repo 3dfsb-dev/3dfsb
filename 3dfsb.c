@@ -3070,7 +3070,6 @@ static void mouse(int button, int state)
 				TDFSB_KEY_FINDER = 0;
 				TDFSB_FUNC_KEY = keyfinder;
 				TDFSB_FUNC_UPKEY = keyupfinder;
-
 			} else {
 				TDFSB_OBJECT_SELECTED = NULL;
 				TDFSB_OBJECT_SEARCH = 0;
@@ -3890,7 +3889,7 @@ int main(int argc, char **argv)
 				break;
 			case SDL_KEYUP:
 				if (specupkey(event.key.keysym.sym))
-					TDFSB_FUNC_UPKEY((unsigned char)(event.key.keysym.unicode & 0x7F));
+					TDFSB_FUNC_UPKEY((unsigned char)(event.key.keysym.sym & 0x7F));		// no unicode for key up's
 				break;
 			default:
 				break;
