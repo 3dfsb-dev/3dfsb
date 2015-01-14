@@ -392,7 +392,7 @@ static int keyfinder(unsigned char key);
 static int keyupfinder(unsigned char key);
 static int speckey(int key);
 static int specupkey(int key);
-static void stillDisplay(void);
+static void standstillDisplay(void);
 
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
@@ -1556,10 +1556,10 @@ static void viewm(void)
 		centX = -(GLdouble) acos(tposx / ((GLdouble) cos((((double)centY) / (double)((double)SWY / PI))))) * (GLdouble) ((GLdouble) SWX / mousesense / PI);
 }
 
-static void check_still(void)
+static void check_standstill(void)
 {
 	if (!(forwardkeybuf + backwardkeybuf + leftkeybuf + rightkeybuf + upkeybuf + downkeybuf))
-		TDFSB_FUNC_IDLE = stillDisplay;
+		TDFSB_FUNC_IDLE = standstillDisplay;
 }
 
 static void stop_move(void)
@@ -2211,17 +2211,17 @@ static void move(void)
 	TDFSB_FUNC_DISP();
 }
 
-static void stillDisplay(void)
+static void standstillDisplay(void)
 {
 	TDFSB_FUNC_DISP();
 }
 
-static void startstillDisplay(void)
+static void startstandstillDisplay(void)
 {
 	if (TDFSB_CONFIG_FULLSCREEN)
 		keyboard(TDFSB_KC_FS);
 	//stop_move();
-	TDFSB_FUNC_IDLE = stillDisplay;
+	TDFSB_FUNC_IDLE = standstillDisplay;
 	TDFSB_FUNC_DISP();
 }
 
@@ -2235,7 +2235,7 @@ static void ground(void)
 		TDFSB_ANIM_COUNT = 0;
 		uposy = vposy = 0;
 		stop_move();
-		TDFSB_FUNC_IDLE = stillDisplay;
+		TDFSB_FUNC_IDLE = standstillDisplay;
 	}
 	TDFSB_FUNC_DISP();
 }
@@ -2289,7 +2289,7 @@ static void approach(void)
 			TDFSB_ANIM_COUNT = 0;
 			TDFSB_ANIM_STATE = 0;
 			stop_move();
-			TDFSB_FUNC_IDLE = stillDisplay;
+			TDFSB_FUNC_IDLE = standstillDisplay;
 		}
 
 		break;
@@ -2321,7 +2321,7 @@ static void approach(void)
 			TDFSB_ANIM_COUNT = 0;
 			TDFSB_ANIM_STATE = 0;
 			stop_move();
-			TDFSB_FUNC_IDLE = stillDisplay;
+			TDFSB_FUNC_IDLE = standstillDisplay;
 			if (vposy < 0)
 				vposy = 0;
 			uposy = vposy;
@@ -2371,7 +2371,7 @@ static void noDisplay(void)
 
 	leodir();
 	TDFSB_FUNC_DISP = display;
-	TDFSB_FUNC_IDLE = stillDisplay;
+	TDFSB_FUNC_IDLE = standstillDisplay;
 }
 
 // When a user points to and clicks on an object, the tool is applied on it
@@ -3085,7 +3085,7 @@ static void mouse(int button, int state)
 				TDFSB_FUNC_IDLE = move;
 			} else {
 				forwardkeybuf = 0;
-				check_still();
+				check_standstill();
 			}
 			break;
 		}
@@ -3114,7 +3114,7 @@ static void mouse(int button, int state)
 				TDFSB_FUNC_IDLE = move;
 			} else {
 				backwardkeybuf = 0;
-				check_still();
+				check_standstill();
 			}
 			break;
 		}
@@ -3126,7 +3126,7 @@ static void mouse(int button, int state)
 		} else {
 			TDFSB_FUNC_MOTION = MouseMove;
 			TDFSB_FUNC_IDLE = move;
-			check_still();
+			check_standstill();
 			uposy = vposy;
 		}
 		break;
@@ -3427,22 +3427,22 @@ static int specupkey(int key)
 	if (!TDFSB_ANIM_STATE) {
 		if (key == SDLK_UP) {
 			forwardkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == SDLK_DOWN) {
 			backwardkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == SDLK_LEFT) {
 			leftkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == SDLK_RIGHT) {
 			rightkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == SDLK_PAGEUP) {
 			upkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == SDLK_PAGEDOWN) {
 			downkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else
 			return (1);
 
@@ -3469,22 +3469,22 @@ static int keyboardup(unsigned char key)
 	if (!TDFSB_ANIM_STATE) {
 		if (key == TDFSB_KC_FORWARD) {
 			forwardkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == TDFSB_KC_BACKWARD) {
 			backwardkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == TDFSB_KC_LEFT) {
 			leftkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == TDFSB_KC_RIGHT) {
 			rightkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == TDFSB_KC_UP) {
 			upkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else if (key == TDFSB_KC_DOWN) {
 			downkeybuf = 0;
-			check_still();
+			check_standstill();
 		} else
 			return (1);
 
@@ -3842,7 +3842,7 @@ int main(int argc, char **argv)
 	SDL_EnableKeyRepeat(0, 0);
 	SDL_ShowCursor(SDL_DISABLE);
 
-	TDFSB_FUNC_IDLE = startstillDisplay;
+	TDFSB_FUNC_IDLE = startstandstillDisplay;
 	TDFSB_FUNC_DISP = display;
 	TDFSB_FUNC_MOTION = MouseMove;
 	TDFSB_FUNC_MOUSE = mouse;
