@@ -3314,15 +3314,20 @@ static int speckey(int key)
 				stop_move();
 				TDFSB_OA = TDFSB_OBJECT_SELECTED;
 				TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
-				if (TDFSB_OA->regtype == DIRECTORY) {
-					// Fly straight into directories
-					TDFSB_OA_DY = (TDFSB_OA->posy - vposy) / 100;
-				} else if (!((TDFSB_OA->mode) & 0x20)) {	// if not a symlink
+				if (!((TDFSB_OA->mode) & 0x20)) {	// if not a symlink
 					TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
 				} else {
 					TDFSB_OA_DY = (5 - vposy) / 100;
 				}
 				TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
+
+				// Fly straight into directories
+				if (TDFSB_OA->regtype == DIRECTORY) {
+					TDFSB_OA_DY = ((TDFSB_OA->posy - vposy) / 100) * 2;	// Straight into the center, not above
+					// Do it at double speed
+					TDFSB_OA_DX = TDFSB_OA_DX * 2;
+					TDFSB_OA_DZ = TDFSB_OA_DZ * 2;
+				}
 				TDFSB_ANIM_STATE = 1;
 
 				TDFSB_OBJECT_SELECTED = NULL;
