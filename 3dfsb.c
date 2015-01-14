@@ -63,6 +63,12 @@
 // Icons
 #include "images/icon_pdf.xpm"
 
+// Own headers
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
+#include "common.c"
+#pragma GCC diagnostic pop
+
 #ifndef _GLUfuncptr
 #define _GLUfuncptr void*
 #endif
@@ -607,7 +613,7 @@ static SDL_Surface *ScaleSurface(SDL_Surface * Surface, double Width, double Hei
 {
 	int x, y, o_y, o_x;
 
-	if (!Surface || !Width || !Height)
+	if (!Surface || (Width<0.1) || (Height<0.1))
 		return 0;
 
 	SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel, Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
@@ -2196,9 +2202,8 @@ static void move(void)
 			uposy = vposy = vposy - tposy / mousespeed;
 	}
 
-	if (uposy != vposy) {
-		vposy += (uposy - vposy) / 2;
-	}
+	vposy += (uposy - vposy) / 2;
+
 	if (vposy < 0)
 		vposy = 0;
 
@@ -2215,7 +2220,7 @@ static void startstillDisplay(void)
 {
 	if (TDFSB_CONFIG_FULLSCREEN)
 		keyboard(TDFSB_KC_FS);
-	stop_move();
+	//stop_move();
 	TDFSB_FUNC_IDLE = stillDisplay;
 	TDFSB_FUNC_DISP();
 }
@@ -2344,7 +2349,7 @@ static void noDisplay(void)
 	char warpmess[] = "WARPING...";
 	unsigned int charpos;
 
-	stop_move();
+	//stop_move();
 	SDL_WarpMouse(SWX / 2, SWY / 2);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -3174,7 +3179,7 @@ static int speckey(int key)
 				snprintf(TDFSB_CES_TEMP, 4096, "cd \"%s\"; xterm&", TDFSB_CURRENTPATH);
 			else {
 				if (TDFSB_CSE_FLAG)
-					snprintf(TDFSB_CES_TEMP, 4096, TDFSB_CUSTOM_EXECUTE_STRING, fullpath);
+					str_replace(TDFSB_CUSTOM_EXECUTE_STRING, strlen(TDFSB_CUSTOM_EXECUTE_STRING), "%s", fullpath);
 				else
 					strncpy(TDFSB_CES_TEMP, TDFSB_CUSTOM_EXECUTE_STRING, 4096);
 			}
