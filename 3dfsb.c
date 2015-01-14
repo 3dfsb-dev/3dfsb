@@ -75,7 +75,7 @@
 // Note: __attribute__ ((unused)) also works but is gcc specific
 #define UNUSED(x) (void)(x)
 
-#define PI  3.141599265
+#define PI  3.14159265
 #define SQF 0.70710
 
 #define NUMBER_OF_FILETYPES	9
@@ -135,12 +135,7 @@ struct tree_entry {
 	char *linkpath;
 	unsigned int mode, regtype, rasterx, rasterz;
 	GLfloat posx, posy, posz, scalex, scaley, scalez;
-	/* texturewidth = p2w = just the next power of two that fits the texture size!
-	   // And for for text files, it is the size:  texturewidth = ((GLfloat) log(((double)buf.st_size / 256) + 1)) + 6;
-	   // For audio files, it is nothing
-	   textureheight = p2h = just the texture size! 
-	   textureformat = cglmode;
-	   textureid = 31337;        gets filled in with the texture id */
+	// texturewidth = p2w = just the next power of two that fits the texture size!
 	unsigned int texturewidth, textureheight, textureformat, textureid;
 	unsigned int originalwidth;
 	unsigned int originalheight;
