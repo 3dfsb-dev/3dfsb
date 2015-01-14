@@ -1222,22 +1222,22 @@ static void setup_kc(void)
 	TDFSB_KC_CDU = 'u';
 	TDFSB_KC_IMBR = 'b';
 	TDFSB_KC_INFO = 'i';
-	TDFSB_KC_DISP = 'd';
+	TDFSB_KC_DISP = 'y';
 	TDFSB_KC_CRH = 'c';
 	TDFSB_KC_FPS = 'p';
 	TDFSB_KC_GCR = 'g';
 	TDFSB_KC_SHD = 'm';
 	TDFSB_KC_NAME = 't';
-	TDFSB_KC_SORT = 'a';
+	TDFSB_KC_SORT = 'n';
 	TDFSB_KC_CLASS = 'o';
 	TDFSB_KC_UP = '1';
 	TDFSB_KC_DOWN = '3';
-	TDFSB_KC_LEFT = 'q';
-	TDFSB_KC_RIGHT = 'e';
-	TDFSB_KC_SAVE = 's';
+	TDFSB_KC_LEFT = 'a';	// on azerty keyboards, this should be q... but we set the defaults to querty
+	TDFSB_KC_RIGHT = 'd';
+	TDFSB_KC_SAVE = 'x';
 	TDFSB_KC_FTH = '#';
-	TDFSB_KC_FORWARD = '2';
-	TDFSB_KC_BACKWARD = 'w';
+	TDFSB_KC_FORWARD = 'w';	// on azerty keyboards, this should be z... but we set the defaults to querty
+	TDFSB_KC_BACKWARD = 's';
 }
 
 static void setup_help(void)
