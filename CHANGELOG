@@ -1,14 +1,8 @@
-Next version (unreleased)
-*************************
-
-Major changes
--------------
-- No more waiting screens: fly into your directories instantly, with file previews being loaded asynchronously in the background
+Version 1.1 (14-01-2015)
+************************
+- No more waiting: fly into your directories instantly, with file previews being loaded asynchronously in the background
 - Faster navigation: fly into directories with the approach action
-
-Minor changes
--------------
-- More graphics: PDF files now have a PDF icon to show their type, instead of being a boring old gray box
+- Better graphics: PDF files now have a PDF icon to show their type, instead of being a boring old gray box
 - Fixed stuck WASD keys
 - Fixed all warnings
 - Cleanups
