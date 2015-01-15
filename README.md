@@ -9,7 +9,7 @@ Homepage: https://github.com/tomvanbraeckel/3dfsb
 
 Forked, cleaned up and improved by Tom Van Braeckel, originally written by Leander Seige.
 
-Version 1.0 (07-01-2015)
+Improvements made so far
 ************************
 
 Major changes
@@ -20,6 +20,7 @@ Major changes
 - More fun: you can now zap away at your files with the lasergun tool! For your own protection, nothing is physically deleted from disk, unless y
 ou explicitly configure the program to do so.
 - Video input device (eg: webcam) file previews: Video4Linux (V4L2) capture devices are now visible in the 3D world and can be viewed just like your movies!
+- No more waiting: fly into your directories instantly, with file previews being loaded asynchronously in the background
 
 Minor changes
 -------------
@@ -28,7 +29,7 @@ Minor changes
 - Uncapped framerate by default
 - Uncapped texture size by default
 - Higher rendering resolution by default
-- Lots and lots of code cleanups and comments added
+- Lots and lots of code cleanups, bugfixes and comments added
 - No more dependency on libsmpeg
 
 Performance
