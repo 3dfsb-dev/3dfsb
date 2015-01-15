@@ -405,7 +405,7 @@ GstBuffer *videobuffer;
 magic_t magic;
 
 // Asynchronous texture loading
-pthread_t async_load_textures_thread_id;
+pthread_t async_load_textures_thread_id = NULL;
 
 GAsyncQueue *loaded_textures_queue = NULL;
 
@@ -1860,7 +1860,10 @@ static void leodir(void)
 
 /* cleaning up */
 
-	pthread_cancel(async_load_textures_thread_id);
+	if (async_load_textures_thread_id) {
+		pthread_cancel(async_load_textures_thread_id);
+		async_load_textures_thread_id = (pthread_t) NULL;
+	}
 
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
