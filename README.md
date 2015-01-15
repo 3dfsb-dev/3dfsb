@@ -109,33 +109,7 @@ USAGE
   3dfsb for your needs, choose a certain kind of files and than launch
   emacs for editing text files, mplayer for playing avis or whatever...
 
-Here is a print out of the default keyboard settings.
-You may change these by editing ~/.3dfsb
-
-    Esc           quit   F1/F2    speed +/-
-    Mouse move    look   F3/F4      rot +/-
-    UP         forward   F5/F6  ball detail
-    DOWN      backward   HOME     start pos
-    L/R     step aside   LMB  select object
-    END    ground zero   +RMB|CTRL appr.obj
-    F7/F8  max fps +/-   +ENTER ply mpg/mp3
-    F9     change tool (selector, weapon)
-    "t"      filenames   "g"   ground cross
-    "c"      crosshair   "d"        display
-    "."      dot files   "p"      print FPS
-    "r" rel./get mouse   "f"     fullscreen
-    "l"     reload dir   "b"   image bricks
-    "u"           cd..   "a"      alphasort
-    "m"        shading   " "         flying
-    "h"      show help   "i"  print GL info
-    "0"      jump home   "o"    classic nav
-    "s"    save config   "#"   fps throttle
-     
-    "1|3|q|e"            Up|Down|Left|Right
-    "2|w"                  Forward|Backward
-    PgUp/Down or MMB+Mouse move up/downward
-
-
+You may change the default settings (including keyboard configuration) by editing ~/.3dfsb
 
 Dependencies
 ============
