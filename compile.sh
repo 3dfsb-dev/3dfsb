@@ -1,6 +1,12 @@
 #!/bin/bash
 # Compile 3dfsb using sdl-config and pkg-config to find the necessary CFLAGS paths and linker flags
 
+usage() {
+	echo "Usage: $0 [i386]"
+	echo "Add the i386 option to compile for 32-bit (i386) architectures on a 64-bit machine"
+	echo "Starting build in 2 seconds..."
+	sleep 3
+}
 execfind ()
 {
     for cmd in $*; 
@@ -12,18 +18,26 @@ execfind ()
     done;
 }
 
-# For 32 bit
-export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig/
+#########################
+# EXECUTION STARTS HERE #
+#########################
+i386="$1"
 
-                                            
+usage
+
+# On 64 bit machines, pkg-config will search for pkg-configs in /usr/lib/x86_64-linux-gnu/pkgconfig/ by default
+if [ "$i386" == "i386" ]; then
+	export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig/
+	i386option="-m32"
+fi
+
+# SDL stuff
 SDL_CONFIG=$(execfind sdl-config sdl11-config sdl10-config sdl12-config \/boot\/develop\/tools/gnupro\/bin\/sdl-config);
-
 if ! "$SDL_CONFIG" --version > /dev/null; then
     echo "Cannot find the sdl-config script.";
     echo "Please check your SDL installation.";
     exit 1;
 fi
-
 echo "Using $SDL_CONFIG.";
 SDL_CFLAGS=$($SDL_CONFIG --cflags);	# Example: -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT
 SDL_LIBS=$($SDL_CONFIG --libs);		# Example: -L/usr/lib/x86_64-linux-gnu -lSDL
@@ -31,11 +45,11 @@ SDL_LIBS=$($SDL_CONFIG --libs);		# Example: -L/usr/lib/x86_64-linux-gnu -lSDL
 GSTREAMER_CFLAGS=$(pkg-config --cflags gstreamer-1.0)	# Example: -pthread -I/usr/local/include/gstreamer-1.0 -I/usr/local/lib/gstreamer-1.0/include -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
 GSTREAMER_LIBS=$(pkg-config --libs gstreamer-1.0)	# Example: -L/usr/local/lib -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0
 
-# GTK is for debugging purposes (dumping an image to a file)
+# GTK is useful for debugging purposes (dumping an image to a file)
 #GTK_CFLAGS=$(pkg-config --cflags gtk+-2.0)
 #GTK_LIBS=$(pkg-config --libs gtk+-2.0)
 
-OTHER_LIBS=$(pkg-config --libs glu SDL_stretch)
+OTHER_LIBS=$(pkg-config --libs glu)	# Example: -lGLU -lGL
 
 NOPKGCONFIG_LIBS="-lglut -lmagic -lm"
 
@@ -49,20 +63,20 @@ fi
 if uname -s | grep -i -c "LINUX" > /dev/null; then 
     echo "GNU/Linux detected.";
     echo -n "Compiling...";
-    # On Linux, pkg-config is easier to use than sdl-config...
+    # On Linux, pkg-config is easier to use than sdl-config
     SDL_CFLAGS=$(pkg-config --cflags SDL_image);	# Example: -D_GNU_SOURCE=1 -D_REENTRANT -I/usr/include/SDL 
     SDL_LIBS=$(pkg-config --libs SDL_image);		# Example: -lSDL_image -lSDL 
 
     # -Wconversion fails for a non-fixable reason, IIRC...
     # -Werror=format-nonliteral fails when we read the command to execute from the config file and put it in an snprintf() to substitute the %s... but can't we just do a simple find and replace of the %s?
-    #warnings="-pedantic -pedantic-errors -std=c99 -Waggregate-return -Wall -Wcast-align -Wcast-qual -Wchar-subscripts  -Wcomment -Wdisabled-optimization -Werror -Wextra -Wfloat-equal  -Wformat -Wformat-security -Wformat-y2k -Wformat=2 -Wmissing-prototypes -Wpointer-arith -Wshadow -Wstrict-prototypes"
+    warnings="-pedantic -pedantic-errors -std=c99 -Waggregate-return -Wall -Wcast-align -Wcast-qual -Wchar-subscripts  -Wcomment -Wdisabled-optimization -Werror -Wextra -Wfloat-equal  -Wformat -Wformat-security -Wformat-y2k -Wformat=2 -Wmissing-prototypes -Wpointer-arith -Wshadow -Wstrict-prototypes"
 
     # This fails
     #gccopt="-static -static-libgcc"
 
-    gccopt="-g -m32"		# debugging info by default
+    gccopt="-g"		# debugging info by default
 
-    gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
+    gcc $i386option $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
     echo "done."
     echo "Now run the 3D File System Browser with ./3dfsb"
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
@@ -78,5 +92,3 @@ else
     echo "FreeBSD please send me the output of 'uname -s'." 
     exit 1;
 fi;
-
-exit 0;
