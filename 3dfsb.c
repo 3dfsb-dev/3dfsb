@@ -671,7 +671,6 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 		printf("Error: get_image_from_file can only handle VIDEOFILE, VIDEOSOURCFILE and IMAGEFILE's!\n");
 		goto err_out;
 	}
-
 	// create a new pipeline
 	gchar *uri = gst_filename_to_uri(filename, &error);
 	if (error != NULL) {
@@ -842,15 +841,15 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 	// We don't free the converter surface, that will be done when it has been *used* by the texture setting code,
 	// or when we exit this folder and re-do a leodir() operation (= entering another folder)
 
-err_undo_mapping:
+ err_undo_mapping:
 	gst_buffer_unmap(buffer, &map);
-err_free_buffer:
+ err_free_buffer:
 	// TODO?
-err_free_sample:
+ err_free_sample:
 	gst_sample_unref(sample);
-err_free_pipeline:
+ err_free_pipeline:
 	cleanup_media_player();
-err_out:
+ err_out:
 	return converter_to_return;
 }
 
