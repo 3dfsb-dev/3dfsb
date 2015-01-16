@@ -124,7 +124,7 @@ int (*TDFSB_FUNC_UPKEY) (unsigned char key);
 
 unsigned long int www, hhh, p2w, p2h, cglmode;
 
-long int c1, c3, c4, cc, cc1, cc2, cc3, cc4;
+long int c1, cc, cc1;
 
 static GLuint TDFSB_DisplayLists = 0;
 static GLuint TDFSB_CylinderList = 0;
@@ -1046,12 +1046,13 @@ static void tdb_gen_list(void)
 	glPushMatrix();
 	glDisable(GL_LIGHTING);
 	glColor4f(TDFSB_GG_R, TDFSB_GG_G, TDFSB_GG_B, 1.0);
-	for (c1 = 0; c1 <= 20; c1++) {
+	unsigned int gridnr;
+	for (gridnr = 0; gridnr <= 20; gridnr++) {
 		glBegin(GL_LINES);
-		glVertex3f(TDFSB_MINX + TDFSB_STEPX * c1, -1, TDFSB_MINZ);
-		glVertex3f(TDFSB_MINX + TDFSB_STEPX * c1, -1, TDFSB_MAXZ);
-		glVertex3f(TDFSB_MINX, -1, TDFSB_MINZ + TDFSB_STEPZ * c1);
-		glVertex3f(TDFSB_MAXX, -1, TDFSB_MINZ + TDFSB_STEPZ * c1);
+		glVertex3f(TDFSB_MINX + TDFSB_STEPX * gridnr, -1, TDFSB_MINZ);
+		glVertex3f(TDFSB_MINX + TDFSB_STEPX * gridnr, -1, TDFSB_MAXZ);
+		glVertex3f(TDFSB_MINX, -1, TDFSB_MINZ + TDFSB_STEPZ * gridnr);
+		glVertex3f(TDFSB_MAXX, -1, TDFSB_MINZ + TDFSB_STEPZ * gridnr);
 		glEnd();
 	}
 
