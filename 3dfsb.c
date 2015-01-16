@@ -55,10 +55,12 @@
 #include <magic.h>
 
 // For saving pixbuf's to a file for debugging
+/*
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-prototypes"
 #include <gtk/gtk.h>
 #pragma GCC diagnostic pop
+*/
 
 // Icons
 #include "images/icon_pdf.xpm"
