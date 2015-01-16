@@ -69,7 +69,7 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 
     # -Wconversion fails for a non-fixable reason, IIRC...
     # -Werror=format-nonliteral fails when we read the command to execute from the config file and put it in an snprintf() to substitute the %s... but can't we just do a simple find and replace of the %s?
-    warnings="-pedantic -pedantic-errors -std=c99 -Waggregate-return -Wall -Wcast-align -Wcast-qual -Wchar-subscripts  -Wcomment -Wdisabled-optimization -Werror -Wextra -Wfloat-equal  -Wformat -Wformat-security -Wformat-y2k -Wformat=2 -Wmissing-prototypes -Wpointer-arith -Wshadow -Wstrict-prototypes"
+    warnings="-pedantic -pedantic-errors -std=c99 -Waggregate-return -Wall -Wcast-align -Wcast-qual -Wchar-subscripts  -Wcomment -Wdisabled-optimization -Werror -Wextra -Wfloat-equal  -Wformat -Wformat-security -Wformat-y2k -Wformat=2 -Wmissing-prototypes -Wpointer-arith -Wshadow -Wstrict-prototypes -Wunused"
 
     # This fails
     #gccopt="-static -static-libgcc"
