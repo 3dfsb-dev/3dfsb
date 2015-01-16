@@ -1468,8 +1468,9 @@ static int setup_config(void)
 		}
 
 		if (TDFSB_MAX_TEX_SIZE) {
-			for (cc = 1; cc <= TDFSB_MAX_TEX_SIZE; cc *= 2) ;
-			TDFSB_MAX_TEX_SIZE = cc / 2;
+			unsigned int max;
+			for (max = 1; max <= TDFSB_MAX_TEX_SIZE; max *= 2) ;
+			TDFSB_MAX_TEX_SIZE = max / 2;
 		}
 
 		if (realpath(TDFSB_CURRENTPATH, &temp_trunc[0]) != &temp_trunc[0])
@@ -1622,8 +1623,8 @@ static void init(void)
 	while (tmpstr != NULL) {
 		cnt++;
 		glTranslatef(-prevlen, -14 / 0.09, 0);
-		c3 = (int)strlen(tmpstr);
-		for (charpos = 0; charpos < c3; charpos++) {
+		unsigned int tmpstr_len = (int)strlen(tmpstr);
+		for (charpos = 0; charpos < tmpstr_len; charpos++) {
 			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, tmpstr[charpos]);
 		}
 		prevlen = c3 * 104.76;
@@ -2024,20 +2025,21 @@ static void leodir(void)
 	momz = 0;
 	nextz = 0;
 
-	unsigned int rowpos;	// position in the current row
-	for (rowpos = 0; rowpos <= total_objects_in_grid_ratio; rowpos++) {
+	unsigned int rowposz;	// position in the current row
+	for (rowposz = 0; rowposz <= total_objects_in_grid_ratio; rowposz++) {
 		momz += maxz + nextz + 2 * (log(help->scalez + 1)) + 4;
 		maxz = 0;
 		momx = 0;
-		for (c1 = 0; c1 <= total_objects_in_grid_ratio; c1++) {
+		unsigned int rowposx;	// position in the current row
+		for (rowposx = 0; rowposx <= total_objects_in_grid_ratio; rowposx++) {
 			if (help->scalez > maxz) {
 				maxz = help->scalez;
 			}
 			momx = momx + (help->scalex);
 			help->posx = momx;
 			help->posz = momz;
-			help->rasterx = c1;
-			help->rasterz = rowpos;
+			help->rasterx = rowposx;
+			help->rasterz = rowposz;
 			momx = momx + (help->scalex);
 			help = help->next;
 			if (!help)
@@ -2046,9 +2048,11 @@ static void leodir(void)
 		}
 		if (!help)
 			break;
+
+		// No idea what this does:
 		FMptr = help;
 		nextz = 0;
-		for (c1 = 0; c1 <= total_objects_in_grid_ratio; c1++) {
+		for (rowposx = 0; rowposx <= total_objects_in_grid_ratio; rowposx++) {
 			if (FMptr->scalez > nextz)
 				nextz = FMptr->scalez;
 			FMptr = FMptr->next;
@@ -2366,9 +2370,9 @@ static void noDisplay(void)
 	glLineWidth(1);
 	glColor3f(0.5, 1.0, 0.5);
 	strcpy(fullpath, warpmess);
-	c3 = (int)strlen(fullpath);
+	unsigned int fullpath_len = (int)strlen(fullpath);
 	glScalef(0.15, 0.15, 0.15);
-	for (charpos = 0; charpos < c3; charpos++) {
+	for (charpos = 0; charpos < fullpath_len; charpos++) {
 		glutStrokeCharacter(GLUT_STROKE_ROMAN, fullpath[charpos]);
 	}
 	glEnable(GL_LIGHTING);
