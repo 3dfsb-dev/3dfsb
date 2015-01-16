@@ -643,11 +643,13 @@ static SDL_Surface *ScaleSurface(SDL_Surface * Surface, double Width, double Hei
 
 /* Get an image from a (video, videosource or image) file.
  *
- * @returns NULL when there is a problem to get any image from the file.
- *
- * Modus Operandus:
  * First we create a pipeline, then get a sample, then get the buffer from it,
- * then map the buffer to a "loader" SDL_Surface, and then scale that into the "converter_to_return" SDL_Surface. */
+ * then map the buffer to a "loader" SDL_Surface, and then scale that into the "converter_to_return" SDL_Surface.
+ *
+ * Note: this uses around 300MB of memory for each high resolution image... we need to clear it up!
+ *
+ * @returns NULL when there is a problem to get any image from the file.
+ */
 static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 {
 	GstElement *sink;
