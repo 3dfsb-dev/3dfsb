@@ -686,7 +686,7 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
 		// Idea for speedup: set queue-size to 1 instead of 2
 	}
-	printf("gst-launch-1.0 %s\n", descr);
+	//printf("gst-launch-1.0 %s\n", descr);
 	pipeline = (GstPipeline *) (gst_parse_launch(descr, &error));
 
 	if (error != NULL) {
