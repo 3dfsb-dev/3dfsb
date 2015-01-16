@@ -671,7 +671,7 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
 		// Idea for speedup: set queue-size to 1 instead of 2
 	}
-	//printf("gst-launch-1.0 %s\n", descr);
+	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = (GstPipeline *) (gst_parse_launch(descr, &error));
 
 	if (error != NULL) {
@@ -2645,7 +2645,7 @@ static void display(void)
 				cc = c1 = 1;
 			glScalef(0.005, 0.005, 0.005);
 			glColor4f(1.0, 1.0, 0.0, 1.0);
-			c3 = (int)strlen((char *)object->textfilecontents);
+			unsigned int textfilecontents_len = (int)strlen((char *)object->textfilecontents);
 			glTranslatef((200 * mx) * cc, -100 * c1 + 1500 + object->textureformat, (200 * mz) * cc);
 			u = mx - vposx;
 			v = mz - vposz;
@@ -2662,10 +2662,10 @@ static void display(void)
 				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, object->textfilecontents[charpos + (object->textureheight)]);
 				charpos++;
 			}
-			while (charpos < c3 && charpos < 10);
+			while (charpos < textfilecontents_len && charpos < 10);
 			if (object->textureformat >= 150) {
 				(object->textureheight) = (object->textureheight) + 1;
-				if ((object->textureheight) >= c3 - 10)
+				if ((object->textureheight) >= textfilecontents_len - 10)
 					(object->textureheight) = 0;
 				(object->textureformat) = 0;
 			}
@@ -2790,7 +2790,7 @@ static void display(void)
 
 	if (TDFSB_SHOW_DISPLAY) {
 		strcpy(fullpath, TDFSB_CURRENTPATH);
-		c3 = (int)strlen(fullpath);
+		unsigned int fullpath_len = (int)strlen(fullpath);
 		cc = (GLfloat) glutStrokeLength(GLUT_STROKE_ROMAN, (unsigned char *)fullpath) * 0.14;
 		if (cc < (SWX / 10))
 			cc = SWX / 10;
@@ -2842,7 +2842,7 @@ static void display(void)
 		glTranslatef(10 + TDFSB_XL_DISPLAY, 18, 1);
 		glColor3f(0.4, 0.8, 0.6);
 		glScalef(0.14, 0.14, 1);
-		for (charpos = 0; charpos < c3; charpos++) {
+		for (charpos = 0; charpos < fullpath_len; charpos++) {
 			glutStrokeCharacter(GLUT_STROKE_ROMAN, fullpath[charpos]);
 		}
 
