@@ -702,14 +702,11 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 	ret = gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
 	switch (ret) {
 	case GST_STATE_CHANGE_FAILURE:
-		g_print("failed to play the file\n");
+		g_print("Failed to pause the file\n");
 		//exit(-1);
 	case GST_STATE_CHANGE_NO_PREROLL:
-		/* for live sources, we need to set the pipeline to PLAYING before we can
-		 * receive a buffer. */
+		// for live sources, we need to set the pipeline to PLAYING before we can receive a buffer
 		gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
-		//g_print("live sources not supported yet\n");
-		//exit(-1);
 	default:
 		break;
 	}
@@ -718,7 +715,7 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 	 * better way is to run a mainloop and catch errors there. */
 	ret = gst_element_get_state(GST_ELEMENT(pipeline), NULL, NULL, 5 * GST_SECOND);
 	if (ret == GST_STATE_CHANGE_FAILURE) {
-		g_print("failed to play the file\n");
+		g_print("Failed to get the pipeline state\n");
 		//exit(-1);
 	}
 
