@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Compile 3dfsb using sdl-config and pkg-config to find the necessary CFLAGS paths and linker flags
 
 execfind ()
@@ -11,6 +11,10 @@ execfind ()
         fi;
     done;
 }
+
+# For 32 bit
+export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig/
+
                                             
 SDL_CONFIG=$(execfind sdl-config sdl11-config sdl10-config sdl12-config \/boot\/develop\/tools/gnupro\/bin\/sdl-config);
 
@@ -28,8 +32,8 @@ GSTREAMER_CFLAGS=$(pkg-config --cflags gstreamer-1.0)	# Example: -pthread -I/usr
 GSTREAMER_LIBS=$(pkg-config --libs gstreamer-1.0)	# Example: -L/usr/local/lib -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0
 
 # GTK is for debugging purposes (dumping an image to a file)
-GTK_CFLAGS=$(pkg-config --cflags gtk+-2.0)
-GTK_LIBS=$(pkg-config --libs gtk+-2.0)
+#GTK_CFLAGS=$(pkg-config --cflags gtk+-2.0)
+#GTK_LIBS=$(pkg-config --libs gtk+-2.0)
 
 OTHER_LIBS=$(pkg-config --libs glu SDL_stretch)
 
@@ -51,12 +55,12 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 
     # -Wconversion fails for a non-fixable reason, IIRC...
     # -Werror=format-nonliteral fails when we read the command to execute from the config file and put it in an snprintf() to substitute the %s... but can't we just do a simple find and replace of the %s?
-    warnings="-pedantic -pedantic-errors -std=c99 -Waggregate-return -Wall -Wcast-align -Wcast-qual -Wchar-subscripts  -Wcomment -Wdisabled-optimization -Werror -Wextra -Wfloat-equal  -Wformat -Wformat-security -Wformat-y2k -Wformat=2 -Wmissing-prototypes -Wpointer-arith -Wshadow -Wstrict-prototypes"
+    #warnings="-pedantic -pedantic-errors -std=c99 -Waggregate-return -Wall -Wcast-align -Wcast-qual -Wchar-subscripts  -Wcomment -Wdisabled-optimization -Werror -Wextra -Wfloat-equal  -Wformat -Wformat-security -Wformat-y2k -Wformat=2 -Wmissing-prototypes -Wpointer-arith -Wshadow -Wstrict-prototypes"
 
     # This fails
     #gccopt="-static -static-libgcc"
 
-    gccopt="-g"		# debugging info by default
+    gccopt="-g -m32"		# debugging info by default
 
     gcc $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
     echo "done."
