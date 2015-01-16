@@ -641,21 +641,36 @@ static SDL_Surface *ScaleSurface(SDL_Surface * Surface, double Width, double Hei
 	return _ret;
 }
 
+/* Get an image from a (video, videosource or image) file.
+ *
+ * @returns NULL when there is a problem to get any image from the file.
+ *
+ * Modus Operandus:
+ * First we create a pipeline, then get a sample, then get the buffer from it,
+ * then map the buffer to a "loader" SDL_Surface, and then scale that into the "converter_to_return" SDL_Surface. */
 static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 {
-	if (filetype != VIDEOFILE && filetype != VIDEOSOURCEFILE && filetype != IMAGEFILE) {
-		printf("Error: get_image_from_file can only handle VIDEOFILE, VIDEOSOURCFILE and IMAGEFILE's!\n");
-		return NULL;
-	}
 	GstElement *sink;
 	gint width, height;
 	GstSample *sample;
 	gchar *descr;
-	GError *error = NULL;
 	gint64 duration, position;
 	GstStateChangeReturn ret;
 	gboolean res;
 	GstMapInfo map;
+	GError *error = NULL;
+
+	// Return values:
+	SDL_Surface *converter_to_return = NULL;
+	www = 0;
+	hhh = 0;
+	p2w = 0;
+	p2h = 0;
+
+	if (filetype != VIDEOFILE && filetype != VIDEOSOURCEFILE && filetype != IMAGEFILE) {
+		printf("Error: get_image_from_file can only handle VIDEOFILE, VIDEOSOURCFILE and IMAGEFILE's!\n");
+		goto err_out;
+	}
 
 	// create a new pipeline
 	gchar *uri = gst_filename_to_uri(filename, &error);
@@ -731,31 +746,32 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 
 	/* if we have a buffer now, convert it to a pixbuf. It's possible that we
 	 * don't have a buffer because we went EOS right away or had an error. */
-	if (sample) {
-		GstCaps *caps;
-		GstStructure *s;
+	if (!sample) {
+		g_print("Could not get sample from GStreamer pipeline, perhaps a corrupt image?\n");
+		converter_to_return = NULL;
+		goto err_free_pipeline;
+	}
 
-		/* get the snapshot buffer format now. We set the caps on the appsink so
-		 * that it can only be an rgb buffer. The only thing we have not specified
-		 * on the caps is the height, which is dependant on the pixel-aspect-ratio
-		 * of the source material */
-		caps = gst_sample_get_caps(sample);
-		if (!caps) {
-			g_print("could not get snapshot format\n");
-			//exit(-1);
-		}
-		s = gst_caps_get_structure(caps, 0);
+	GstCaps *caps;
+	GstStructure *s;
 
-		/* we need to get the final caps on the buffer to get the size */
-		res = gst_structure_get_int(s, "width", &width);
-		res |= gst_structure_get_int(s, "height", &height);
-		if (!res) {
-			g_print("could not get snapshot dimension\n");
-			//exit(-1);
-		}
+	/* get the snapshot buffer format now. We set the caps on the appsink so
+	 * that it can only be an rgb buffer. The only thing we have not specified
+	 * on the caps is the height, which is dependant on the pixel-aspect-ratio
+	 * of the source material */
+	caps = gst_sample_get_caps(sample);
+	if (!caps) {
+		g_print("could not get snapshot format\n");
+		//exit(-1);
+	}
+	s = gst_caps_get_structure(caps, 0);
 
-	} else {
-		g_print("could not make snapshot\n");
+	/* we need to get the final caps on the buffer to get the size */
+	res = gst_structure_get_int(s, "width", &width);
+	res |= gst_structure_get_int(s, "height", &height);
+	if (!res) {
+		g_print("could not get snapshot dimension\n");
+		//exit(-1);
 	}
 
 	/* Ugly global variables... */
@@ -769,7 +785,15 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 	cglmode = GL_RGB;	// We set this globally here, and it is used somewhere later in the code that calls get_image_from_file()
 
 	GstBuffer *buffer = gst_sample_get_buffer(sample);
+	if (!buffer) {
+		printf("Warning: could not get a buffer from the GStreamer sample!\n");
+		goto err_free_sample;
+	}
 	gst_buffer_map(buffer, &map, GST_MAP_READ);
+	if (!map.data) {
+		printf("Warning: could not map GStreamer buffer!\n");
+		goto err_free_buffer;
+	}
 
 /*
 	   // Save the preview for debugging (or caching?) purposes
@@ -789,24 +813,21 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 						       0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
 #endif
 	    );
-
-	SDL_Surface *converter = ScaleSurface(loader, p2w, p2h);
-	if (!converter) {
-		SDL_FreeSurface(loader);
-		printf("Cannot read image %s ! (converting)\n", filename);
-		www = 0;
-		hhh = 0;
-		p2w = 0;
-		p2h = 0;
-		return NULL;
+	if (!loader) {
+		printf("Warning: could not create SDL_Surface loader from buffer mapping's data map.data!\n");
+		goto err_undo_mapping;
 	}
+
+	converter_to_return = ScaleSurface(loader, p2w, p2h);
+	if (!converter_to_return)
+		printf("Warning: cannot ScaleSurface loader to SDL_Surface converter!\n");
 
 	/*
 	   // Save the preview for debugging (or caching?) purposes
 	   // Note: this is made for images without an alpha mask, otherwise you need to change FALSE to TRUE and www * 3 to www * 4
-	   SDL_LockSurface(converter);
+	   SDL_LockSurface(converter_to_return);
 	   error = NULL;
-	   pixbuf = gdk_pixbuf_new_from_data(converter->pixels,
+	   pixbuf = gdk_pixbuf_new_from_data(converter_to_return->pixels,
 	   GDK_COLORSPACE_RGB, FALSE, 8, p2w, p2h, // parameter 3 means "has alpha", 4 = bits per sample
 	   GST_ROUND_UP_4(p2w * 3), NULL, NULL);        // parameter 7 = rowstride
 	   gdk_pixbuf_save(pixbuf, "get_image_from_file_converter.png", "png", &error, NULL);
@@ -815,17 +836,25 @@ static SDL_Surface *get_image_from_file(char *filename, unsigned int filetype)
 	   g_error_free(error);
 	   exit(-1);
 	   }
-	   SDL_UnlockSurface(converter);
+	   SDL_UnlockSurface(converter_to_return);
 	 */
 
+	// Cleanups
 	SDL_FreeSurface(loader);
 
+	// We don't free the converter surface, that will be done when it has been *used* by the texture setting code,
+	// or when we exit this folder and re-do a leodir() operation (= entering another folder)
+
+err_undo_mapping:
 	gst_buffer_unmap(buffer, &map);
+err_free_buffer:
+	// TODO?
+err_free_sample:
 	gst_sample_unref(sample);
-
+err_free_pipeline:
 	cleanup_media_player();
-
-	return converter;
+err_out:
+	return converter_to_return;
 }
 
 // This new thread loads the textures
