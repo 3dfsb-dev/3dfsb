@@ -1653,7 +1653,7 @@ static void init(void)
 		for (charpos = 0; charpos < tmpstr_len; charpos++) {
 			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, tmpstr[charpos]);
 		}
-		prevlen = c3 * 104.76;
+		prevlen = tmpstr_len * 104.76;
 		tmpstr = strtok(NULL, "\n");
 	}
 
