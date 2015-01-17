@@ -2888,82 +2888,83 @@ static void display(void)
 		glColor3f(0.4, 0.8, 0.6);
 		glCallList(TDFSB_HelpList);
 		glPopMatrix();
-	} else {
-		// If an object is selected, then show it onscreen
-		if (TDFSB_OBJECT_SELECTED) {
-			glPushMatrix();
-			glTranslatef(10, SWY - 18, 0);
-			glScalef(0.12, 0.12, 1);
-			glColor3f(0.5, 1.0, 0.25);
-			for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
-			}
-			glPopMatrix();
-		} else if (TDFSB_SHOW_FPS) {
-			glPushMatrix();
-			glTranslatef(10, SWY - 18, 0);
-			glScalef(0.12, 0.12, 1);
-			glColor3f(0.4, 0.8, 0.6);
-			for (charpos = 0; charpos < strlen(fpsbuf); charpos++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, fpsbuf[charpos]);
-			}
-			glPopMatrix();
+	}
+
+	// If an object is selected, then show it onscreen
+	if (TDFSB_OBJECT_SELECTED) {
+		glPushMatrix();
+		glTranslatef(10, SWY - 18, 0);
+		glScalef(0.12, 0.12, 1);
+		glColor3f(0.5, 1.0, 0.25);
+		for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
 		}
-		if (TDFSB_SHOW_CONFIG_FPS) {
-			glPushMatrix();
-			glTranslatef(10, SWY - 36, 0);
-			glScalef(0.12, 0.12, 1);
-			glColor3f(0.4, 0.8, 0.6);
-			for (charpos = 0; charpos < strlen(cfpsbuf); charpos++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, cfpsbuf[charpos]);
-			}
-			glPopMatrix();
-			TDFSB_SHOW_CONFIG_FPS--;
+		glPopMatrix();
+	}
+	if (TDFSB_SHOW_FPS) {
+		glPushMatrix();
+		glTranslatef(SWX / 2, SWY - 40, 0);
+		glScalef(0.12, 0.12, 1);
+		glColor3f(0.4, 0.8, 0.6);
+		for (charpos = 0; charpos < strlen(fpsbuf); charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, fpsbuf[charpos]);
 		}
-		if (TDFSB_SHOW_THROTTLE) {
-			glPushMatrix();
-			glTranslatef(10, SWY - 54, 0);
-			glScalef(0.12, 0.12, 1);
-			glColor3f(0.4, 0.8, 0.6);
-			for (charpos = 0; charpos < strlen(throttlebuf); charpos++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, throttlebuf[charpos]);
-			}
-			glPopMatrix();
-			TDFSB_SHOW_THROTTLE--;
+		glPopMatrix();
+	}
+	if (TDFSB_SHOW_CONFIG_FPS) {
+		glPushMatrix();
+		glTranslatef(10, SWY - 36, 0);
+		glScalef(0.12, 0.12, 1);
+		glColor3f(0.4, 0.8, 0.6);
+		for (charpos = 0; charpos < strlen(cfpsbuf); charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, cfpsbuf[charpos]);
 		}
-		if (TDFSB_SHOW_BALL) {
-			glPushMatrix();
-			glTranslatef(10, SWY - 72, 0);
-			glScalef(0.12, 0.12, 1);
-			glColor3f(0.4, 0.8, 0.6);
-			for (charpos = 0; charpos < strlen(ballbuf); charpos++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ballbuf[charpos]);
-			}
-			glPopMatrix();
-			TDFSB_SHOW_BALL--;
+		glPopMatrix();
+		TDFSB_SHOW_CONFIG_FPS--;
+	}
+	if (TDFSB_SHOW_THROTTLE) {
+		glPushMatrix();
+		glTranslatef(10, SWY - 54, 0);
+		glScalef(0.12, 0.12, 1);
+		glColor3f(0.4, 0.8, 0.6);
+		for (charpos = 0; charpos < strlen(throttlebuf); charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, throttlebuf[charpos]);
 		}
-		if (TDFSB_FLY_DISPLAY) {
-			glPushMatrix();
-			glTranslatef(SWX - 104.76 * 11 * 0.1, SWY - 18, 0);
-			glScalef(0.10, 0.10, 1);
-			glColor3f(0.6, 0.4, 0.0);
-			for (charpos = 0; charpos < 11; charpos++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, flybuf[charpos]);
-			}
-			glPopMatrix();
-			TDFSB_FLY_DISPLAY--;
+		glPopMatrix();
+		TDFSB_SHOW_THROTTLE--;
+	}
+	if (TDFSB_SHOW_BALL) {
+		glPushMatrix();
+		glTranslatef(10, SWY - 72, 0);
+		glScalef(0.12, 0.12, 1);
+		glColor3f(0.4, 0.8, 0.6);
+		for (charpos = 0; charpos < strlen(ballbuf); charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ballbuf[charpos]);
 		}
-		if (TDFSB_CLASSIC_DISPLAY) {
-			glPushMatrix();
-			glTranslatef(SWX - 104.76 * 12 * 0.1, SWY - 36, 0);
-			glScalef(0.10, 0.10, 1);
-			glColor3f(0.5, 0.5, 0.0);
-			for (charpos = 0; charpos < 11; charpos++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, classicbuf[charpos]);
-			}
-			glPopMatrix();
-			TDFSB_CLASSIC_DISPLAY--;
+		glPopMatrix();
+		TDFSB_SHOW_BALL--;
+	}
+	if (TDFSB_FLY_DISPLAY) {
+		glPushMatrix();
+		glTranslatef(SWX - 104.76 * 11 * 0.1, SWY - 18, 0);
+		glScalef(0.10, 0.10, 1);
+		glColor3f(0.6, 0.4, 0.0);
+		for (charpos = 0; charpos < 11; charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, flybuf[charpos]);
 		}
+		glPopMatrix();
+		TDFSB_FLY_DISPLAY--;
+	}
+	if (TDFSB_CLASSIC_DISPLAY) {
+		glPushMatrix();
+		glTranslatef(SWX - 104.76 * 12 * 0.1, SWY - 36, 0);
+		glScalef(0.10, 0.10, 1);
+		glColor3f(0.5, 0.5, 0.0);
+		for (charpos = 0; charpos < 11; charpos++) {
+			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, classicbuf[charpos]);
+		}
+		glPopMatrix();
+		TDFSB_CLASSIC_DISPLAY--;
 	}
 
 	if (TDFSB_SPEED_DISPLAY) {
