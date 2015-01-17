@@ -1703,9 +1703,6 @@ static void init(void)
 	glEnable(GL_LIGHT0);
 
 	mono = glutStrokeWidth(GLUT_STROKE_MONO_ROMAN, 'W');
-
-	// Initialize the textures queue
-	loaded_textures_queue = g_async_queue_new();
 }
 
 static void reshape(int w, int h)
@@ -1899,6 +1896,9 @@ static void leodir(void)
 		pthread_cancel(async_load_textures_thread_id);
 		async_load_textures_thread_id = (pthread_t) NULL;
 	}
+	// The queue will be cleaned up when the refcount reaches 0
+	// This is important, otherwise the queue pop operation in the display() function might return some bogus, already free'd object
+	g_async_queue_unref(loaded_textures_queue);
 
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 	if (TDFSB_TEX_NAMES != NULL)
@@ -2204,6 +2204,8 @@ static void leodir(void)
 	TDFSB_ANIM_STATE = 0;
 
 	// Start a new thread that loads the textures (of images and video files) and sets them
+	// Initialize the textures queue
+	loaded_textures_queue = g_async_queue_new();
 	int err = pthread_create(&async_load_textures_thread_id, NULL, &async_load_textures, NULL);
 	if (err != 0)
 		printf("Can't create thread :[%s]", strerror(err));
@@ -2445,7 +2447,6 @@ static void display(void)
 	}
 	// Check and try to retexture objects if needed
 	struct tree_entry *object_to_retexture = g_async_queue_try_pop(loaded_textures_queue);
-	// TODO: from time to time, object_to_retexture contains not NULL, but some garbage data...
 	if (object_to_retexture != NULL) {
 		printf("Object %s finished loading, drawing on texture ID %d\n", object_to_retexture->name, object_to_retexture->textureid);
 		tdb_gen_list();	// Recalculate the blocks, because the scale of the object_to_retexture has been corrected
