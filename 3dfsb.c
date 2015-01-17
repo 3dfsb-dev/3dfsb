@@ -1284,7 +1284,7 @@ static void setup_help(void)
 		exit(1);
 	}
 
-	strcat(help_str, STATIC_HELP_TEXT);
+	strcpy(help_str, STATIC_HELP_TEXT);
 
 	sprintf(tmpstr, "\"%c\"      filenames   \"%c\"   ground cross\n", TDFSB_KC_NAME, TDFSB_KC_GCR);
 	strcat(help_str, tmpstr);
