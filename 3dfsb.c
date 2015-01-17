@@ -1320,7 +1320,7 @@ static void setup_help(void)
 	free(tmpstr);
 }
 
-static int setup_config(void)
+static int read_or_create_config_file(void)
 {
 	FILE *config;
 	char conf_line[2048], conf_param[256], conf_value[1024], homefile[256];
@@ -3803,8 +3803,8 @@ int main(int argc, char **argv)
 
 	set_filetypes();
 	setup_kc();
-	if (setup_config())
-		setup_config();
+	if (read_or_create_config_file())
+		read_or_create_config_file();
 	setup_help();
 
 	if (argc == 3) {
