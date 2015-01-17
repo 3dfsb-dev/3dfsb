@@ -50,14 +50,7 @@ locate_backward(const char **needle_ptr, char *read_ptr,
         *needle_ptr = (const char *)needle_last;
     return false;
 }
-/*
-static bool
-locate_forward(const char **needle_ptr, char *read_ptr, 
-        const char *needle, const char *needle_last);
-static bool
-locate_backward(const char **needle_ptr, char *read_ptr, 
-        const char *needle, const char *needle_last);
-*/
+
 char *str_replace(char *haystack, size_t haystacksize,
                     const char *oldneedle, const char *newneedle)
 {   
