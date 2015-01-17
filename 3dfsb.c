@@ -218,7 +218,7 @@ GLfloat TDFSB_GG_R = 0.2, TDFSB_GG_G = 0.2, TDFSB_GG_B = 0.6;
 GLfloat TDFSB_BG_R = 0.0, TDFSB_BG_G = 0.0, TDFSB_BG_B = 0.0;
 GLfloat TDFSB_FN_R = 1.0, TDFSB_FN_G = 1.0, TDFSB_FN_B = 1.0;
 GLint TDFSB_BALL_DETAIL = 8, TDFSB_WAS_NOREAD = 0;
-unsigned int TDFSB_MAX_TEX_SIZE = 2048;		// This cause Out-Of-Memory at 8192 and beyond if I enter a directory with high resolution images or video. So 2048 is a nice default, this uses around 150MB of RAM when going into a directory with around 55 high resolution images.
+unsigned int TDFSB_MAX_TEX_SIZE = 1024;		// This cause Out-Of-Memory at 8192 and beyond if I enter a directory with high resolution images or video. So 1024 is a nice default, this uses around 150MB of RAM when going into a directory with around 300 high resolution images.
 GLfloat mousesense = 1.5;
 GLfloat mousespeed = 1.0;	// 1-20, with 1 being maximum
 GLfloat headspeed = 2.0;	// 1.1-2.0, with 2.0 being maximum
