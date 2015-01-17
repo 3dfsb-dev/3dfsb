@@ -76,17 +76,17 @@ if uname -s | grep -i -c "LINUX" > /dev/null; then
 
     gccopt="-g"		# debugging info by default
 
-    gcc $i386option $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS 3dfsb.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
+    gcc $i386option $gccopt $warnings $SDL_CFLAGS $GSTREAMER_CFLAGS $GTK_CFLAGS *.c -o 3dfsb $GSTREAMER_LIBS $SDL_LIBS $OTHER_LIBS $GTK_LIBS $NOPKGCONFIG_LIBS
     echo "done."
     echo "Now run the 3D File System Browser with ./3dfsb"
 elif uname -s | grep -i -c "BEOS" > /dev/null; then 
     echo "BeOS detected.";
     echo "compiling...";
-    gcc $SDL_LIBS $SDL_CFLAGS -I/boot/develop/tools/gnupro/include/ -I/boot/develop/headers/be/opengl/ -L/boot/home/config/lib -L/boot/develop/tools/gnupro/lib/ -lSDL_image -lGL -lglut -lmagic -D_THREAD_SAFE -O2 -x c -o 3dfsb 3dfsb.c;
+    gcc $SDL_LIBS $SDL_CFLAGS -I/boot/develop/tools/gnupro/include/ -I/boot/develop/headers/be/opengl/ -L/boot/home/config/lib -L/boot/develop/tools/gnupro/lib/ -lSDL_image -lGL -lglut -lmagic -D_THREAD_SAFE -O2 -x c -o 3dfsb *.c
 elif uname -s | grep -i -c "BSD" > /dev/null; then 
     echo "BSD detected.";
     echo "compiling...";
-    gcc $SDL_LIBS $SDL_CFLAGS -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -lSDL_image -lGL -lGLU -lglut -lXmu -lXi -lXext -lX11 -lm -lmagic -D_THREAD_SAFE -O2 -x c -o 3dfsb 3dfsb.c;
+    gcc $SDL_LIBS $SDL_CFLAGS -I/usr/local/include -I/usr/include/ -I/usr/X11R6/include -L/usr/lib/ -L/usr/local/lib/ -L/usr/X11R6/lib -lSDL_image -lGL -lGLU -lglut -lXmu -lXi -lXext -lX11 -lm -lmagic -D_THREAD_SAFE -O2 -x c -o 3dfsb *.c
 else
     echo "Unknown OS. If you are running Linux, BeOS or";
     echo "FreeBSD please send me the output of 'uname -s'." 

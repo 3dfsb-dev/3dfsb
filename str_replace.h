@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <sys/types.h>
+
 // str_replace(haystack, haystacksize, oldneedle, newneedle) --
 //  Search haystack and replace all occurences of oldneedle with newneedle.
 //  Resulting haystack contains no more than haystacksize characters (including the '\0').

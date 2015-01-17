@@ -68,7 +68,7 @@
 // Own headers
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-qual"	// feel free to fix this warning so this pragma can be removed :-)
-#include "common.c"
+#include "str_replace.h"
 #pragma GCC diagnostic pop
 
 #ifndef _GLUfuncptr
