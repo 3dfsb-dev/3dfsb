@@ -66,10 +66,7 @@
 #include "images/icon_pdf.xpm"
 
 // Own headers
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-qual"	// feel free to fix this warning so this pragma can be removed :-)
 #include "str_replace.h"
-#pragma GCC diagnostic pop
 
 #ifndef _GLUfuncptr
 #define _GLUfuncptr void*
