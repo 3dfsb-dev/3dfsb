@@ -1603,7 +1603,7 @@ static void stop_move(void)
 
 static Uint32 fps_timer(void)
 {
-	sprintf(fpsbuf, "FPS: %d", (int)((1000 * TDFSB_FPS_DISP) / TDFSB_FPS_DT) - 1);
+	sprintf(fpsbuf, "FPS: %d", (int)((1000 * TDFSB_FPS_DISP) / TDFSB_FPS_DT));
 	TDFSB_FPS_DISP = 0;
 	return (TDFSB_FPS_DT);
 }
