@@ -168,7 +168,7 @@ unsigned char ch, TDFSB_KEY_FINDER = 0;
 GLuint TDFSB_TEX_NUM;
 GLuint *TDFSB_TEX_NAMES;
 
-char *help_str, *tmpstr, *help_copy;
+char *help_str, *help_copy;
 int cnt;
 int forwardkeybuf = 0;
 int leftkeybuf = 0;
@@ -437,6 +437,7 @@ static void ende(int code)
 	struct tree_entry *help;
 
 	cleanup_media_player();
+	gst_deinit();
 
 	magic_close(magic);	// Mimetype database
 
@@ -469,6 +470,7 @@ static void ende(int code)
 		root = NULL;
 		total_objects_in_grid = 0;
 	}
+	free(help_str);		// This can only be free'd in the end, because we need it every time the user asks for help
 	SDL_Quit();
 	exit(code);
 }
@@ -1275,9 +1277,9 @@ static void setup_help(void)
 {
 	help_str = (char *)malloc(1024 * sizeof(char));
 	help_copy = (char *)malloc(1024 * sizeof(char));
-	tmpstr = (char *)malloc(64 * sizeof(char));
+	char * tmpstr = (char *)malloc(64 * sizeof(char));
 
-	if (!(help_copy && tmpstr)) {
+	if (!help_copy || !tmpstr) {
 		printf("Malloc Failure setup_help \n");
 		exit(1);
 	}
@@ -1320,6 +1322,7 @@ static void setup_help(void)
 	sprintf(tmpstr, "\"%c\"  print GL info    \"%c\" show/hide help\n", TDFSB_KC_INFO, TDFSB_KC_HELP);
 	strcat(help_str, tmpstr);
 
+	free(tmpstr);
 }
 
 static int setup_config(void)
@@ -1647,7 +1650,7 @@ static void init(void)
 	prevlen = 0;
 	cnt = 0;
 	strcpy(help_copy, help_str);
-	tmpstr = strtok(help_copy, "\n");
+	char * tmpstr = strtok(help_copy, "\n");
 	while (tmpstr != NULL) {
 		cnt++;
 		glTranslatef(-prevlen, -14 / 0.09, 0);
@@ -1658,6 +1661,7 @@ static void init(void)
 		prevlen = tmpstr_len * 104.76;
 		tmpstr = strtok(NULL, "\n");
 	}
+	free(help_copy);	// help_copy is only used to create the TDFSB_HelpList
 
 	glEndList();
 
