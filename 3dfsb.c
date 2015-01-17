@@ -156,7 +156,6 @@ char *FCptr;
 
 char temp_trunc[4096];
 char TDFSB_CURRENTPATH[4096], fullpath[4096], yabuf[4096], fpsbuf[12], cfpsbuf[12], throttlebuf[14], ballbuf[20], flybuf[12], classicbuf[12];
-//char home[512];
 char TDFSB_CUSTOM_EXECUTE_STRING[4096];
 char TDFSB_CES_TEMP[4096];
 char *alert_kc = "MALFORMED KEYBOARD MAP";
@@ -370,7 +369,6 @@ void *param_value[] = { &TDFSB_BALL_DETAIL, &TDFSB_CURRENTPATH, &TDFSB_MAX_TEX_S
 };
 
 // Default values
-// Too conservative: char *pdef[] = { "20", "/", "256", "400", "300", "640", "480", "0", "0.2", "0.2", "0.6", "yes", "no", "yes", "0.0", "0.0", "0.0", "no", "X", "yes", "no", "no", "no", "25", "2.0", "1.0", "1.0", "1.0", "1.0", "1", "cd \"%s\"; xterm&" };
 char *pdef[] = { "20", "/", "0", "1024", "768", "1024", "768",
 	"0", "0.2", "0.2",	// TDFSB_GG_R/G/B
 	"0.6", "yes", "no", "yes",
