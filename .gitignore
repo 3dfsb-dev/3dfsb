@@ -37,3 +37,35 @@
 
 # Generated binaries
 3dfsb
+
+# CMake and Make files
+CMakeFiles/
+autom4te.cache/
+m4/
+scripts/
+utests/testgcal
+
+CMakeCache.txt
+Doxyfile
+Makefile
+Makefile.in
+aclocal.m4
+configure
+config.h
+config.h.in
+config.status
+libtool
+stamp-h1
+
+.*
+*.o*
+*.la*
+*.lo*
+*.pc*
+*.so*
+
+# Exclude only top-level *.cmake files
+/*.cmake
+
+# We provide custom cmake files in cmake/Modules
+#cmake/
