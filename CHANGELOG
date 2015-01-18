@@ -1,3 +1,9 @@
+Version 1.1.1 (18-01-2015)
+**************************
+- Stability improvements
+- Cleanups
+- Support for compiling on a 64-bit Linux for 32-bit Linux machines
+
 Version 1.1 (14-01-2015)
 ************************
 - No more waiting: fly into your directories instantly, with file previews being loaded asynchronously in the background
