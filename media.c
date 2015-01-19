@@ -394,6 +394,9 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 	cleanup_media_player();
  err_out:
 	toreturn = (texture_description*)malloc(sizeof(texture_description));
+	toreturn->texturesurface = converter_to_return;
+	toreturn->originalwidth = www;
+	toreturn->originalwidth = hhh;
 	return toreturn;
 }
 
