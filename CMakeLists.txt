@@ -1,8 +1,33 @@
+# CMake build file for 3dfsb
+# Use:
+# cmake . ; make
+# ...to build 3dfsb.
+# More ideas to improve this file: http://sourceforge.net/p/hugin/hugin/ci/default/tree/CMakeLists.txt
 cmake_minimum_required(VERSION 2.8)
 
 project(3dfsb C)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
+
+#
+# Check build type and set options accordingly
+#
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
+# allow user to specify lib suffix
+set(LIB_SUFFIX "" CACHE STRING "Define suffix of lib directory name (32/64)" )
+
+IF(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  MESSAGE("Building in Debug mode, resulting programs will be SLOW")
+  ADD_DEFINITIONS(-DDEBUG)
+  IF(UNIX)
+    ADD_DEFINITIONS(-Wall)
+  ENDIF(UNIX)
+ENDIF(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 
 find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
