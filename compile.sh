@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Compile 3dfsb using sdl-config and pkg-config to find the necessary CFLAGS paths and linker flags
 
 usage() {
@@ -26,7 +26,7 @@ i386="$1"
 usage
 
 # On 64 bit machines, pkg-config will search for pkg-configs in /usr/lib/x86_64-linux-gnu/pkgconfig/ by default
-if [ "$i386" == "i386" ]; then
+if [ "$i386" = "i386" ]; then
 	export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig/
 	i386option="-m32"
 fi
