@@ -149,31 +149,24 @@ sudo apt-get install gstreamer1.0-plugins-* gstreamer1.0-libav
 Compilation
 ===========
 
-There is a small shell script which contains a standard compile string for every OS (Linux, BeOS and BSD). So please try:
+There is a small shell script which contains a standard compile string for every OS (Linux, BeOS and BSD).
+So please try:
 
 ./compile.sh
 
-If something goes wrong error messages will appear. If
-you don't know how to solve them don't hesitate and
-report the error messages to me.
+Alternatively, CMake can be used to compile.
+For this, try:
 
-If ./compile.sh was successful you can call the 3dfsb:
+cmake .
+make
+
+If the compilation was successful you can call the 3dfsb:
 
 ./3dfsb
-
-or copy the 3dfsb binary to your path, e.g. /usr/bin/
-
-Once you have a working 3dfsb binary you may try to
-edit the compile.sh for a more optimized version.
-You could change the -O2 argument (opimization) to a
-higher value (e.g. -O6) or add machine specific
-optimizations (e.g.  -march=i686 -mcpu=i686).
-Read 'man gcc' for additional arguments.
 
 
 ADDITIONAL NOTES
 ================
-
 
 FreeBSD:
 
