@@ -470,7 +470,7 @@ static void *async_load_textures(void *arg)
 			if (result) {
 				object->originalwidth = result->originalwidth;
 				object->originalheight = result->originalheight;
-				object->textureformat = result->cglmode;
+				object->textureformat = result->textureformat;
 				object->texturesurface = result->texturesurface;
 			}
 		} else if (object->regtype == PDFFILE) {

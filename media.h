@@ -6,7 +6,7 @@
 struct texture_description {
 	unsigned int originalwidth;
 	unsigned int originalheight;
-	unsigned long cglmode;
+	unsigned long textureformat;
 	SDL_Surface * texturesurface;
 };
 

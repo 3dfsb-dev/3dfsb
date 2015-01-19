@@ -320,8 +320,7 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 	unsigned long int max;
 	for (max = 1; (max < www || max < hhh) && max < TDFSB_MAX_TEX_SIZE; max *= 2) ;
 	p2h = p2w = max;
-	// TODO:
-	// unsigned long cglmode = GL_RGB;	// We set this globally here, and it is used somewhere later in the code that calls get_image_from_file()
+	unsigned long cglmode = GL_RGB;
 
 	GstBuffer *buffer = gst_sample_get_buffer(sample);
 	if (!buffer) {
@@ -393,11 +392,15 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
  err_free_pipeline:
 	cleanup_media_player();
  err_out:
-	toreturn = (texture_description*)malloc(sizeof(texture_description));
-	toreturn->texturesurface = converter_to_return;
-	toreturn->originalwidth = www;
-	toreturn->originalwidth = hhh;
-	return toreturn;
+	if (converter_to_return) {
+		toreturn = (texture_description*)malloc(sizeof(texture_description));
+		toreturn->texturesurface = converter_to_return;
+		toreturn->originalwidth = www;
+		toreturn->originalheight = hhh;
+		toreturn->textureformat = cglmode;
+		return toreturn;
+	} else
+		return NULL;
 }
 
 void toggle_media_pipeline(void) {
