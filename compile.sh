@@ -4,8 +4,7 @@
 usage() {
 	echo "Usage: $0 [i386]"
 	echo "Add the i386 option to compile for 32-bit (i386) architectures on a 64-bit machine"
-	echo "Starting build in 2 seconds..."
-	sleep 3
+	#echo "Starting build in 2 seconds..."; sleep 2
 }
 execfind ()
 {
