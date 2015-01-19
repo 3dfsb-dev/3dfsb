@@ -41,12 +41,12 @@ GstBuffer *videobuffer;
 /* fakesink handoff callback */
 static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, gpointer data)
 {
-        UNUSED(fakesink);
-        UNUSED(pad);
-        UNUSED(data);
+	UNUSED(fakesink);
+	UNUSED(pad);
+	UNUSED(data);
 
-        framecounter++;
-        videobuffer = buf; 
+	framecounter++;
+	videobuffer = buf;
 }
 
 void cleanup_media_player(void)
@@ -58,7 +58,7 @@ void cleanup_media_player(void)
 	}
 }
 
-void update_media_texture(tree_entry *TDFSB_MEDIA_FILE)
+void update_media_texture(tree_entry * TDFSB_MEDIA_FILE)
 {
 	// Ensure we don't refresh the texture if nothing changed
 	if (framecounter == displayedframenumber) {
@@ -202,7 +202,7 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 	GError *error = NULL;
 
 	// Return values:
-	texture_description * toreturn = NULL;
+	texture_description *toreturn = NULL;
 	SDL_Surface *converter_to_return = NULL;
 	unsigned long www = 0;
 	unsigned long hhh = 0;
@@ -393,7 +393,7 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 	cleanup_media_player();
  err_out:
 	if (converter_to_return) {
-		toreturn = (texture_description*)malloc(sizeof(texture_description));
+		toreturn = (texture_description *) malloc(sizeof(texture_description));
 		toreturn->texturesurface = converter_to_return;
 		toreturn->originalwidth = www;
 		toreturn->originalheight = hhh;
@@ -403,7 +403,8 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 		return NULL;
 }
 
-void toggle_media_pipeline(void) {
+void toggle_media_pipeline(void)
+{
 	GstState state;
 	gst_element_get_state(GST_ELEMENT(pipeline), &state, NULL, GST_CLOCK_TIME_NONE);
 
@@ -417,7 +418,8 @@ void toggle_media_pipeline(void) {
 	}
 }
 
-void play_media(char * fullpath, tree_entry * TDFSB_OBJECT_SELECTED) {
+void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
+{
 	//printf("Starting GStreamer pipeline for URI %s\n", fullpath);
 
 	GstBus *bus = NULL;

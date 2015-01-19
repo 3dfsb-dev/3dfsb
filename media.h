@@ -7,7 +7,7 @@ struct texture_description {
 	unsigned int originalwidth;
 	unsigned int originalheight;
 	unsigned long textureformat;
-	SDL_Surface * texturesurface;
+	SDL_Surface *texturesurface;
 };
 
 typedef struct texture_description texture_description;
@@ -28,9 +28,9 @@ SDL_Surface *ScaleSurface(SDL_Surface * Surface, double Width, double Height);
  */
 texture_description *get_image_from_file(char *filename, unsigned int filetype, unsigned int TDFSB_MAX_TEX_SIZE);
 
-void update_media_texture(tree_entry *TDFSB_MEDIA_FILE);
+void update_media_texture(tree_entry * TDFSB_MEDIA_FILE);
 
 void toggle_media_pipeline(void);
-void play_media(char * fullpath, tree_entry * TDFSB_OBJECT_SELECTED);
+void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED);
 
 #endif

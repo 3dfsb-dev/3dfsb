@@ -161,7 +161,7 @@ GLfloat TDFSB_GG_R = 0.2, TDFSB_GG_G = 0.2, TDFSB_GG_B = 0.6;
 GLfloat TDFSB_BG_R = 0.0, TDFSB_BG_G = 0.0, TDFSB_BG_B = 0.0;
 GLfloat TDFSB_FN_R = 1.0, TDFSB_FN_G = 1.0, TDFSB_FN_B = 1.0;
 GLint TDFSB_BALL_DETAIL = 8, TDFSB_WAS_NOREAD = 0;
-unsigned int TDFSB_MAX_TEX_SIZE = 1024;		// This cause Out-Of-Memory at 8192 and beyond if I enter a directory with high resolution images or video. So 1024 is a nice default, this uses around 150MB of RAM when going into a directory with around 300 high resolution images.
+unsigned int TDFSB_MAX_TEX_SIZE = 1024;	// This cause Out-Of-Memory at 8192 and beyond if I enter a directory with high resolution images or video. So 1024 is a nice default, this uses around 150MB of RAM when going into a directory with around 300 high resolution images.
 GLfloat mousesense = 1.5;
 GLfloat mousespeed = 1.0;	// 1-20, with 1 being maximum
 GLfloat headspeed = 2.0;	// 1.1-2.0, with 2.0 being maximum
@@ -466,7 +466,7 @@ static void *async_load_textures(void *arg)
 				fclose(fileptr);
 			}
 		} else if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
-			texture_description * result = get_image_from_file(async_fullpath, object->regtype, TDFSB_MAX_TEX_SIZE);
+			texture_description *result = get_image_from_file(async_fullpath, object->regtype, TDFSB_MAX_TEX_SIZE);
 			if (result) {
 				object->originalwidth = result->originalwidth;
 				object->originalheight = result->originalheight;
@@ -857,7 +857,7 @@ static void setup_help(void)
 {
 	help_str = (char *)malloc(1024 * sizeof(char));
 	help_copy = (char *)malloc(1024 * sizeof(char));
-	char * tmpstr = (char *)malloc(64 * sizeof(char));
+	char *tmpstr = (char *)malloc(64 * sizeof(char));
 
 	if (!help_copy || !tmpstr) {
 		printf("Malloc Failure setup_help \n");
@@ -1230,7 +1230,7 @@ static void init(void)
 	prevlen = 0;
 	cnt = 0;
 	strcpy(help_copy, help_str);
-	char * tmpstr = strtok(help_copy, "\n");
+	char *tmpstr = strtok(help_copy, "\n");
 	while (tmpstr != NULL) {
 		cnt++;
 		glTranslatef(-prevlen, -14 / 0.09, 0);
@@ -1483,7 +1483,7 @@ static void leodir(void)
 	TDFSB_TEX_NUM = 0;
 	TDFSB_TEX_NAMES = NULL;
 
-	TDFSB_MEDIA_FILE = NULL;        // Set this to NULL, because the later functions check it to know what they should display
+	TDFSB_MEDIA_FILE = NULL;	// Set this to NULL, because the later functions check it to know what they should display
 	cleanup_media_player();	// stop any playing media
 
 	if (total_objects_in_grid != 0) {
@@ -2467,7 +2467,6 @@ static void display(void)
 		glCallList(TDFSB_HelpList);
 		glPopMatrix();
 	}
-
 	// If an object is selected, then show it onscreen
 	if (TDFSB_OBJECT_SELECTED) {
 		glPushMatrix();
