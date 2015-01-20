@@ -36,10 +36,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <GL/gl.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
