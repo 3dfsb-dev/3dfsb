@@ -1,17 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <SDL.h>
-#include <SDL_image.h>
-
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-qual"
 #include <gst/gst.h>
