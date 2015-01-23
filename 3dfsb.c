@@ -1791,6 +1791,7 @@ static void display(void)
 		mz = object->posz;
 		my = object->posy;
 
+		// Show the filenames
 		if (TDFSB_FILENAMES) {
 			glPushMatrix();
 			if (!((object->mode) & 0x20))
@@ -1823,8 +1824,13 @@ static void display(void)
 				}
 			}
 
-			// TODO: the ".." entry's font is too small...
-			glScalef(0.005, 0.005, 0.005);
+			// Make the font a bit bigger for the . folders, otherwise it is too small
+			if (object->name[0] == '.') {
+				glScalef(0.05, 0.05, 0.05);
+			} else {
+				glScalef(0.005, 0.005, 0.005);
+			}
+
 
 			if (!((object->mode) & 0x20)) {
 				// Why are these colors so high, instead of the default 1.0, 1.0, 1.0?
