@@ -438,6 +438,13 @@ static void *async_load_textures(void *arg)
 	return NULL;
 }
 
+/*
+ * Redraw the (fairly static) list of solid shapes in the world,
+ * which should only be updated when first entering a directory
+ * or when a new texture is loaded, which means the texture size comes known,
+ * and the the size of (one of) the blocks must be updated.
+ * About ~300 lines of code
+ */
 static void tdb_gen_list(void)
 {
 	int mat_state;
@@ -982,6 +989,9 @@ static void insert(char *value, char *linkpath, unsigned int mode, off_t size, u
 	}
 }
 
+/*
+ * Directory handling code, about ~450 lines of code
+ */
 static char **leoscan(char *ls_path)
 {
 	DIR *ls_dir;
