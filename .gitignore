@@ -51,7 +51,6 @@ Makefile
 Makefile.in
 aclocal.m4
 configure
-config.h
 config.h.in
 config.status
 libtool
