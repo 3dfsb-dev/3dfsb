@@ -2943,7 +2943,7 @@ int main(int argc, char **argv)
 		exit(0);
 	} else if (argc == 2) {
 		if ((!strcmp(argv[1], "--version") || !strcmp(argv[1], "-V"))) {
-			printf("TDFSB 0.0.10\n");
+			printf("3DFSB v1.1.1\n");
 			exit(0);
 		} else {
 			printf("Wrong args(1).\n");
