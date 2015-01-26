@@ -347,7 +347,7 @@ static void *async_load_textures(void *arg)
 
 		// For regular files or device files (because the others don't have textures (yet),
 		// but I think these can be either symlinks or real files because of the way this "mode" property is devised...
-		if ((((object->mode) & 0x1F) != 0) && ((object->mode) & 0x1F) != 2)
+		if ((((object->mode) & 0x1F) != 0) && ((object->mode) & 0x1F) != 2 && (object->regtype != PROCESS))
 			continue;
 
 		char async_fullpath[4096] = { 0 };	// allocate on the stack for automatic free'ing
@@ -366,7 +366,7 @@ static void *async_load_textures(void *arg)
 				fread(object->textfilecontents, sizeof(char), 1000, fileptr);
 				fclose(fileptr);
 			}
-		} else if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) {
+		} else if (object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE || object->regtype == PROCESS) {
 			texture_description *result = get_image_from_file(async_fullpath, object->regtype, TDFSB_MAX_TEX_SIZE);
 			if (result) {
 				object->originalwidth = result->originalwidth;
@@ -464,14 +464,14 @@ static void tdb_gen_list(void)
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
-		if (((help->mode) & 0x1F) == 1 || ((help->mode) & 0x1F) == 11) {	// Directory
+		if ((((help->mode) & 0x1F) == 1 || ((help->mode) & 0x1F) == 11) && help->regtype != PROCESS) {	// Directory
 			glTranslatef(mx, my, mz);
 			if ((help->mode) & 0x20)
 				glutSolidSphere(0.5, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
-		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE))) {	// Regular file, except VIDEOSOURCEFILE's, which are character devices
-			if (((help->regtype == IMAGEFILE) || (help->regtype == PDFFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) {
+		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE)) || (help->regtype == PROCESS)) {	// Regular file, except VIDEOSOURCEFILE's, which are character devices
+			if ((((help->regtype == IMAGEFILE) || (help->regtype == PDFFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE) ) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) || (help->regtype == PROCESS)) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -489,7 +489,7 @@ static void tdb_gen_list(void)
 				}
 
 				// Link the texture to the cube
-				//printf("Linking texture with id %d to cube for object %s\n", help->textureid, help->name);
+				printf("Linking texture with id %d to cube for object with name %s\n", help->textureid, help->name);
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D, help->textureid);
 				if (TDFSB_ICUBE)
@@ -729,6 +729,7 @@ static void set_filetypes(void)
 	nsuff[AUDIOFILE] = "AUDIO-MP3";
 	nsuff[VIDEOSOURCEFILE] = "VIDEOSOURCE";
 	nsuff[UNKNOWNFILE] = "UNKNOWN";
+	nsuff[PROCESS] = "PROCESS";
 }
 
 static void setup_help(void)
@@ -1241,8 +1242,10 @@ static void leodir(void)
 				reti = regexec(&regex, fullpath, 0, NULL, 0);
 				if (!reti ){
 					printf("Match of %s\n", fullpath);
+					temptype = PROCESS;
 				} else if (reti == REG_NOMATCH ){
 					printf("No match of %s\n", fullpath);
+					temptype = DIRECTORY;
 				} else {
 					regerror(reti, &regex, msgbuf, sizeof(msgbuf));
 					fprintf(stderr, "Regex match failed: %s\n", msgbuf);
@@ -1252,7 +1255,7 @@ static void leodir(void)
 				regfree(&regex);
 			}
 			// Count the number of textures we'll need, so we can allocate them already below
-			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE)
+			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS) 
 				TDFSB_TEX_NUM++;
 
 			// Setting some default scale (before having read the file) and position
@@ -1379,7 +1382,7 @@ static void leodir(void)
 	for (help = root; help; help = help->next) {
 		temptype = help->regtype;
 		// TODO: this is also checked somewhere above, can't we do this in the same loop as above instead of a seperate one?
-		if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE)
+		if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS)
 			help->textureid = TDFSB_TEX_NAMES[c1++];
 	}
 
@@ -1528,7 +1531,7 @@ static void approach(void)
 		break;
 
 	case 2:
-		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE) {	// If we have a texture
+		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE || TDFSB_OA->regtype == PROCESS) {	// If we have a texture
 			if (TDFSB_ANIM_COUNT) {
 				smoox += TDFSB_OA_DX;
 				tposx = smoox;
@@ -1681,7 +1684,7 @@ static void display(void)
 		printf("Object %s finished loading, drawing on texture ID %d\n", object_to_retexture->name, object_to_retexture->textureid);
 		tdb_gen_list();	// Recalculate the blocks, because the scale of the object_to_retexture has been corrected
 		if (object_to_retexture->texturesurface != NULL) {
-			//printf("Texturesurface of object is not NULL, setting it...\n");
+			printf("Texturesurface of object is not NULL, setting it...\n");
 
 			SDL_LockSurface(object_to_retexture->texturesurface);
 
@@ -1782,7 +1785,7 @@ static void display(void)
 					if (!((object->mode) & 0x20)) {
 						if ((senx > object->posx - object->scalex) && (senx < object->posx + object->scalex))
 							if ((seny > object->posy - object->scaley) && (seny < object->posy + object->scaley))
-								if (((senz > object->posz - object->scalez) && (senz < object->posz + object->scalez)) || ((object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE) && ((senz > object->posz - object->scalez - 1) && (senz < object->posz + object->scalez + 1)))) {
+								if (((senz > object->posz - object->scalez) && (senz < object->posz + object->scalez)) || ((object->regtype == IMAGEFILE || object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE || object->regtype == PROCESS) && ((senz > object->posz - object->scalez - 1) && (senz < object->posz + object->scalez + 1)))) {
 									find_entry = object;
 									find_dist = odist;
 								}
@@ -2619,7 +2622,7 @@ static int speckey(int key)
 			}
 			break;
 		case SDLK_RETURN:
-			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE || TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE || TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE)) {
+			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE || TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE || TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE || TDFSB_OBJECT_SELECTED->regtype == PROCESS)) {
 				if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
 					toggle_media_pipeline();
 				} else {

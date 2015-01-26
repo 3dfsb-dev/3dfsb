@@ -11,7 +11,7 @@
 #define PI  3.14159265
 #define SQF 0.70710
 
-#define NUMBER_OF_FILETYPES     9
+#define NUMBER_OF_FILETYPES     10
 #define DIRECTORY       0
 #define IMAGEFILE       1
 #define TEXTFILE        2
@@ -21,6 +21,7 @@
 #define AUDIOFILE       6
 #define VIDEOSOURCEFILE 7
 #define UNKNOWNFILE     8
+#define PROCESS		9
 
 #define MIME_AUDIO      "audio/"
 #define MIME_IMAGE      "image/"

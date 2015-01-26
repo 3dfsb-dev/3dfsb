@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-qual"
 #include <gst/gst.h>
@@ -193,8 +195,8 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 	unsigned long p2w = 0;
 	unsigned long p2h = 0;
 
-	if (filetype != VIDEOFILE && filetype != VIDEOSOURCEFILE && filetype != IMAGEFILE) {
-		printf("Error: get_image_from_file can only handle VIDEOFILE, VIDEOSOURCFILE and IMAGEFILE's!\n");
+	if (filetype != VIDEOFILE && filetype != VIDEOSOURCEFILE && filetype != IMAGEFILE && filetype != PROCESS) {
+		printf("Error: get_image_from_file can only handle VIDEOFILE, VIDEOSOURCFILE, PROCESS and IMAGEFILE's!\n");
 		goto err_out;
 	}
 	// create a new pipeline
@@ -210,8 +212,18 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 	} else if (filetype == VIDEOSOURCEFILE) {
 		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
 		// Idea for speedup: set queue-size to 1 instead of 2
+	} else if (filetype == PROCESS) {
+		// Get PID from filename
+		// Get Window ID(s) for this PID
+		//int pid = 5288;
+		int windowid = 16777223;
+		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", windowid);
+		sleep(1);
+		//system("xdotool search --pid 5288\n");
+		system("xdotool windowraise 16777223\n");
+		//sleep(1);
 	}
-	//printf("gst-launch-1.0 %s\n", descr);
+	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = (GstPipeline *) (gst_parse_launch(descr, &error));
 
 	if (error != NULL) {
@@ -244,7 +256,7 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 		//exit(-1);
 	}
 
-	if (filetype == VIDEOFILE) {	// VIDEOSOURCEFILE's and IMAGEFILE's cannot be seeked
+	if (filetype == VIDEOFILE) {	// VIDEOSOURCEFILE, IMAGEFILE and PROCESS cannot be seeked
 		/* get the duration */
 		gst_element_query_duration(GST_ELEMENT(pipeline), GST_FORMAT_TIME, &duration);
 
@@ -404,7 +416,7 @@ void toggle_media_pipeline(void)
 
 void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 {
-	//printf("Starting GStreamer pipeline for URI %s\n", fullpath);
+	printf("Starting GStreamer pipeline for URI %s\n", fullpath);
 
 	GstBus *bus = NULL;
 	GstElement *fakesink = NULL;
@@ -424,7 +436,18 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		descr = g_strdup_printf("uridecodebin uri=%s ! audioconvert ! playsink", uri);
 	} else if (TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE) {
 		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", fullpath, TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
+	} else if (TDFSB_OBJECT_SELECTED->regtype == PROCESS) {
+		// Get PID from filename
+		// Get Window ID(s) for this PID
+		//int pid = 5288;
+		int windowid = 16777223;
+		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink     name=fakesink0 sync=1", windowid, TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
+		sleep(1);
+		//system("xdotool search --pid 5288\n");
+		system("xdotool windowraise 16777223\n");
+		//sleep(1);
 	}
+
 	// Use this for pulseaudio:
 	// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=3dfsb", uri);
 
