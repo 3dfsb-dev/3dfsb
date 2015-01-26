@@ -216,12 +216,20 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 		// Get PID from filename
 		// Get Window ID(s) for this PID
 		//int pid = 5288;
-		int windowid = 16777223;
+		int windowid = 16777223; // used system("xdotool search --pid 5288\n");
 		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", windowid);
-		sleep(1);
-		//system("xdotool search --pid 5288\n");
-		system("xdotool windowraise 16777223\n");
-		//sleep(1);
+
+		// Experiment with this?
+		//system("xdotool set_window  --overrideredirect 0 16777223");
+
+		// Works:
+		//system("xdotool windowraise 16777223\n"); sleep(1);	// Wait until the window is raised, otherwise we might end up with a gray screen
+
+		// Changes focus, but does not redraw:
+		//system("xdotool windowfocus 16777223\n"); sleep(0.5);	// Wait until the window is raised, otherwise we might end up with a gray screen
+		// Works, and is faster because we have --sync and therefore don't need sleep()
+		// BUT this may change the active desktop... perhaps fix this with get_desktop and set_desktop?
+		system("xdotool windowactivate --sync 16777223\n");
 	}
 	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = (GstPipeline *) (gst_parse_launch(descr, &error));
@@ -373,6 +381,11 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 	   SDL_UnlockSurface(converter_to_return);
 	 */
 
+	// If we do this, the window is gone, and can't be brought back with windowraise
+	//system("xdotool windowminimize --sync 16777223\n");
+
+	// sleep(1);	// Wait until the window is raised, otherwise we might end up with a gray screen
+
 	// Cleanups
 	SDL_FreeSurface(loader);
 
@@ -442,10 +455,10 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		//int pid = 5288;
 		int windowid = 16777223;
 		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink     name=fakesink0 sync=1", windowid, TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
-		sleep(1);
+		//sleep(1);
 		//system("xdotool search --pid 5288\n");
 		system("xdotool windowraise 16777223\n");
-		//sleep(1);
+		sleep(1);
 	}
 
 	// Use this for pulseaudio:
