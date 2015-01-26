@@ -2642,6 +2642,10 @@ static int speckey(int key)
 	return (0);
 }
 
+/*
+ * When a keyup event is received, check whether a special key [1] is received, to stop some motion in a direction
+ * [1]: special keys are: up, down, left, right, pageup, pagedown
+ */
 static int specupkey(int key)
 {
 	if (!TDFSB_ANIM_STATE) {
@@ -2713,6 +2717,7 @@ static int keyboardup(unsigned char key)
 		return (0);
 }
 
+/* Handle a keydown event */
 static int keyboard(unsigned char key)
 {
 
@@ -2721,7 +2726,6 @@ static int keyboard(unsigned char key)
 			printf("\nBye bye...\n\n");
 			ende(0);
 		}
-
 		else if (key == TDFSB_KC_FLY) {
 			TDFSB_MODE_FLY = 1 - TDFSB_MODE_FLY;
 			if (TDFSB_MODE_FLY)

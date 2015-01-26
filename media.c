@@ -217,7 +217,7 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 		// Get Window ID(s) for this PID
 		//int pid = 5288;
 		int windowid = 16777223; // used system("xdotool search --pid 5288\n");
-		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", windowid);
+		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! appsink name=sink sync=false caps=\"" CAPS "\"", windowid);
 
 		// Experiment with this?
 		//system("xdotool set_window  --overrideredirect 0 16777223");
