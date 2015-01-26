@@ -459,12 +459,16 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		//system("xdotool search --pid 5288\n");
 		system("xdotool windowraise 37748743\n");
 		sleep(1);
+	} else if (TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
+		system("/opt/TurboVNC/bin/vncserver -geometry 1920x1080 &"); sleep(1);
+		//descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
+		descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! fakesink name=fakesink0 sync=1");
 	}
 
 	// Use this for pulseaudio:
 	// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=3dfsb", uri);
 
-	//printf("gst-launch-1.0 %s\n", descr);
+	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = (GstPipeline *) gst_parse_launch(descr, &error);
 
 	if (error != NULL) {

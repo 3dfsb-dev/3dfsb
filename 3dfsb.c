@@ -2633,6 +2633,10 @@ static int speckey(int key)
 					play_media(fullpath, TDFSB_OBJECT_SELECTED);
 					TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 				}
+			} else if (TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
+				cleanup_media_player();	// Stop all other playing media
+				play_media(fullpath, TDFSB_OBJECT_SELECTED);
+				TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 			}
 			break;
 

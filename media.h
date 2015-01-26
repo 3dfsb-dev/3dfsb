@@ -31,6 +31,7 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 void update_media_texture(tree_entry * TDFSB_MEDIA_FILE);
 
 void toggle_media_pipeline(void);
+void run_binary(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED);
 void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED);
 
 #endif
