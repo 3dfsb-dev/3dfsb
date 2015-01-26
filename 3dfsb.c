@@ -50,6 +50,8 @@
 
 #include <magic.h>
 
+#include <regex.h>
+
 // For saving pixbuf's to a file for debugging
 /*
 #pragma GCC diagnostic push
@@ -1226,7 +1228,28 @@ static void leodir(void)
 				printf("This is a v4l file!\n");
 				temptype = VIDEOSOURCEFILE;
 			} else if ((mode & 0x01) == 1) {
-				temptype = DIRECTORY;
+				regex_t regex;
+				int reti;
+				char msgbuf[100];
+				/* Compile regular expression */
+				reti = regcomp(&regex, "/proc/[[:digit:]]*$", 0);
+				if (reti) {
+				    fprintf(stderr, "Could not compile regex\n");
+				    exit(1);
+				}
+				/* Execute regular expression */
+				reti = regexec(&regex, fullpath, 0, NULL, 0);
+				if (!reti ){
+					printf("Match of %s\n", fullpath);
+				} else if (reti == REG_NOMATCH ){
+					printf("No match of %s\n", fullpath);
+				} else {
+					regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+					fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+					exit(1);
+				}
+				/* Free compiled regular expression if you want to use the regex_t again */
+				regfree(&regex);
 			}
 			// Count the number of textures we'll need, so we can allocate them already below
 			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE)
