@@ -489,7 +489,7 @@ static void tdb_gen_list(void)
 				}
 
 				// Link the texture to the cube
-				printf("Linking texture with id %d to cube for object with name %s\n", help->textureid, help->name);
+				//printf("Linking texture with id %d to cube for object with name %s\n", help->textureid, help->name);
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D, help->textureid);
 				if (TDFSB_ICUBE)
