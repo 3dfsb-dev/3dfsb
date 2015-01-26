@@ -2452,32 +2452,35 @@ static int speckey(int key)
 		switch (key) {
 
 		case SDLK_TAB:
-			if (TDFSB_OBJECT_SELECTED) {
-				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_OBJECT_SEARCH = 0;
-				TDFSB_KEY_FINDER = 0;
-				TDFSB_FUNC_KEY = keyboard;
-				TDFSB_FUNC_UPKEY = keyboardup;
+			if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == PROCESS) {
+				printf("tab pressed while focussed on a PROCESS, sending TAB to the process...\n");
+				system("DISPLAY=:0 xdotool key --window 37748743 Tab");
+			} else {
+				if (TDFSB_OBJECT_SELECTED) {
+					TDFSB_OBJECT_SELECTED = NULL;
+					TDFSB_OBJECT_SEARCH = 0;
+					TDFSB_KEY_FINDER = 0;
+					TDFSB_FUNC_KEY = keyboard;
+					TDFSB_FUNC_UPKEY = keyboardup;
+				}
+				if (SDL_GetModState() & 0x0003)
+					snprintf(TDFSB_CES_TEMP, 4096, "cd \"%s\"; xterm&", TDFSB_CURRENTPATH);
+				else {
+					if (TDFSB_CSE_FLAG)
+						str_replace(TDFSB_CUSTOM_EXECUTE_STRING, strlen(TDFSB_CUSTOM_EXECUTE_STRING), "%s", fullpath);
+					else
+						strncpy(TDFSB_CES_TEMP, TDFSB_CUSTOM_EXECUTE_STRING, 4096);
+				}
+				system(TDFSB_CES_TEMP);
+				printf("EXECUTE COMMAND: %s\n", TDFSB_CES_TEMP);
+				if (TDFSB_HAVE_MOUSE) {
+					TDFSB_HAVE_MOUSE = 0;
+					TDFSB_FUNC_MOUSE = NULL;
+					TDFSB_FUNC_MOTION = NULL;
+					SDL_ShowCursor(SDL_ENABLE);
+				}
 			}
-			if (SDL_GetModState() & 0x0003)
-				snprintf(TDFSB_CES_TEMP, 4096, "cd \"%s\"; xterm&", TDFSB_CURRENTPATH);
-			else {
-				if (TDFSB_CSE_FLAG)
-					str_replace(TDFSB_CUSTOM_EXECUTE_STRING, strlen(TDFSB_CUSTOM_EXECUTE_STRING), "%s", fullpath);
-				else
-					strncpy(TDFSB_CES_TEMP, TDFSB_CUSTOM_EXECUTE_STRING, 4096);
-			}
-			system(TDFSB_CES_TEMP);
-			printf("EXECUTE COMMAND: %s\n", TDFSB_CES_TEMP);
-			if (TDFSB_HAVE_MOUSE) {
-				TDFSB_HAVE_MOUSE = 0;
-				TDFSB_FUNC_MOUSE = NULL;
-				TDFSB_FUNC_MOTION = NULL;
-				SDL_ShowCursor(SDL_ENABLE);
-			}
-
 			break;
-
 		case SDLK_F1:
 			if (mousespeed > 1)
 				mousespeed = mousespeed - 1;

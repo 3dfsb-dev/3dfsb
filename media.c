@@ -213,23 +213,23 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! appsink name=sink caps=\"" CAPS "\"", filename);
 		// Idea for speedup: set queue-size to 1 instead of 2
 	} else if (filetype == PROCESS) {
-		// Get PID from filename
+		// Get PID from path name
 		// Get Window ID(s) for this PID
 		//int pid = 5288;
-		int windowid = 16777223; // used system("xdotool search --pid 5288\n");
+		int windowid = 37748743; // used system("xdotool search --pid 5288\n");
 		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! appsink name=sink sync=false caps=\"" CAPS "\"", windowid);
 
 		// Experiment with this?
-		//system("xdotool set_window  --overrideredirect 0 16777223");
+		//system("xdotool set_window  --overrideredirect 0 37748743");
 
 		// Works:
-		//system("xdotool windowraise 16777223\n"); sleep(1);	// Wait until the window is raised, otherwise we might end up with a gray screen
+		//system("xdotool windowraise 37748743\n"); sleep(1);	// Wait until the window is raised, otherwise we might end up with a gray screen
 
 		// Changes focus, but does not redraw:
-		//system("xdotool windowfocus 16777223\n"); sleep(0.5);	// Wait until the window is raised, otherwise we might end up with a gray screen
+		//system("xdotool windowfocus 37748743\n"); sleep(0.5);	// Wait until the window is raised, otherwise we might end up with a gray screen
 		// Works, and is faster because we have --sync and therefore don't need sleep()
 		// BUT this may change the active desktop... perhaps fix this with get_desktop and set_desktop?
-		system("xdotool windowactivate --sync 16777223\n");
+		system("xdotool windowactivate --sync 37748743\n");
 	}
 	printf("gst-launch-1.0 %s\n", descr);
 	pipeline = (GstPipeline *) (gst_parse_launch(descr, &error));
@@ -382,7 +382,7 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 	 */
 
 	// If we do this, the window is gone, and can't be brought back with windowraise
-	//system("xdotool windowminimize --sync 16777223\n");
+	//system("xdotool windowminimize --sync 37748743\n");
 
 	// sleep(1);	// Wait until the window is raised, otherwise we might end up with a gray screen
 
@@ -453,11 +453,11 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		// Get PID from filename
 		// Get Window ID(s) for this PID
 		//int pid = 5288;
-		int windowid = 16777223;
+		int windowid = 37748743;
 		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink     name=fakesink0 sync=1", windowid, TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
 		//sleep(1);
 		//system("xdotool search --pid 5288\n");
-		system("xdotool windowraise 16777223\n");
+		system("xdotool windowraise 37748743\n");
 		sleep(1);
 	}
 
