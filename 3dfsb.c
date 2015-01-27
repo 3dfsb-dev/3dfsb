@@ -1255,7 +1255,7 @@ static void leodir(void)
 				regfree(&regex);
 			}
 			// Count the number of textures we'll need, so we can allocate them already below
-			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS) 
+			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS || temptype == TEXTFILE) 
 				TDFSB_TEX_NUM++;
 
 			// Setting some default scale (before having read the file) and position
@@ -1382,7 +1382,7 @@ static void leodir(void)
 	for (help = root; help; help = help->next) {
 		temptype = help->regtype;
 		// TODO: this is also checked somewhere above, can't we do this in the same loop as above instead of a seperate one?
-		if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS)
+		if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS || temptype == TEXTFILE)
 			help->textureid = TDFSB_TEX_NAMES[c1++];
 	}
 
