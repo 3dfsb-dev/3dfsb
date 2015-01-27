@@ -1124,6 +1124,7 @@ static void leodir(void)
 	TDFSB_WAS_NOREAD = 0;
 	TDFSB_TEX_NUM = 0;
 	TDFSB_TEX_NAMES = NULL;
+	INPUT_OBJECT = NULL;
 
 	cleanup_media_player();	// stop any playing media
 
@@ -2643,11 +2644,16 @@ static int speckey(int key)
 					TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 				}
 			} else if (TDFSB_OBJECT_SELECTED && TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
-				cleanup_media_player();	// Stop all other playing media
-				play_media(fullpath, TDFSB_OBJECT_SELECTED);
-				INPUT_OBJECT = TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
-				calculate_scale(TDFSB_MEDIA_FILE);
-				tdb_gen_list();		// refresh scene, because where there was a textfile, will now be a cube
+				if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
+					// Re-connect the input
+					INPUT_OBJECT = TDFSB_MEDIA_FILE;
+				} else {
+					cleanup_media_player();	// Stop all other playing media
+					play_media(fullpath, TDFSB_OBJECT_SELECTED);
+					INPUT_OBJECT = TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
+					calculate_scale(TDFSB_MEDIA_FILE);
+					tdb_gen_list();		// refresh scene, because where there was a textfile, will now be a cube
+				}
 			}
 			break;
 
@@ -3141,6 +3147,15 @@ int main(int argc, char **argv)
 						break;
 						case SDLK_COLON:
 							keysequence = "colon";		// XKeysymToKeycode() works but results in ";"
+						break;
+						case SDLK_BACKSPACE:
+							keysequence = "BackSpace";
+						break;
+						case SDLK_DELETE:
+							keysequence = "Delete";
+						break;
+						case SDLK_TAB:
+							keysequence = "Tab";
 						break;
 						default:
 							ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
