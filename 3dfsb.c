@@ -52,6 +52,8 @@
 
 #include <regex.h>
 
+#include <xdo.h>
+
 // For saving pixbuf's to a file for debugging
 /*
 #pragma GCC diagnostic push
@@ -2735,8 +2737,16 @@ static int keyboardup(unsigned char key)
 /* Handle a keydown event */
 static int keyboard(unsigned char key)
 {
-
-	if (!TDFSB_ANIM_STATE) {
+	if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
+		char sequence[2];
+		sequence[0] = key;
+		sequence[1] = 0x00;
+		xdo_t *xdo = xdo_new(":1");
+		xdo_send_keysequence_window(xdo, CURRENTWINDOW, sequence, 0);
+		xdo_free(xdo);
+		return 0;
+		//system("DISPLAY=:1 xdotool key a");
+	} else if (!TDFSB_ANIM_STATE) {
 		if (key == 27) {
 			printf("\nBye bye...\n\n");
 			ende(0);
