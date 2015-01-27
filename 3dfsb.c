@@ -3147,7 +3147,6 @@ int main(int argc, char **argv)
 								XSync(xdo->xdpy, False);
 								XFlush(xdo->xdpy);
 							} else {
-								//printf("not sending keycode %d or X will complain\n", ukeycode);
 								printf("Not forwarding key %d\n", event.key.keysym.sym);
 							}
 						break;
