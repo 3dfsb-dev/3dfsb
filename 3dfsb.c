@@ -3128,7 +3128,9 @@ int main(int argc, char **argv)
 			case SDL_KEYDOWN:
 				if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
 					xdo_t *xdo = xdo_new(":1");
-					XTestFakeKeyEvent(xdo->xdpy, event.key.keysym.scancode, 1, 0);
+					unsigned int ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
+					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
+					//XTestFakeKeyEvent(xdo->xdpy, event.key.keysym.scancode, 1, 0);
 					XSync(xdo->xdpy, False);
 					XFlush(xdo->xdpy);
 					xdo_free(xdo);
