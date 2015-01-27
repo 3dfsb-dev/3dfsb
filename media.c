@@ -43,7 +43,7 @@ void cleanup_media_player(void)
 		gst_object_unref(pipeline);
 	}
 	// Kill any running X session
-	system("/opt/TurboVNC/bin/vncserver -kill :1; sleep 1");
+	system("/opt/TurboVNC/bin/vncserver -kill :1; sleep 1");	// When we do this, the parent process gets killed somehow...
 	TDFSB_MEDIA_FILE = NULL;
 }
 
