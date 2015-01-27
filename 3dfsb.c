@@ -3136,27 +3136,18 @@ int main(int argc, char **argv)
 					char * keysequence = NULL;
 					unsigned int ukeycode = 0;
 					switch (event.key.keysym.sym) {
-						case SDLK_RETURN:
-							keysequence = "Return";
-						break;
-						case SDLK_ESCAPE:
-							keysequence = "Escape";
-						break;
-						case SDLK_UP:
-							keysequence = "Up";
-						break;
-						case SDLK_COLON:
-							keysequence = "colon";		// XKeysymToKeycode() works but results in ";"
-						break;
-						case SDLK_BACKSPACE:
-							keysequence = "BackSpace";
-						break;
-						case SDLK_DELETE:
-							keysequence = "Delete";
-						break;
-						case SDLK_TAB:
-							keysequence = "Tab";
-						break;
+						case SDLK_RETURN: keysequence = "Return"; break;
+						case SDLK_ESCAPE: keysequence = "Escape"; break;
+						case SDLK_UP: keysequence = "Up"; break;
+						case SDLK_DOWN: keysequence = "Down"; break;
+						case SDLK_LEFT: keysequence = "Left"; break;
+						case SDLK_RIGHT: keysequence = "Right"; break;
+						// XKeysymToKeycode() works but results in ";" break;
+						case SDLK_COLON: keysequence = "colon"; break;
+						case SDLK_BACKSPACE: keysequence = "BackSpace"; break;
+						case SDLK_DELETE: keysequence = "Delete"; break;
+						case SDLK_TAB: keysequence = "Tab"; break;
+						case SDLK_RSHIFT: keysequence = "shift"; break;
 						default:
 							ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
 							if (ukeycode) {
