@@ -470,8 +470,8 @@ static void tdb_gen_list(void)
 				glutSolidSphere(0.5, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
-		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE)) || (help->regtype == PROCESS)) {	// Regular file, except VIDEOSOURCEFILE's, which are character devices
-			if ((((help->regtype == IMAGEFILE) || (help->regtype == PDFFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE) ) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) || (help->regtype == PROCESS)) {
+		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE)) || (help->regtype == PROCESS) || (help->regtype == TEXTFILE && help == TDFSB_MEDIA_FILE)) {	// Regular file, except VIDEOSOURCEFILE's, which are character devices
+			if ((((help->regtype == IMAGEFILE) || (help->regtype == PDFFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE) ) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) || (help->regtype == PROCESS) || (help->regtype == TEXTFILE && help == TDFSB_MEDIA_FILE)) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -520,7 +520,6 @@ static void tdb_gen_list(void)
 					glTranslatef(mx, my, mz);
 					glScalef(help->scalex, help->scaley, help->scalez);
 				}
-
 				glutSolidCube(2);
 			}
 		} else {
@@ -566,7 +565,7 @@ static void tdb_gen_list(void)
 		mx = help->posx;
 		mz = help->posz;
 		my = help->posy;
-		if (((help->regtype == TEXTFILE) && ((help->mode) & 0x1F) == 0)) {
+		if (((help->regtype == TEXTFILE) && ((help->mode) & 0x1F) == 0) && (help != TDFSB_MEDIA_FILE)) {
 			if (!mat_state) {
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_yel);
 				glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient_yel);
@@ -2637,6 +2636,7 @@ static int speckey(int key)
 				cleanup_media_player();	// Stop all other playing media
 				play_media(fullpath, TDFSB_OBJECT_SELECTED);
 				TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
+				tdb_gen_list();		// refresh scene, because where there was a textfile, will now be a cube
 			}
 			break;
 
