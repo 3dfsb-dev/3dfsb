@@ -50,7 +50,7 @@ GSTREAMER_LIBS=$(pkg-config --libs gstreamer-1.0)	# Example: -L/usr/local/lib -l
 
 OTHER_LIBS=$(pkg-config --libs glu)	# Example: -lGLU -lGL
 
-NOPKGCONFIG_LIBS="-lglut -lmagic -lm -lxdo"
+NOPKGCONFIG_LIBS="-lglut -lmagic -lm -lxdo -lX11 -lXtst"
 
 echo "Converting built-in images to XPM format with imagemagick's 'mogrify' tool..."
 mogrify -format xpm images/*.png

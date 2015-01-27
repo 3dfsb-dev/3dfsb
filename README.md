@@ -132,6 +132,8 @@ and the sdl-config script.
 - OpenGL/GLU/glut: Linux/FreeBSB users can use their package manager, BeOS/Haiku users should have OpenGL (including GLU) included. For glut look at http://www.bebits.com/
 - GSteamer 1.xx Core, Gstreamer 1.xx plugins: http://www.gstreamer.com/
 - libmagic-dev: for mimetype identification
+- libxdo-dev: for sending keystrokes
+- libxtst-dev: for XTest extension (for sending keystrokes)
 
 On Ubuntu, you can install all build-time dependencies with:
 

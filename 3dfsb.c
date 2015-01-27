@@ -53,6 +53,7 @@
 #include <regex.h>
 
 #include <xdo.h>
+#include <X11/extensions/XTest.h>
 
 // For saving pixbuf's to a file for debugging
 /*
@@ -2444,6 +2445,7 @@ static void mouse(int button, int state)
 	}
 }
 
+/* Returns 1 when the key still has to be handled by the keyboard function */
 static int speckey(int key)
 {
 	if (!TDFSB_ANIM_STATE) {
@@ -2737,17 +2739,7 @@ static int keyboardup(unsigned char key)
 /* Handle a keydown event */
 static int keyboard(unsigned char key)
 {
-	if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
-		printf("sending key code %d = %c\n", key, key);
-		char sequence[2];
-		sequence[0] = key;
-		sequence[1] = 0x00;
-		xdo_t *xdo = xdo_new(":1");
-		xdo_send_keysequence_window(xdo, CURRENTWINDOW, sequence, 0);
-		xdo_free(xdo);
-		return 0;
-		//system("DISPLAY=:1 xdotool key a");
-	} else if (!TDFSB_ANIM_STATE) {
+	if (!TDFSB_ANIM_STATE) {
 		if (key == 27) {
 			printf("\nBye bye...\n\n");
 			ende(0);
@@ -3134,8 +3126,28 @@ int main(int argc, char **argv)
 					TDFSB_FUNC_MOUSE(event.button.button, event.button.state);
 				break;
 			case SDL_KEYDOWN:
-				if (speckey(event.key.keysym.sym))
-					TDFSB_FUNC_KEY((unsigned char)(event.key.keysym.unicode & 0x7F));
+				if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
+					xdo_t *xdo = xdo_new(":1");
+					XTestFakeKeyEvent(xdo->xdpy, event.key.keysym.scancode, 1, 0);
+					XSync(xdo->xdpy, False);
+					XFlush(xdo->xdpy);
+					xdo_free(xdo);
+
+					/*
+					unsigned char key = (unsigned char)(event.key.keysym.unicode & 0x7F);
+					printf("sending key code %d = %c\n", key, key);
+					char sequence[2];
+					sequence[0] = key;
+					sequence[1] = 0x00;
+					xdo_t *xdo = xdo_new(":1");
+					xdo_send_keysequence_window(xdo, CURRENTWINDOW, sequence, 0);
+					xdo_free(xdo);
+					*/
+					//system("DISPLAY=:1 xdotool key a");
+				} else {
+					if (speckey(event.key.keysym.sym))
+						TDFSB_FUNC_KEY((unsigned char)(event.key.keysym.unicode & 0x7F));
+				}
 				break;
 			case SDL_KEYUP:
 				if (specupkey(event.key.keysym.sym))
