@@ -145,8 +145,6 @@ int TDFSB_FLY_DISPLAY = 0, TDFSB_CLASSIC_DISPLAY = 0;
 int TDFSB_SHOW_THROTTLE = 0, TDFSB_SHOW_BALL = 0;
 int TDFSB_FPS_DISP = 0, TDFSB_FPS_DT = 1000, TDFSB_SHOW_CONFIG_FPS = 0;
 
-struct tree_entry *TDFSB_MEDIA_FILE;
-
 struct timeval ltime, ttime, rtime, wtime;
 long sec;
 
@@ -1125,7 +1123,6 @@ static void leodir(void)
 	TDFSB_TEX_NUM = 0;
 	TDFSB_TEX_NAMES = NULL;
 
-	TDFSB_MEDIA_FILE = NULL;	// Set this to NULL, because the later functions check it to know what they should display
 	cleanup_media_player();	// stop any playing media
 
 	if (total_objects_in_grid != 0) {
@@ -3129,26 +3126,37 @@ int main(int argc, char **argv)
 				if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
 					xdo_t *xdo = xdo_new(":1");
 					unsigned int ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
-					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
-					//XTestFakeKeyEvent(xdo->xdpy, event.key.keysym.scancode, 1, 0);
-					XSync(xdo->xdpy, False);
-					XFlush(xdo->xdpy);
+					if (ukeycode) {
+						XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
+						XSync(xdo->xdpy, False);
+						XFlush(xdo->xdpy);
+					} else {
+						printf("not sending keycode %d or X will complain\n", ukeycode);
+						char * keysequence = NULL;
+						switch (event.key.keysym.sym) {
+							case SDLK_RETURN:
+								keysequence = "Return";
+							break;
+							case SDLK_ESCAPE:
+								printf("ESC received, this will not be sent to the application\n");
+							break;
+							default:
+								printf("Not forwarding unsupported key %d\n", event.key.keysym.sym);
+							break;
+						}
+						if (event.key.keysym.sym == SDLK_ESCAPE) {
+							printf("ESC received, unbinding...\n");
+							cleanup_media_player();
+							tdb_gen_list();
+						} else if (keysequence) {
+							xdo_send_keysequence_window(xdo, CURRENTWINDOW, keysequence, 0);
+						} else {
+							printf("In the end, we received a key and did nothing with it.\n");
+						}
+					}
 					xdo_free(xdo);
-
-					/*
-					unsigned char key = (unsigned char)(event.key.keysym.unicode & 0x7F);
-					printf("sending key code %d = %c\n", key, key);
-					char sequence[2];
-					sequence[0] = key;
-					sequence[1] = 0x00;
-					xdo_t *xdo = xdo_new(":1");
-					xdo_send_keysequence_window(xdo, CURRENTWINDOW, sequence, 0);
-					xdo_free(xdo);
-					*/
-					//system("DISPLAY=:1 xdotool key a");
-				} else {
-					if (speckey(event.key.keysym.sym))
-						TDFSB_FUNC_KEY((unsigned char)(event.key.keysym.unicode & 0x7F));
+				} else if (speckey(event.key.keysym.sym)) {
+					TDFSB_FUNC_KEY((unsigned char)(event.key.keysym.unicode & 0x7F));
 				}
 				break;
 			case SDL_KEYUP:

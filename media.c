@@ -37,16 +37,17 @@ static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, 
 
 void cleanup_media_player(void)
 {
-	// Kill any running X session
-	system("/opt/TurboVNC/bin/vncserver -kill :1");
 	if (pipeline && GST_IS_ELEMENT(pipeline)) {
 		printf("Cleaning up GStreamer pipeline\n");
 		gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
 		gst_object_unref(pipeline);
 	}
+	// Kill any running X session
+	system("/opt/TurboVNC/bin/vncserver -kill :1; sleep 1");
+	TDFSB_MEDIA_FILE = NULL;
 }
 
-void update_media_texture(tree_entry * TDFSB_MEDIA_FILE)
+void update_media_texture(tree_entry * media_tree_entry)
 {
 	// Ensure we don't refresh the texture if nothing changed
 	if (framecounter == displayedframenumber) {
@@ -64,9 +65,9 @@ void update_media_texture(tree_entry * TDFSB_MEDIA_FILE)
 		return;		// No video frame received yet
 
 	// now map.data points to the video frame that we saved in on_gst_buffer()
-	glBindTexture(GL_TEXTURE_2D, TDFSB_MEDIA_FILE->textureid);
+	glBindTexture(GL_TEXTURE_2D, media_tree_entry->textureid);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) TDFSB_MEDIA_FILE->textureformat, TDFSB_MEDIA_FILE->texturewidth, TDFSB_MEDIA_FILE->textureheight, 0, (GLenum) TDFSB_MEDIA_FILE->textureformat, GL_UNSIGNED_BYTE, map.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) media_tree_entry->textureformat, media_tree_entry->texturewidth, media_tree_entry->textureheight, 0, (GLenum) media_tree_entry->textureformat, GL_UNSIGNED_BYTE, map.data);
 
 	// Free up memory again
 	gst_buffer_unmap(videobuffer, &map);
