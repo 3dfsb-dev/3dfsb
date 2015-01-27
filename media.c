@@ -37,6 +37,8 @@ static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, 
 
 void cleanup_media_player(void)
 {
+	// Kill any running X session
+	system("/opt/TurboVNC/bin/vncserver -kill :1");
 	if (pipeline && GST_IS_ELEMENT(pipeline)) {
 		printf("Cleaning up GStreamer pipeline\n");
 		gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
@@ -64,7 +66,7 @@ void update_media_texture(tree_entry * TDFSB_MEDIA_FILE)
 	// now map.data points to the video frame that we saved in on_gst_buffer()
 	glBindTexture(GL_TEXTURE_2D, TDFSB_MEDIA_FILE->textureid);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TDFSB_MEDIA_FILE->texturewidth, TDFSB_MEDIA_FILE->textureheight, 0, GL_RGB, GL_UNSIGNED_BYTE, map.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) TDFSB_MEDIA_FILE->textureformat, TDFSB_MEDIA_FILE->texturewidth, TDFSB_MEDIA_FILE->textureheight, 0, (GLenum) TDFSB_MEDIA_FILE->textureformat, GL_UNSIGNED_BYTE, map.data);
 
 	// Free up memory again
 	gst_buffer_unmap(videobuffer, &map);
@@ -464,7 +466,6 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		TDFSB_OBJECT_SELECTED->textureformat = GL_RGB;
 		TDFSB_OBJECT_SELECTED->originalwidth = 1920;
 		TDFSB_OBJECT_SELECTED->originalheight = 1080;
-		//descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
 		descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
 	}
 

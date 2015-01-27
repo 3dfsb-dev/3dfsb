@@ -497,6 +497,11 @@ static void tdb_gen_list(void)
 				//printf("Linking texture with id %d to cube for object with name %s\n", help->textureid, help->name);
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D, help->textureid);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 				if (TDFSB_ICUBE)
 					cc1 = 20;
 				else
@@ -1707,11 +1712,6 @@ static void display(void)
 			 */
 
 			glBindTexture(GL_TEXTURE_2D, object_to_retexture->textureid);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 			glTexImage2D(GL_TEXTURE_2D, 0, (GLenum) object_to_retexture->textureformat, object_to_retexture->texturewidth, object_to_retexture->textureheight, 0, (GLenum) object_to_retexture->textureformat, GL_UNSIGNED_BYTE, object_to_retexture->texturesurface->pixels);
 
 			SDL_UnlockSurface(object_to_retexture->texturesurface);
@@ -2459,6 +2459,8 @@ static int speckey(int key)
 			if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == PROCESS) {
 				printf("tab pressed while focussed on a PROCESS, sending TAB to the process...\n");
 				system("DISPLAY=:0 xdotool key --window 37748743 Tab");
+			} else if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
+				system("DISPLAY=:1 xdotool key a");
 			} else {
 				if (TDFSB_OBJECT_SELECTED) {
 					TDFSB_OBJECT_SELECTED = NULL;
@@ -2637,7 +2639,7 @@ static int speckey(int key)
 					play_media(fullpath, TDFSB_OBJECT_SELECTED);
 					TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 				}
-			} else if (TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
+			} else if (TDFSB_OBJECT_SELECTED && TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
 				cleanup_media_player();	// Stop all other playing media
 				play_media(fullpath, TDFSB_OBJECT_SELECTED);
 				TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
