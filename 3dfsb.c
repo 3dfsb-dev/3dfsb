@@ -2641,6 +2641,7 @@ static int speckey(int key)
 				cleanup_media_player();	// Stop all other playing media
 				play_media(fullpath, TDFSB_OBJECT_SELECTED);
 				TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
+				calculate_scale(TDFSB_MEDIA_FILE);
 				tdb_gen_list();		// refresh scene, because where there was a textfile, will now be a cube
 			}
 			break;
