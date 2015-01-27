@@ -2986,6 +2986,7 @@ static int keyboard(unsigned char key)
 		return (0);
 }
 
+/* Send an SDL_Event to the other X server */
 static void send_event_to_object(SDL_Event event) {
 	xdo_t *xdo = xdo_new(":1");
 	char * keysequence = NULL;
@@ -3006,7 +3007,11 @@ static void send_event_to_object(SDL_Event event) {
 		default:
 			ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
 			if (ukeycode) {
-				XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
+				if (event.type == SDL_KEYDOWN) {
+					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
+				} else if (event.type == SDL_KEYUP) {
+					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 0, 0);
+				}
 				XSync(xdo->xdpy, False);
 				XFlush(xdo->xdpy);
 			} else {
@@ -3018,7 +3023,11 @@ static void send_event_to_object(SDL_Event event) {
 		printf("F12 received, unbinding...\n");
 		INPUT_OBJECT = NULL;
 	} else if (keysequence) {
-		xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, keysequence, 0);
+		if (event.type == SDL_KEYDOWN) {
+			xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, keysequence, 0);
+		} else if (event.type == SDL_KEYUP) {
+			xdo_send_keysequence_window_up(xdo, CURRENTWINDOW, keysequence, 0);
+		}
 	}
 	xdo_free(xdo);
 }
@@ -3176,8 +3185,11 @@ int main(int argc, char **argv)
 				}
 				break;
 			case SDL_KEYUP:
-				if (specupkey(event.key.keysym.sym))
+				if (INPUT_OBJECT) {
+					send_event_to_object(event);
+				} else if (specupkey(event.key.keysym.sym)) {
 					TDFSB_FUNC_UPKEY((unsigned char)(event.key.keysym.sym & 0x7F));	// no unicode for key up's
+				}
 				break;
 			default:
 				break;
