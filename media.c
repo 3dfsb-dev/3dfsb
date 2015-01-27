@@ -429,8 +429,6 @@ void toggle_media_pipeline(void)
 
 void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 {
-	printf("Starting GStreamer pipeline for URI %s\n", fullpath);
-
 	GstBus *bus = NULL;
 	GstElement *fakesink = NULL;
 
@@ -461,8 +459,13 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		sleep(1);
 	} else if (TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
 		system("/opt/TurboVNC/bin/vncserver -geometry 1920x1080 &"); sleep(1);
+		TDFSB_OBJECT_SELECTED->texturewidth = 2048;
+		TDFSB_OBJECT_SELECTED->textureheight = 2048;
+		TDFSB_OBJECT_SELECTED->textureformat = GL_RGB;
+		TDFSB_OBJECT_SELECTED->originalwidth = 1920;
+		TDFSB_OBJECT_SELECTED->originalheight = 1080;
 		//descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
-		descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! fakesink name=fakesink0 sync=1");
+		descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
 	}
 
 	// Use this for pulseaudio:

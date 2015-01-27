@@ -302,6 +302,20 @@ static char *uppercase(char *str)
 	return newstr;
 }
 
+static tree_entry * calculate_scale(tree_entry * object) {
+	if (object->originalwidth < object->originalheight) {
+		object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
+		object->scaley = (object->originalheight * (object->scalex)) / object->originalwidth;
+	} else {
+		object->scaley = ((GLfloat) log(((double)object->originalheight / 128) + 1)) + 1;
+		object->scalex = object->scalez = (object->originalwidth * (object->scaley)) / object->originalheight;
+	}
+	object->posy = object->scaley - 1;	// vertical position of the object
+	object->scalez = 0.5;	// flatscreens instead of the default ugly big square blocks
+	return object;
+}
+
+
 static int get_file_type(char *filename)
 {
 	unsigned int temptype = 0;	// temptype needs to be 0 to check if we found a match later on!
@@ -422,16 +436,7 @@ static void *async_load_textures(void *arg)
 			object->texturewidth = object->texturesurface->w;
 			object->textureheight = object->texturesurface->h;
 			printf("Original dimensions: %dx%d %s TEXTURE: %dx%d\n", object->originalwidth, object->originalheight, async_fullpath, object->texturewidth, object->textureheight);
-			if (object->originalwidth < object->originalheight) {
-				object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
-				object->scaley = (object->originalheight * (object->scalex)) / object->originalwidth;
-			} else {
-				object->scaley = ((GLfloat) log(((double)object->originalheight / 128) + 1)) + 1;
-				object->scalex = object->scalez = (object->originalwidth * (object->scaley)) / object->originalheight;
-			}
-			object->posy = object->scaley - 1;	// vertical position of the object
-			object->scalez = 0.5;	// flatscreens instead of the default ugly big square blocks
-
+			object = calculate_scale(object);
 			// Add to queue to redraw/retexture this object in the rendering thread
 			g_async_queue_push(loaded_textures_queue, object);
 		}
@@ -1903,7 +1908,7 @@ static void display(void)
 			}
 		}
 /* animate text files */
-		if ((object->regtype == TEXTFILE) && (object->textfilecontents) && ((object->mode) & 0x1F) == 0) {
+		if ((object->regtype == TEXTFILE) && (object->textfilecontents) && ((object->mode) & 0x1F) == 0 && (object != TDFSB_MEDIA_FILE)) {
 			// Note: every frame, we increment this, and if it is bigger than a threshold (150),
 			// we move the pointer in the file (stored in object->textureheight)
 			object->textureformat = object->textureformat + 10;
