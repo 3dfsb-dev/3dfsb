@@ -3125,34 +3125,39 @@ int main(int argc, char **argv)
 			case SDL_KEYDOWN:
 				if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
 					xdo_t *xdo = xdo_new(":1");
-					unsigned int ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
-					if (ukeycode) {
-						XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
-						XSync(xdo->xdpy, False);
-						XFlush(xdo->xdpy);
-					} else {
-						printf("not sending keycode %d or X will complain\n", ukeycode);
-						char * keysequence = NULL;
-						switch (event.key.keysym.sym) {
-							case SDLK_RETURN:
-								keysequence = "Return";
-							break;
-							case SDLK_ESCAPE:
-								printf("ESC received, this will not be sent to the application\n");
-							break;
-							default:
-								printf("Not forwarding unsupported key %d\n", event.key.keysym.sym);
-							break;
-						}
-						if (event.key.keysym.sym == SDLK_ESCAPE) {
-							printf("ESC received, unbinding...\n");
-							cleanup_media_player();
-							tdb_gen_list();
-						} else if (keysequence) {
-							xdo_send_keysequence_window(xdo, CURRENTWINDOW, keysequence, 0);
-						} else {
-							printf("In the end, we received a key and did nothing with it.\n");
-						}
+					char * keysequence = NULL;
+					unsigned int ukeycode = 0;
+					switch (event.key.keysym.sym) {
+						case SDLK_RETURN:
+							keysequence = "Return";
+						break;
+						case SDLK_ESCAPE:
+							keysequence = "Escape";
+						break;
+						case SDLK_UP:
+							keysequence = "Up";
+						break;
+						case SDLK_COLON:
+							keysequence = "colon";		// XKeysymToKeycode() works but results in ";"
+						break;
+						default:
+							ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
+							if (ukeycode) {
+								XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
+								XSync(xdo->xdpy, False);
+								XFlush(xdo->xdpy);
+							} else {
+								//printf("not sending keycode %d or X will complain\n", ukeycode);
+								printf("Not forwarding key %d\n", event.key.keysym.sym);
+							}
+						break;
+					}
+					if (event.key.keysym.sym == SDLK_F12) {
+						printf("F12 received, unbinding...\n");
+						cleanup_media_player();
+						tdb_gen_list();
+					} else if (keysequence) {
+						xdo_send_keysequence_window(xdo, CURRENTWINDOW, keysequence, 0);
 					}
 					xdo_free(xdo);
 				} else if (speckey(event.key.keysym.sym)) {
