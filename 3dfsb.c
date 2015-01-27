@@ -2738,6 +2738,7 @@ static int keyboardup(unsigned char key)
 static int keyboard(unsigned char key)
 {
 	if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
+		printf("sending key code %d = %c\n", key, key);
 		char sequence[2];
 		sequence[0] = key;
 		sequence[1] = 0x00;
