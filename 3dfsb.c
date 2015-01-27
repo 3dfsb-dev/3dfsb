@@ -245,8 +245,10 @@ magic_t magic;
 
 // Asynchronous texture loading
 pthread_t async_load_textures_thread_id = NULL;
-
 GAsyncQueue *loaded_textures_queue = NULL;
+
+// Input events go to an object
+tree_entry * INPUT_OBJECT = NULL;
 
 static void ende(int code)
 {
@@ -2643,7 +2645,7 @@ static int speckey(int key)
 			} else if (TDFSB_OBJECT_SELECTED && TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
 				cleanup_media_player();	// Stop all other playing media
 				play_media(fullpath, TDFSB_OBJECT_SELECTED);
-				TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
+				INPUT_OBJECT = TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 				calculate_scale(TDFSB_MEDIA_FILE);
 				tdb_gen_list();		// refresh scene, because where there was a textfile, will now be a cube
 			}
@@ -3123,7 +3125,7 @@ int main(int argc, char **argv)
 					TDFSB_FUNC_MOUSE(event.button.button, event.button.state);
 				break;
 			case SDL_KEYDOWN:
-				if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
+				if (INPUT_OBJECT) {
 					xdo_t *xdo = xdo_new(":1");
 					char * keysequence = NULL;
 					unsigned int ukeycode = 0;
@@ -3153,8 +3155,7 @@ int main(int argc, char **argv)
 					}
 					if (event.key.keysym.sym == SDLK_F12) {
 						printf("F12 received, unbinding...\n");
-						cleanup_media_player();
-						tdb_gen_list();
+						INPUT_OBJECT = NULL;
 					} else if (keysequence) {
 						xdo_send_keysequence_window(xdo, CURRENTWINDOW, keysequence, 0);
 					}
