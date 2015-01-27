@@ -79,7 +79,6 @@
 int CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding
 
 const SDL_VideoInfo *info = NULL;
-SDL_Event event;
 SDL_Surface *window;
 int bpp = 0, rgb_size[3];
 GLUquadricObj *aua1, *aua2;
@@ -2987,6 +2986,44 @@ static int keyboard(unsigned char key)
 		return (0);
 }
 
+static void send_event_to_object(SDL_Event event) {
+	xdo_t *xdo = xdo_new(":1");
+	char * keysequence = NULL;
+	unsigned int ukeycode = 0;
+	switch (event.key.keysym.sym) {
+		case SDLK_RETURN: keysequence = "Return"; break;
+		case SDLK_ESCAPE: keysequence = "Escape"; break;
+		case SDLK_UP: keysequence = "Up"; break;
+		case SDLK_DOWN: keysequence = "Down"; break;
+		case SDLK_LEFT: keysequence = "Left"; break;
+		case SDLK_RIGHT: keysequence = "Right"; break;
+		// XKeysymToKeycode() works but results in ";" break;
+		case SDLK_COLON: keysequence = "colon"; break;
+		case SDLK_BACKSPACE: keysequence = "BackSpace"; break;
+		case SDLK_DELETE: keysequence = "Delete"; break;
+		case SDLK_TAB: keysequence = "Tab"; break;
+		case SDLK_RSHIFT: keysequence = "shift"; break;
+		default:
+			ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
+			if (ukeycode) {
+				XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
+				XSync(xdo->xdpy, False);
+				XFlush(xdo->xdpy);
+			} else {
+				printf("Not forwarding key %d\n", event.key.keysym.sym);
+			}
+		break;
+	}
+	if (event.key.keysym.sym == SDLK_F12) {
+		printf("F12 received, unbinding...\n");
+		INPUT_OBJECT = NULL;
+	} else if (keysequence) {
+		xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, keysequence, 0);
+	}
+	xdo_free(xdo);
+}
+
+
 int main(int argc, char **argv)
 {
 	int fake_glut_argc;
@@ -3107,6 +3144,7 @@ int main(int argc, char **argv)
 
 	leodir();
 
+	SDL_Event event;
 	while (1) {
 		TDFSB_FUNC_IDLE();
 		while (SDL_PollEvent(&event)) {
@@ -3132,40 +3170,7 @@ int main(int argc, char **argv)
 				break;
 			case SDL_KEYDOWN:
 				if (INPUT_OBJECT) {
-					xdo_t *xdo = xdo_new(":1");
-					char * keysequence = NULL;
-					unsigned int ukeycode = 0;
-					switch (event.key.keysym.sym) {
-						case SDLK_RETURN: keysequence = "Return"; break;
-						case SDLK_ESCAPE: keysequence = "Escape"; break;
-						case SDLK_UP: keysequence = "Up"; break;
-						case SDLK_DOWN: keysequence = "Down"; break;
-						case SDLK_LEFT: keysequence = "Left"; break;
-						case SDLK_RIGHT: keysequence = "Right"; break;
-						// XKeysymToKeycode() works but results in ";" break;
-						case SDLK_COLON: keysequence = "colon"; break;
-						case SDLK_BACKSPACE: keysequence = "BackSpace"; break;
-						case SDLK_DELETE: keysequence = "Delete"; break;
-						case SDLK_TAB: keysequence = "Tab"; break;
-						case SDLK_RSHIFT: keysequence = "shift"; break;
-						default:
-							ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
-							if (ukeycode) {
-								XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
-								XSync(xdo->xdpy, False);
-								XFlush(xdo->xdpy);
-							} else {
-								printf("Not forwarding key %d\n", event.key.keysym.sym);
-							}
-						break;
-					}
-					if (event.key.keysym.sym == SDLK_F12) {
-						printf("F12 received, unbinding...\n");
-						INPUT_OBJECT = NULL;
-					} else if (keysequence) {
-						xdo_send_keysequence_window(xdo, CURRENTWINDOW, keysequence, 0);
-					}
-					xdo_free(xdo);
+					send_event_to_object(event);
 				} else if (speckey(event.key.keysym.sym)) {
 					TDFSB_FUNC_KEY((unsigned char)(event.key.keysym.unicode & 0x7F));
 				}
