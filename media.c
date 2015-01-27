@@ -43,7 +43,7 @@ void cleanup_media_player(void)
 		gst_object_unref(pipeline);
 	}
 	// Kill any running X session
-	system("/opt/TurboVNC/bin/vncserver -kill :1; sleep 1");	// When we do this, the parent process gets killed somehow...
+	system("/opt/TurboVNC/bin/vncserver -kill :1 &");	// When we do this synchronously, we get killed (for stalling?)
 	TDFSB_MEDIA_FILE = NULL;
 }
 
@@ -498,7 +498,7 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 	} else {
 		// There is no fakesink, must be because we are playing an audio or videosource file
 	}
-	framecounter = 0;
+	framecounter = displayedframenumber = 0;
 	gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
 }
