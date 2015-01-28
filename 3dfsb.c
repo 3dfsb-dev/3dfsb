@@ -2988,9 +2988,10 @@ static int keyboard(unsigned char key)
 
 /* Send an SDL_Event to the other X server */
 static void send_event_to_object(SDL_Event event) {
+	printf("sending event of type %d with event.key.keysym.sym %d\n", event.type, event.key.keysym.sym);
 	xdo_t *xdo = xdo_new(":1");
 	char * keysequence = NULL;
-	unsigned int ukeycode = 0;
+	//unsigned int ukeycode = 0;
 	switch (event.key.keysym.sym) {
 		case SDLK_RETURN: keysequence = "Return"; break;
 		case SDLK_ESCAPE: keysequence = "Escape"; break;
@@ -3005,6 +3006,10 @@ static void send_event_to_object(SDL_Event event) {
 		case SDLK_TAB: keysequence = "Tab"; break;
 		case SDLK_RSHIFT: keysequence = "shift"; break;
 		default:
+			keysequence = malloc(sizeof(char) * 2);
+			keysequence[0] = event.key.keysym.sym;
+			keysequence[1] = 0;
+			/*
 			ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
 			if (ukeycode) {
 				if (event.type == SDL_KEYDOWN) {
@@ -3017,18 +3022,26 @@ static void send_event_to_object(SDL_Event event) {
 			} else {
 				printf("Not forwarding key %d\n", event.key.keysym.sym);
 			}
+			*/
 		break;
 	}
 	if (event.key.keysym.sym == SDLK_F12) {
 		printf("F12 received, unbinding...\n");
 		INPUT_OBJECT = NULL;
 	} else if (keysequence) {
+		// Damn, this works fine when I do it command line in my own X session, but in :1 (by Xvnc) it generates strange stuff...
+		// xev shows just 2 events for a shiftdown, a press, shiftup
+		// Perhaps Xvnc is causing trouble; let's try in a different, simpeler X session
 		if (event.type == SDL_KEYDOWN) {
+			printf("keydown %s\n", keysequence);
 			xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, keysequence, 0);
+			//char * todo
 		} else if (event.type == SDL_KEYUP) {
+			printf("keyup %s\n", keysequence);
 			xdo_send_keysequence_window_up(xdo, CURRENTWINDOW, keysequence, 0);
 		}
 	}
+	//free(keysequence);
 	xdo_free(xdo);
 }
 
