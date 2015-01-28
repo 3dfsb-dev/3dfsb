@@ -13,6 +13,9 @@
 #endif
 
 #define CAPS "video/x-raw,format=RGB"
+//#define STARTX "/opt/TurboVNC/bin/vncserver -geometry 1920x1080 &"
+//#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile ./10.log -config ~/xorg.conf :1 & sleep 1; DISPLAY=:1 /usr/bin/lxterminal &"
+#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile ./10.log -config ~/xorg.conf :1 & sleep 1; DISPLAY=:1 /etc/X11/Xsession &"
 
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
@@ -461,7 +464,7 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		system("xdotool windowraise 37748743\n");
 		sleep(1);
 	} else if (TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
-		system("/opt/TurboVNC/bin/vncserver -geometry 1920x1080 &"); sleep(1);
+		system(STARTX); sleep(1);
 		TDFSB_OBJECT_SELECTED->texturewidth = 2048;
 		TDFSB_OBJECT_SELECTED->textureheight = 2048;
 		TDFSB_OBJECT_SELECTED->textureformat = GL_RGB;
