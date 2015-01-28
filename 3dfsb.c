@@ -2650,6 +2650,13 @@ static int speckey(int key)
 					cleanup_media_player();	// Stop all other playing media
 					play_media(fullpath, TDFSB_OBJECT_SELECTED);
 					INPUT_OBJECT = TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
+					// Ensure the normal keyboard handlers are enabled,
+					// because the mousebuttonup event will be consumed by the INPUT_OBJECT,
+					// so we'll stay in some kind of "finder" mode otherwise
+					TDFSB_OBJECT_SEARCH = 0;
+					TDFSB_KEY_FINDER = 0;
+					TDFSB_FUNC_KEY = keyboard;
+					TDFSB_FUNC_UPKEY = keyboardup;
 					calculate_scale(TDFSB_MEDIA_FILE);
 					tdb_gen_list();		// refresh scene, because where there was a textfile, will now be a cube
 				}
@@ -2755,18 +2762,14 @@ static int keyboard(unsigned char key)
 			else
 				strcpy(flybuf, "Flying:OFF");
 			TDFSB_FLY_DISPLAY = 100;
-		}
-
-		else if (key == TDFSB_KC_HELP) {
+		} else if (key == TDFSB_KC_HELP) {
 			TDFSB_SHOW_HELP = 1 - TDFSB_SHOW_HELP;
 			if (TDFSB_SHOW_HELP) {
 				printf("\n=======================================\n");
 				puts(help_str);
 				printf("=======================================\n\n");
 			}
-		}
-
-		else if (key == TDFSB_KC_FS) {
+		} else if (key == TDFSB_KC_FS) {
 			if (TDFSB_FULLSCREEN) {
 				if ((window = SDL_SetVideoMode(aSWX, aSWY, bpp, SDL_OPENGL | SDL_RESIZABLE)) == 0) {
 					printf("SDL ERROR Video mode set failed: %s\n", SDL_GetError());
@@ -3195,7 +3198,6 @@ int main(int argc, char **argv)
 				reshape(event.resize.w, event.resize.h);
 				break;
 			case SDL_MOUSEMOTION:
-				//printf("Mouse motion to %d,%d\n", event.motion.x, event.motion.y);
 				if (INPUT_OBJECT) {
 					send_event_to_object(event);
 				} else if (TDFSB_FUNC_MOTION) {
