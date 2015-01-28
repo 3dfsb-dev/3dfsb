@@ -2999,12 +2999,20 @@ static void send_event_to_object(SDL_Event event) {
 		case SDLK_DOWN: keysequence = "Down"; break;
 		case SDLK_LEFT: keysequence = "Left"; break;
 		case SDLK_RIGHT: keysequence = "Right"; break;
-		// XKeysymToKeycode() works but results in ";" break;
-		case SDLK_COLON: keysequence = "colon"; break;
+		case SDLK_PAGEUP: keysequence = "Page_Up"; break;
+		case SDLK_PAGEDOWN: keysequence = "Page_Down"; break;
 		case SDLK_BACKSPACE: keysequence = "BackSpace"; break;
 		case SDLK_DELETE: keysequence = "Delete"; break;
 		case SDLK_TAB: keysequence = "Tab"; break;
-		case SDLK_RSHIFT: keysequence = "shift"; break;
+		case SDLK_LSHIFT: keysequence = "Shift_L"; break;
+		case SDLK_RSHIFT: keysequence = "Shift_R"; break;
+		case SDLK_LALT: keysequence = "Alt_L"; break;
+		case SDLK_RALT: keysequence = "Alt_R"; break;
+		case SDLK_LCTRL: keysequence = "Control_L"; break;
+		case SDLK_RCTRL: keysequence = "Control_R"; break;
+		case SDLK_CAPSLOCK: keysequence = "Caps_Lock"; break;
+		case SDLK_HOME: keysequence = "Home"; break;
+		case SDLK_END: keysequence = "End"; break;
 		default:
 			/*
 			keysequence = malloc(sizeof(char) * 2);
