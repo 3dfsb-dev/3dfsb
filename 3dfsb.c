@@ -2990,22 +2990,15 @@ static int keyboard(unsigned char key)
 static void send_event_to_object(SDL_Event event) {
 	xdo_t *xdo = xdo_new(":1");
 	if (event.type == SDL_MOUSEMOTION) {
-		int newx = event.motion.x;
-		int newy = event.motion.y;
-		int oldx = -1;
-		int oldy = -1;
-		int oldscreen_num = -1;
 		int centerx = SWX / 2;
 		int centery = SWY / 2;
-		int diffx = newx - centerx;
-		int diffy = newy - centery;
-		// Get current screen
-		xdo_get_mouse_location(xdo, &oldx, &oldy, &oldscreen_num);
-		newx = oldx + diffx;
-		newy = oldy + diffy;
-		//printf("Mouse is on screen %d at position %d,%d and will be moved to %d, %d\n", oldscreen_num, oldx, oldy, newx, newy);
-		// The mouse position always stays in the center of the screen!
-		xdo_move_mouse(xdo, newx, newy, oldscreen_num);
+		int diffx = event.motion.x - centerx;
+		int diffy = event.motion.y - centery;
+		xdo_move_mouse_relative(xdo, diffx, diffy);
+	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
+		xdo_mouse_down(xdo, CURRENTWINDOW, event.button.button);
+	} else if (event.type == SDL_MOUSEBUTTONUP) {
+		xdo_mouse_up(xdo, CURRENTWINDOW, event.button.button);
 	} else {
 		printf("sending event of type %d with event.key.keysym.sym %d\n", event.type, event.key.keysym.sym);
 		char * keysequence = NULL;
@@ -3211,8 +3204,11 @@ int main(int argc, char **argv)
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
-				if (TDFSB_FUNC_MOUSE)
+				if (INPUT_OBJECT) {
+					send_event_to_object(event);
+				} else if (TDFSB_FUNC_MOUSE) {
 					TDFSB_FUNC_MOUSE(event.button.button, event.button.state);
+				}
 				break;
 			case SDL_KEYDOWN:
 				if (INPUT_OBJECT) {
