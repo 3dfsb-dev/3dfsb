@@ -2555,7 +2555,20 @@ static int speckey(int key)
 			if (CURRENT_TOOL >= NUMBER_OF_TOOLS)
 				CURRENT_TOOL = 0;
 			break;
-
+		case SDLK_F12:
+			if (TDFSB_MEDIA_FILE) {
+				INPUT_OBJECT = TDFSB_MEDIA_FILE;
+				// Ensure the normal keyboard handlers are enabled,
+				// because the mousebuttonup event will be consumed by the INPUT_OBJECT,
+				// so we'll stay in some kind of "finder" mode otherwise
+				TDFSB_OBJECT_SEARCH = 0;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_KEY = keyboard;
+				TDFSB_FUNC_UPKEY = keyboardup;
+			} else {
+				printf("Cannot bind to any object because none is active!\n");
+			}
+			break;
 		case SDLK_HOME:
 			vposy = 0;
 			lastposx = lastposz = vposx = vposz = -10;
@@ -2649,14 +2662,7 @@ static int speckey(int key)
 				} else {
 					cleanup_media_player();	// Stop all other playing media
 					play_media(fullpath, TDFSB_OBJECT_SELECTED);
-					INPUT_OBJECT = TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
-					// Ensure the normal keyboard handlers are enabled,
-					// because the mousebuttonup event will be consumed by the INPUT_OBJECT,
-					// so we'll stay in some kind of "finder" mode otherwise
-					TDFSB_OBJECT_SEARCH = 0;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_KEY = keyboard;
-					TDFSB_FUNC_UPKEY = keyboardup;
+					TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 					calculate_scale(TDFSB_MEDIA_FILE);
 					tdb_gen_list();		// refresh scene, because where there was a textfile, will now be a cube
 				}
@@ -3042,8 +3048,9 @@ static void send_event_to_object(SDL_Event event) {
 				}
 			break;
 		}
-		if (event.key.keysym.sym == SDLK_F12) {
-			printf("F12 received, unbinding...\n");
+		// Only unbind at keydown, because a keyup could come from the previous F12 press
+		if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_F12) {
+			printf("Unbinding mouse and keyboard input from %s\n", INPUT_OBJECT->name);
 			INPUT_OBJECT = NULL;
 		} else if (keysequence) {
 			// This works fine in a normal Xorg session but with Xvnc it generates strange stuff;
