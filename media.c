@@ -15,7 +15,13 @@
 #define CAPS "video/x-raw,format=RGB"
 //#define STARTX "/opt/TurboVNC/bin/vncserver -geometry 1920x1080 &"
 //#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile ./10.log -config ~/xorg.conf :1 & sleep 1; DISPLAY=:1 /usr/bin/lxterminal &"
+// TODO: remove the Xsession and move the mouse to 0,0 so that the focus is always on the one single window
 #define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile ./10.log -config ~/xorg.conf :1 & sleep 1; DISPLAY=:1 /etc/X11/Xsession &"
+
+//#define STOPX "/opt/TurboVNC/bin/vncserver -kill :1 &"
+// killall Xorg != kill ($pidof Xorg)
+// TODO: save the new Xorg's PID and kill only that one
+#define STOPX "kill $(pidof Xorg) &"
 
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
@@ -46,7 +52,7 @@ void cleanup_media_player(void)
 		gst_object_unref(pipeline);
 	}
 	// Kill any running X session
-	system("/opt/TurboVNC/bin/vncserver -kill :1 &");	// When we do this synchronously, we get killed (for stalling?)
+	system(STOPX);	// When we do this synchronously, we get killed (for stalling?)
 	TDFSB_MEDIA_FILE = NULL;
 }
 
