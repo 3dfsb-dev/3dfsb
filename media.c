@@ -471,7 +471,7 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		system("xdotool windowraise 37748743\n");
 		sleep(1);
 	} else if (TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
-		system(STARTX); sleep(1);
+		system(STARTX); sleep(2);
 		TDFSB_OBJECT_SELECTED->texturewidth = 2048;
 		TDFSB_OBJECT_SELECTED->textureheight = 2048;
 		TDFSB_OBJECT_SELECTED->textureformat = GL_RGB;
