@@ -2988,67 +2988,80 @@ static int keyboard(unsigned char key)
 
 /* Send an SDL_Event to the other X server */
 static void send_event_to_object(SDL_Event event) {
-	printf("sending event of type %d with event.key.keysym.sym %d\n", event.type, event.key.keysym.sym);
 	xdo_t *xdo = xdo_new(":1");
-	char * keysequence = NULL;
-	unsigned int ukeycode = 0;
-	switch (event.key.keysym.sym) {
-		case SDLK_RETURN: keysequence = "Return"; break;
-		case SDLK_ESCAPE: keysequence = "Escape"; break;
-		case SDLK_UP: keysequence = "Up"; break;
-		case SDLK_DOWN: keysequence = "Down"; break;
-		case SDLK_LEFT: keysequence = "Left"; break;
-		case SDLK_RIGHT: keysequence = "Right"; break;
-		case SDLK_PAGEUP: keysequence = "Page_Up"; break;
-		case SDLK_PAGEDOWN: keysequence = "Page_Down"; break;
-		case SDLK_BACKSPACE: keysequence = "BackSpace"; break;
-		case SDLK_DELETE: keysequence = "Delete"; break;
-		case SDLK_TAB: keysequence = "Tab"; break;
-		case SDLK_LSHIFT: keysequence = "Shift_L"; break;
-		case SDLK_RSHIFT: keysequence = "Shift_R"; break;
-		case SDLK_LALT: keysequence = "Alt_L"; break;
-		case SDLK_RALT: keysequence = "Alt_R"; break;
-		case SDLK_LCTRL: keysequence = "Control_L"; break;
-		case SDLK_RCTRL: keysequence = "Control_R"; break;
-		case SDLK_CAPSLOCK: keysequence = "Caps_Lock"; break;
-		case SDLK_HOME: keysequence = "Home"; break;
-		case SDLK_END: keysequence = "End"; break;
-		default:
-			/*
-			keysequence = malloc(sizeof(char) * 2);
-			keysequence[0] = event.key.keysym.sym;
-			keysequence[1] = 0;
-			*/
-			ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
-			if (ukeycode) {
-				if (event.type == SDL_KEYDOWN) {
-					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
-				} else if (event.type == SDL_KEYUP) {
-					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 0, 0);
+	if (event.type == SDL_MOUSEMOTION) {
+		int newx = event.motion.x;
+		int newy = event.motion.y;
+		int oldx = -1;
+		int oldy = -1;
+		int oldscreen_num = -1;
+		int centerx = SWX / 2;
+		int centery = SWY / 2;
+		int diffx = newx - centerx;
+		int diffy = newy - centery;
+		// Get current screen
+		xdo_get_mouse_location(xdo, &oldx, &oldy, &oldscreen_num);
+		newx = oldx + diffx;
+		newy = oldy + diffy;
+		//printf("Mouse is on screen %d at position %d,%d and will be moved to %d, %d\n", oldscreen_num, oldx, oldy, newx, newy);
+		// The mouse position always stays in the center of the screen!
+		xdo_move_mouse(xdo, newx, newy, oldscreen_num);
+	} else {
+		printf("sending event of type %d with event.key.keysym.sym %d\n", event.type, event.key.keysym.sym);
+		char * keysequence = NULL;
+		unsigned int ukeycode = 0;
+		switch (event.key.keysym.sym) {
+			case SDLK_RETURN: keysequence = "Return"; break;
+			case SDLK_ESCAPE: keysequence = "Escape"; break;
+			case SDLK_UP: keysequence = "Up"; break;
+			case SDLK_DOWN: keysequence = "Down"; break;
+			case SDLK_LEFT: keysequence = "Left"; break;
+			case SDLK_RIGHT: keysequence = "Right"; break;
+			case SDLK_PAGEUP: keysequence = "Page_Up"; break;
+			case SDLK_PAGEDOWN: keysequence = "Page_Down"; break;
+			case SDLK_BACKSPACE: keysequence = "BackSpace"; break;
+			case SDLK_DELETE: keysequence = "Delete"; break;
+			case SDLK_TAB: keysequence = "Tab"; break;
+			case SDLK_LSHIFT: keysequence = "Shift_L"; break;
+			case SDLK_RSHIFT: keysequence = "Shift_R"; break;
+			case SDLK_LALT: keysequence = "Alt_L"; break;
+			case SDLK_RALT: keysequence = "Alt_R"; break;
+			case SDLK_LCTRL: keysequence = "Control_L"; break;
+			case SDLK_RCTRL: keysequence = "Control_R"; break;
+			case SDLK_CAPSLOCK: keysequence = "Caps_Lock"; break;
+			case SDLK_HOME: keysequence = "Home"; break;
+			case SDLK_END: keysequence = "End"; break;
+			default:
+				ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
+				if (ukeycode) {
+					if (event.type == SDL_KEYDOWN) {
+						XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
+					} else if (event.type == SDL_KEYUP) {
+						XTestFakeKeyEvent(xdo->xdpy, ukeycode, 0, 0);
+					}
+					XSync(xdo->xdpy, False);
+					XFlush(xdo->xdpy);
+				} else {
+					printf("Not forwarding key %d\n", event.key.keysym.sym);
 				}
-				XSync(xdo->xdpy, False);
-				XFlush(xdo->xdpy);
-			} else {
-				printf("Not forwarding key %d\n", event.key.keysym.sym);
+			break;
+		}
+		if (event.key.keysym.sym == SDLK_F12) {
+			printf("F12 received, unbinding...\n");
+			INPUT_OBJECT = NULL;
+		} else if (keysequence) {
+			// This works fine in a normal Xorg session but with Xvnc it generates strange stuff;
+			// xev shows just 2 events for a shiftdown, a press, shiftup
+			if (event.type == SDL_KEYDOWN) {
+				printf("keydown %s\n", keysequence);
+				xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, keysequence, 0);
+				//char * todo
+			} else if (event.type == SDL_KEYUP) {
+				printf("keyup %s\n", keysequence);
+				xdo_send_keysequence_window_up(xdo, CURRENTWINDOW, keysequence, 0);
 			}
-		break;
-	}
-	if (event.key.keysym.sym == SDLK_F12) {
-		printf("F12 received, unbinding...\n");
-		INPUT_OBJECT = NULL;
-	} else if (keysequence) {
-		// This works fine in a normal Xorg session but with Xvnc it generates strange stuff;
-		// xev shows just 2 events for a shiftdown, a press, shiftup
-		if (event.type == SDL_KEYDOWN) {
-			printf("keydown %s\n", keysequence);
-			xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, keysequence, 0);
-			//char * todo
-		} else if (event.type == SDL_KEYUP) {
-			printf("keyup %s\n", keysequence);
-			xdo_send_keysequence_window_up(xdo, CURRENTWINDOW, keysequence, 0);
 		}
 	}
-	//free(keysequence);
 	xdo_free(xdo);
 }
 
@@ -3189,8 +3202,12 @@ int main(int argc, char **argv)
 				reshape(event.resize.w, event.resize.h);
 				break;
 			case SDL_MOUSEMOTION:
-				if (TDFSB_FUNC_MOTION)
+				//printf("Mouse motion to %d,%d\n", event.motion.x, event.motion.y);
+				if (INPUT_OBJECT) {
+					send_event_to_object(event);
+				} else if (TDFSB_FUNC_MOTION) {
 					TDFSB_FUNC_MOTION(event.motion.x, event.motion.y);
+				}
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
