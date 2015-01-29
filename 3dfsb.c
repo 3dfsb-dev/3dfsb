@@ -3014,6 +3014,21 @@ static void send_event_to_object(SDL_Event event) {
 		char * keysequence = NULL;
 		unsigned int ukeycode = 0;
 		switch (event.key.keysym.sym) {
+			// Here we try to follow the same order as in SDL_keysym.h
+			case SDLK_NUMLOCK: keysequence = "Num_Lock"; break;
+			case SDLK_CAPSLOCK: keysequence = "Caps_Lock"; break;
+			//case SDLK_SCROLLLOCK: keysequence = "Scroll_Lock"; break; // SDL 2.0 has this, 1.2 doesn't ?
+			case SDLK_RSHIFT: keysequence = "Shift_R"; break;
+			case SDLK_LSHIFT: keysequence = "Shift_L"; break;
+			case SDLK_RCTRL: keysequence = "Control_R"; break;
+			case SDLK_LCTRL: keysequence = "Control_L"; break;
+			case SDLK_RALT: keysequence = "Alt_R"; break;
+			case SDLK_LALT: keysequence = "Alt_L"; break;
+			case SDLK_RMETA: keysequence = "Meta_R"; break;
+			case SDLK_LMETA: keysequence = "Meta_L"; break;
+			case SDLK_RSUPER: keysequence = "Super_R"; break;
+			case SDLK_LSUPER: keysequence = "Super_L"; break;
+			case SDLK_MODE: keysequence = "ISO_Level3_Shift"; break;	// AltGr
 			case SDLK_RETURN: keysequence = "Return"; break;
 			case SDLK_ESCAPE: keysequence = "Escape"; break;
 			case SDLK_UP: keysequence = "Up"; break;
@@ -3025,14 +3040,6 @@ static void send_event_to_object(SDL_Event event) {
 			case SDLK_BACKSPACE: keysequence = "BackSpace"; break;
 			case SDLK_DELETE: keysequence = "Delete"; break;
 			case SDLK_TAB: keysequence = "Tab"; break;
-			case SDLK_LSHIFT: keysequence = "Shift_L"; break;
-			case SDLK_RSHIFT: keysequence = "Shift_R"; break;
-			case SDLK_LALT: keysequence = "Alt_L"; break;
-			case SDLK_RALT: keysequence = "Alt_R"; break;
-			case SDLK_MODE: keysequence = "ISO_Level3_Shift"; break;	// AltGr
-			case SDLK_LCTRL: keysequence = "Control_L"; break;
-			case SDLK_RCTRL: keysequence = "Control_R"; break;
-			case SDLK_CAPSLOCK: keysequence = "Caps_Lock"; break;
 			case SDLK_HOME: keysequence = "Home"; break;
 			case SDLK_END: keysequence = "End"; break;
 			default:
