@@ -3010,7 +3010,7 @@ static void send_event_to_object(SDL_Event event) {
 	} else if (event.type == SDL_MOUSEBUTTONUP) {
 		xdo_mouse_up(xdo, CURRENTWINDOW, event.button.button);
 	} else {
-		printf("sending event of type %d with event.key.keysym.sym %d\n", event.type, event.key.keysym.sym);
+		printf("Sending event of type %d with event.key.keysym.sym %d\n", event.type, event.key.keysym.sym);
 		char * keysequence = NULL;
 		unsigned int ukeycode = 0;
 		switch (event.key.keysym.sym) {
@@ -3029,6 +3029,7 @@ static void send_event_to_object(SDL_Event event) {
 			case SDLK_RSHIFT: keysequence = "Shift_R"; break;
 			case SDLK_LALT: keysequence = "Alt_L"; break;
 			case SDLK_RALT: keysequence = "Alt_R"; break;
+			case SDLK_MODE: keysequence = "ISO_Level3_Shift"; break;	// AltGr
 			case SDLK_LCTRL: keysequence = "Control_L"; break;
 			case SDLK_RCTRL: keysequence = "Control_R"; break;
 			case SDLK_CAPSLOCK: keysequence = "Caps_Lock"; break;
