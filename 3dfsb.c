@@ -3047,13 +3047,14 @@ static void send_event_to_object(SDL_Event event) {
 				} else {
 					printf("Not forwarding key %d\n", event.key.keysym.sym);
 				}
+				keysequence = NULL;	// Ensure the code below does not send any more keys
 			break;
 		}
 		// Only unbind at keydown, because a keyup could come from the previous F12 press
 		if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_F12) {
 			printf("Unbinding mouse and keyboard input from %s\n", INPUT_OBJECT->name);
 			INPUT_OBJECT = NULL;
-		} else if (keysequence) {
+		} else if (keysequence) {	// Gets set by the code above
 			// This works fine in a normal Xorg session but with Xvnc it generates strange stuff;
 			// xev shows just 2 events for a shiftdown, a press, shiftup
 			if (event.type == SDL_KEYDOWN) {
