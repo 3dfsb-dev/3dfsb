@@ -1529,20 +1529,26 @@ static void approach(void)
 {
 	switch (TDFSB_ANIM_STATE) {
 	case 1:		// Approach vposx,uposy,vposz until we are close in either dimension
+			// Typically, this is used to fly to a point *above* the object we want to approach
 		vposx = vposx + TDFSB_OA_DX;
 		uposy = vposy = vposy + TDFSB_OA_DY;
 		vposz = vposz + TDFSB_OA_DZ;
 		if (fabs(vposx - TDFSB_OA->posx) < 0.1 && fabs(vposz - TDFSB_OA->posz) < 0.1) {
-			TDFSB_ANIM_COUNT = 50;
-			TDFSB_ANIM_STATE = 2;
+			// Set the delta's for the next step in the approach
 			TDFSB_OA_DX = -tposx / 50;
-			TDFSB_OA_DZ = (-1 - tposz) / 50;
+			TDFSB_OA_DZ = (- 0.5 - tposz) / 50;
 			TDFSB_OA_DY = -tposy / 50;
+			// Do it 50 times
+			TDFSB_ANIM_COUNT = 50;
+			// Go to phase 2 (= state 2) of the approach
+			// Note: a directory proximity action might trigger before the phase two is actually started
+			TDFSB_ANIM_STATE = 2;
 		}
 		break;
 
-	case 2:
-		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE || TDFSB_OA->regtype == PROCESS) {	// If we have a texture
+	case 2: // This does the rotation so that we face the front of the object we are approaching
+		// TODO: this will no longer be a TEXTFILE but something generic later on!
+		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE || TDFSB_OA->regtype == PROCESS || TDFSB_OA->regtype == TEXTFILE) {	// If we have a texture
 			if (TDFSB_ANIM_COUNT) {
 				smoox += TDFSB_OA_DX;
 				tposx = smoox;
@@ -1558,14 +1564,9 @@ static void approach(void)
 			} else {
 				TDFSB_ANIM_COUNT = 50;
 				TDFSB_ANIM_STATE = 3;
-				TDFSB_OA_DZ = (TDFSB_OA->posz + TDFSB_OA->scalex + 2 - vposz) / 50;
+				TDFSB_OA_DZ = (TDFSB_OA->posz + TDFSB_OA->scalex + 6.5 - vposz) / 50;
 				TDFSB_OA_DX = (TDFSB_OA->posx + TDFSB_OA->scalex + 6 - vposx) / 50;
 			}
-		} else if (TDFSB_OA->regtype == TEXTFILE) {	// If we don't have a texture, it might be a textfile
-			TDFSB_ANIM_COUNT = 50;
-			TDFSB_ANIM_STATE = 3;
-			TDFSB_OA_DZ = (TDFSB_OA->posz + TDFSB_OA->scalez + 4 - vposz) / 50;
-			TDFSB_OA_DX = (TDFSB_OA->posx + TDFSB_OA->scalex + 4 - vposx) / 50;
 		} else if (TDFSB_OA->regtype == DIRECTORY) {
 			TDFSB_ANIM_COUNT = 50;
 			TDFSB_ANIM_STATE = 3;
@@ -1578,7 +1579,7 @@ static void approach(void)
 
 		break;
 
-	case 3:
+	case 3:		// This moves the camera back a bit, away from the object we are approaching
 		if (TDFSB_ANIM_COUNT) {
 			vposz += TDFSB_OA_DZ * (-tposz);
 			vposx += TDFSB_OA_DX * (-tposx);
@@ -1588,11 +1589,11 @@ static void approach(void)
 		} else {
 			TDFSB_ANIM_COUNT = 50;
 			TDFSB_ANIM_STATE = 4;
-			TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley / 2 - 1 - vposy) / 50;
+			TDFSB_OA_DY = (TDFSB_OA->posy + (TDFSB_OA->scaley / 2) - 1.5 - vposy) / 50;
 		}
 		break;
 
-	case 4:
+	case 4:		// This moves the camera down, to the center of the object we are approaching
 		if (TDFSB_ANIM_COUNT) {
 			uposy = vposy += TDFSB_OA_DY;
 			/* smoou=0; uposy=0; */
