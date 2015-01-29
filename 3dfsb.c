@@ -1536,7 +1536,7 @@ static void approach(void)
 		if (fabs(vposx - TDFSB_OA->posx) < 0.1 && fabs(vposz - TDFSB_OA->posz) < 0.1) {
 			// Set the delta's for the next step in the approach
 			TDFSB_OA_DX = -tposx / 50;
-			TDFSB_OA_DZ = (- 0.5 - tposz) / 50;
+			TDFSB_OA_DZ = (- 0.5 - tposz) / 50;	// Careful, what you change here affects the result of the "down" move later
 			TDFSB_OA_DY = -tposy / 50;
 			// Do it 50 times
 			TDFSB_ANIM_COUNT = 50;
