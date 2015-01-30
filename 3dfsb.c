@@ -1126,6 +1126,7 @@ static void leodir(void)
 	TDFSB_TEX_NUM = 0;
 	TDFSB_TEX_NAMES = NULL;
 	INPUT_OBJECT = NULL;
+	TDFSB_OBJECT_SELECTED = NULL;
 
 	cleanup_media_player();	// stop any playing media
 
@@ -1624,6 +1625,167 @@ static void approach(void)
 
 }
 
+/*
+ * Input handling code starts here, about ~700 lines of code.
+ */
+static void MouseMove(int x, int y)
+{
+	if (!TDFSB_ANIM_STATE) {
+		centX = centX - (GLdouble) (headspeed * (floor(((double)SWX) / 2) - (double)x));
+		centY = centY - (GLdouble) (headspeed * (floor(((double)SWY) / 2) - (double)y));
+		if (centY >= SWY / 2)
+			centY = SWY / 2;
+		if (centY <= ((-SWY) / 2))
+			centY = ((-SWY) / 2);
+		tposz = ((GLdouble) sin((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
+		tposx = ((GLdouble) cos((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
+		tposy = -((GLdouble) sin((((double)centY) / (double)(SWY / PI))));
+	}
+}
+
+static void MouseLift(int x, int y)
+{
+	if (!TDFSB_ANIM_STATE) {
+		uposy += ((GLfloat) ((GLfloat) (SWY / 2) - (GLfloat) y) / 25);
+
+		centX = centX - (GLdouble) (headspeed * (floor(((double)SWX) / 2) - (double)x));
+/*        	centY=centY-(GLdouble)(headspeed*(floor(((double)SWY)/2)-(double)y));*/
+		if (centY >= SWY / 2)
+			centY = SWY / 2;
+		if (centY <= ((-SWY) / 2))
+			centY = ((-SWY) / 2);
+		tposz = ((GLdouble) sin((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
+		tposx = ((GLdouble) cos((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
+		tposy = -((GLdouble) sin((((double)centY) / (double)(SWY / PI))));
+	}
+}
+
+static void mouse(int button, int state)
+{
+	if (TDFSB_ANIM_STATE)
+		return;		// We don't react to mouse buttons when we are in animation state, such as flying somewhere
+
+	switch (button) {
+
+	case SDL_BUTTON_LEFT:
+		if (!TDFSB_CLASSIC_NAV) {
+			if (state == SDL_PRESSED) {
+				TDFSB_OBJECT_SELECTED = NULL;
+				TDFSB_OBJECT_SEARCH = 1;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_KEY = keyfinder;
+				TDFSB_FUNC_UPKEY = keyupfinder;
+			} else {
+				TDFSB_OBJECT_SELECTED = NULL;
+				TDFSB_OBJECT_SEARCH = 0;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_KEY = keyboard;
+				TDFSB_FUNC_UPKEY = keyboardup;
+			}
+			break;
+		} else {
+			if (state == SDL_PRESSED) {
+				forwardkeybuf = 1;
+				backwardkeybuf = 0;
+				TDFSB_FUNC_IDLE = move;
+			} else {
+				forwardkeybuf = 0;
+				check_standstill();
+			}
+			break;
+		}
+
+	case SDL_BUTTON_RIGHT:
+		if (!TDFSB_CLASSIC_NAV) {
+			if (state == SDL_PRESSED && TDFSB_OBJECT_SELECTED) {
+				stop_move();
+				TDFSB_OA = TDFSB_OBJECT_SELECTED;
+				TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
+				TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
+				TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
+				TDFSB_ANIM_STATE = 1;
+				TDFSB_OBJECT_SELECTED = NULL;
+				TDFSB_OBJECT_SEARCH = 0;
+				TDFSB_FUNC_KEY = keyboard;
+				TDFSB_FUNC_UPKEY = keyboardup;
+				TDFSB_KEY_FINDER = 0;
+				TDFSB_FUNC_IDLE = approach;
+			}
+			break;
+		} else {
+			if (state == SDL_PRESSED) {
+				backwardkeybuf = 1;
+				forwardkeybuf = 0;
+				TDFSB_FUNC_IDLE = move;
+			} else {
+				backwardkeybuf = 0;
+				check_standstill();
+			}
+			break;
+		}
+
+	case SDL_BUTTON_MIDDLE:
+		if (state == SDL_PRESSED) {
+			TDFSB_FUNC_MOTION = MouseLift;
+			TDFSB_FUNC_IDLE = move;
+		} else {
+			TDFSB_FUNC_MOTION = MouseMove;
+			TDFSB_FUNC_IDLE = move;
+			check_standstill();
+			uposy = vposy;
+		}
+		break;
+
+	case 4:		// SDL_SCROLLUP?
+		if (state == SDL_PRESSED)
+			uposy = vposy = vposy + TDFSB_MW_STEPS;
+		if (vposy < 0)
+			vposy = uposy = 0;
+		break;
+
+	case 5:		// SDL_SCROLLDOWN?
+		if (state == SDL_PRESSED)
+			uposy = vposy = vposy - TDFSB_MW_STEPS;
+		if (vposy < 0)
+			vposy = uposy = 0;
+		break;
+
+	case 6:
+		printf("No function for button 6 yet\n");
+		break;
+
+	default:
+		break;
+	}
+}
+
+
+static void release_mouse(void) {
+	TDFSB_FUNC_MOUSE = NULL;
+	TDFSB_FUNC_MOTION = NULL;
+	SDL_ShowCursor(SDL_ENABLE);
+	TDFSB_HAVE_MOUSE = 0;
+}
+
+static void grab_mouse(void) {
+	SDL_WarpMouse(SWX / 2, SWY / 2);
+	smoox = tposx;
+	smooy = tposy;
+	smooz = tposz;
+	TDFSB_FUNC_MOUSE = mouse;
+	TDFSB_FUNC_MOTION = MouseMove;
+	SDL_ShowCursor(SDL_DISABLE);
+	TDFSB_HAVE_MOUSE = 1;
+}
+
+static void toggle_mouse_grab(void) {
+	if (TDFSB_HAVE_MOUSE) {
+		release_mouse();
+	} else {
+		grab_mouse();
+	}
+}
+
 static void nullDisplay(void)
 {
 
@@ -1676,10 +1838,18 @@ static void apply_tool_on_object(struct tree_entry *object)
 		strcat(command, TDFSB_CURRENTPATH);
 		if (strlen(command) > 1) strcat(command, "/");
 		strcat(command, object->name);
-		strcat(command, "\"");
+		strcat(command, "\" &");
 		printf("Executing command to open file: %s\n", command);
 		system(command);
+		release_mouse();
+
 	}
+	// Unselect all objects, otherwise the open action might keep triggering
+	TDFSB_OBJECT_SELECTED = NULL;
+	TDFSB_OBJECT_SEARCH = 0;
+	TDFSB_KEY_FINDER = 0;
+	TDFSB_FUNC_KEY = keyboard;
+	TDFSB_FUNC_UPKEY = keyboardup;
 }
 
 /*
@@ -1735,9 +1905,7 @@ static void display(void)
 		}
 		object_to_retexture = NULL;
 	}
-	if (TDFSB_HAVE_MOUSE) {
-		SDL_WarpMouse(SWX / 2, SWY / 2);
-	}
+	if (TDFSB_HAVE_MOUSE) SDL_WarpMouse(SWX / 2, SWY / 2);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_LIGHTING);
@@ -2323,140 +2491,6 @@ static void display(void)
 		TDFSB_FPS_DISP++;
 }
 
-/*
- * Input handling code starts here, about ~700 lines of code.
- */
-static void MouseMove(int x, int y)
-{
-	if (!TDFSB_ANIM_STATE) {
-		centX = centX - (GLdouble) (headspeed * (floor(((double)SWX) / 2) - (double)x));
-		centY = centY - (GLdouble) (headspeed * (floor(((double)SWY) / 2) - (double)y));
-		if (centY >= SWY / 2)
-			centY = SWY / 2;
-		if (centY <= ((-SWY) / 2))
-			centY = ((-SWY) / 2);
-		tposz = ((GLdouble) sin((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
-		tposx = ((GLdouble) cos((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
-		tposy = -((GLdouble) sin((((double)centY) / (double)(SWY / PI))));
-	}
-}
-
-static void MouseLift(int x, int y)
-{
-	if (!TDFSB_ANIM_STATE) {
-		uposy += ((GLfloat) ((GLfloat) (SWY / 2) - (GLfloat) y) / 25);
-
-		centX = centX - (GLdouble) (headspeed * (floor(((double)SWX) / 2) - (double)x));
-/*        	centY=centY-(GLdouble)(headspeed*(floor(((double)SWY)/2)-(double)y));*/
-		if (centY >= SWY / 2)
-			centY = SWY / 2;
-		if (centY <= ((-SWY) / 2))
-			centY = ((-SWY) / 2);
-		tposz = ((GLdouble) sin((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
-		tposx = ((GLdouble) cos((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
-		tposy = -((GLdouble) sin((((double)centY) / (double)(SWY / PI))));
-	}
-}
-
-static void mouse(int button, int state)
-{
-	if (TDFSB_ANIM_STATE)
-		return;		// We don't react to mouse buttons when we are in animation state, such as flying somewhere
-
-	switch (button) {
-
-	case SDL_BUTTON_LEFT:
-		if (!TDFSB_CLASSIC_NAV) {
-			if (state == SDL_PRESSED) {
-				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_OBJECT_SEARCH = 1;
-				TDFSB_KEY_FINDER = 0;
-				TDFSB_FUNC_KEY = keyfinder;
-				TDFSB_FUNC_UPKEY = keyupfinder;
-			} else {
-				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_OBJECT_SEARCH = 0;
-				TDFSB_KEY_FINDER = 0;
-				TDFSB_FUNC_KEY = keyboard;
-				TDFSB_FUNC_UPKEY = keyboardup;
-			}
-			break;
-		} else {
-			if (state == SDL_PRESSED) {
-				forwardkeybuf = 1;
-				backwardkeybuf = 0;
-				TDFSB_FUNC_IDLE = move;
-			} else {
-				forwardkeybuf = 0;
-				check_standstill();
-			}
-			break;
-		}
-
-	case SDL_BUTTON_RIGHT:
-		if (!TDFSB_CLASSIC_NAV) {
-			if (state == SDL_PRESSED && TDFSB_OBJECT_SELECTED) {
-				stop_move();
-				TDFSB_OA = TDFSB_OBJECT_SELECTED;
-				TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
-				TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
-				TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
-				TDFSB_ANIM_STATE = 1;
-				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_OBJECT_SEARCH = 0;
-				TDFSB_FUNC_KEY = keyboard;
-				TDFSB_FUNC_UPKEY = keyboardup;
-				TDFSB_KEY_FINDER = 0;
-				TDFSB_FUNC_IDLE = approach;
-			}
-			break;
-		} else {
-			if (state == SDL_PRESSED) {
-				backwardkeybuf = 1;
-				forwardkeybuf = 0;
-				TDFSB_FUNC_IDLE = move;
-			} else {
-				backwardkeybuf = 0;
-				check_standstill();
-			}
-			break;
-		}
-
-	case SDL_BUTTON_MIDDLE:
-		if (state == SDL_PRESSED) {
-			TDFSB_FUNC_MOTION = MouseLift;
-			TDFSB_FUNC_IDLE = move;
-		} else {
-			TDFSB_FUNC_MOTION = MouseMove;
-			TDFSB_FUNC_IDLE = move;
-			check_standstill();
-			uposy = vposy;
-		}
-		break;
-
-	case 4:		// SDL_SCROLLUP?
-		if (state == SDL_PRESSED)
-			uposy = vposy = vposy + TDFSB_MW_STEPS;
-		if (vposy < 0)
-			vposy = uposy = 0;
-		break;
-
-	case 5:		// SDL_SCROLLDOWN?
-		if (state == SDL_PRESSED)
-			uposy = vposy = vposy - TDFSB_MW_STEPS;
-		if (vposy < 0)
-			vposy = uposy = 0;
-		break;
-
-	case 6:
-		printf("No function for button 6 yet\n");
-		break;
-
-	default:
-		break;
-	}
-}
-
 /* Returns 1 when the key still has to be handled by the keyboard function */
 static int speckey(int key)
 {
@@ -2495,12 +2529,7 @@ static int speckey(int key)
 				}
 				system(TDFSB_CES_TEMP);
 				printf("EXECUTE COMMAND: %s\n", TDFSB_CES_TEMP);
-				if (TDFSB_HAVE_MOUSE) {
-					TDFSB_HAVE_MOUSE = 0;
-					TDFSB_FUNC_MOUSE = NULL;
-					TDFSB_FUNC_MOTION = NULL;
-					SDL_ShowCursor(SDL_ENABLE);
-				}
+				if (TDFSB_HAVE_MOUSE) release_mouse();
 			}
 			break;
 		case SDLK_F1:
@@ -2814,24 +2843,8 @@ static int keyboard(unsigned char key)
 			TDFSB_SHOW_DOTFILES = 1 - TDFSB_SHOW_DOTFILES;
 			TDFSB_FUNC_IDLE = nullDisplay;
 			TDFSB_FUNC_DISP = noDisplay;
-		}
-
-		else if (key == TDFSB_KC_RELEASE_MOUSE) {
-			if (TDFSB_HAVE_MOUSE) {
-				TDFSB_HAVE_MOUSE = 0;
-				TDFSB_FUNC_MOUSE = NULL;
-				TDFSB_FUNC_MOTION = NULL;
-				SDL_ShowCursor(SDL_ENABLE);
-			} else {
-				SDL_WarpMouse(SWX / 2, SWY / 2);
-				smoox = tposx;
-				smooy = tposy;
-				smooz = tposz;
-				TDFSB_FUNC_MOUSE = mouse;
-				TDFSB_FUNC_MOTION = MouseMove;
-				SDL_ShowCursor(SDL_DISABLE);
-				TDFSB_HAVE_MOUSE = 1;
-			}
+		} else if (key == TDFSB_KC_RELEASE_MOUSE) {
+			toggle_mouse_grab();
 		}
 
 		else if (key == TDFSB_KC_RL) {
