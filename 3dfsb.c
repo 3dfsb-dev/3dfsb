@@ -76,6 +76,8 @@
 #define _GLUfuncptr void*
 #endif
 
+#define OPEN_COMMAND "xdg-open "
+
 int CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding
 
 const SDL_VideoInfo *info = NULL;
@@ -1665,9 +1667,19 @@ static void apply_tool_on_object(struct tree_entry *object)
 	if (CURRENT_TOOL == TOOL_WEAPON) {
 		// printf("TODO: Start some animation on the object to show it is being deleted ");
 		object->tombstone = 1;	// Mark the object as deleted
+		// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
+		tdb_gen_list();
+	} else if (CURRENT_TOOL == TOOL_OPENER) {
+		char command[4096];
+		strcpy(command, OPEN_COMMAND);
+		strcat(command, "\"");
+		strcat(command, TDFSB_CURRENTPATH);
+		if (strlen(command) > 1) strcat(command, "/");
+		strcat(command, object->name);
+		strcat(command, "\"");
+		printf("Executing command to open file: %s\n", command);
+		system(command);
 	}
-	// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
-	tdb_gen_list();
 }
 
 /*
