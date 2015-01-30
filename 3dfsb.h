@@ -1,8 +1,8 @@
 #ifndef TDFSB_H
 #define TDFSB_H
 
-#include <GL/gl.h>	// For GLfloat
-#include <SDL.h>	// For SDL_Surface
+#include <GL/gl.h>		// For GLfloat
+#include <SDL.h>		// For SDL_Surface
 
 // To fix warnings about unused variables
 // Note: __attribute__ ((unused)) also works but is gcc specific

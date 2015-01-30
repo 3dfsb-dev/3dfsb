@@ -393,4 +393,3 @@ void setup_kc(void)
 	TDFSB_KC_FORWARD = 'w';	// on azerty keyboards, this should be z... but we set the defaults to querty
 	TDFSB_KC_BACKWARD = 's';
 }
-

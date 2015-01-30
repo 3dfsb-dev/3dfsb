@@ -249,7 +249,7 @@ pthread_t async_load_textures_thread_id = NULL;
 GAsyncQueue *loaded_textures_queue = NULL;
 
 // Input events go to an object
-tree_entry * INPUT_OBJECT = NULL;
+tree_entry *INPUT_OBJECT = NULL;
 
 static void ende(int code)
 {
@@ -306,7 +306,8 @@ static char *uppercase(char *str)
 	return newstr;
 }
 
-static tree_entry * calculate_scale(tree_entry * object) {
+static tree_entry *calculate_scale(tree_entry * object)
+{
 	if (object->originalwidth < object->originalheight) {
 		object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
 		object->scaley = (object->originalheight * (object->scalex)) / object->originalwidth;
@@ -318,7 +319,6 @@ static tree_entry * calculate_scale(tree_entry * object) {
 	object->scalez = 0.5;	// flatscreens instead of the default ugly big square blocks
 	return object;
 }
-
 
 static int get_file_type(char *filename)
 {
@@ -480,7 +480,7 @@ static void tdb_gen_list(void)
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE)) || (help->regtype == PROCESS) || (help->regtype == TEXTFILE && help == TDFSB_MEDIA_FILE)) {	// Regular file, except VIDEOSOURCEFILE's, which are character devices
-			if ((((help->regtype == IMAGEFILE) || (help->regtype == PDFFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE) ) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) || (help->regtype == PROCESS) || (help->regtype == TEXTFILE && help == TDFSB_MEDIA_FILE)) {
+			if ((((help->regtype == IMAGEFILE) || (help->regtype == PDFFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) || (help->regtype == PROCESS) || (help->regtype == TEXTFILE && help == TDFSB_MEDIA_FILE)) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -1249,15 +1249,15 @@ static void leodir(void)
 				/* Compile regular expression */
 				reti = regcomp(&regex, "/proc/[[:digit:]]*$", 0);
 				if (reti) {
-				    fprintf(stderr, "Could not compile regex\n");
-				    exit(1);
+					fprintf(stderr, "Could not compile regex\n");
+					exit(1);
 				}
 				/* Execute regular expression */
 				reti = regexec(&regex, fullpath, 0, NULL, 0);
-				if (!reti ){
+				if (!reti) {
 					printf("Match of %s\n", fullpath);
 					temptype = PROCESS;
-				} else if (reti == REG_NOMATCH ){
+				} else if (reti == REG_NOMATCH) {
 					printf("No match of %s\n", fullpath);
 					temptype = DIRECTORY;
 				} else {
@@ -1269,7 +1269,7 @@ static void leodir(void)
 				regfree(&regex);
 			}
 			// Count the number of textures we'll need, so we can allocate them already below
-			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS || temptype == TEXTFILE) 
+			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS || temptype == TEXTFILE)
 				TDFSB_TEX_NUM++;
 
 			// Setting some default scale (before having read the file) and position
@@ -1532,14 +1532,14 @@ static void approach(void)
 {
 	switch (TDFSB_ANIM_STATE) {
 	case 1:		// Approach vposx,uposy,vposz until we are close in either dimension
-			// Typically, this is used to fly to a point *above* the object we want to approach
+		// Typically, this is used to fly to a point *above* the object we want to approach
 		vposx = vposx + TDFSB_OA_DX;
 		uposy = vposy = vposy + TDFSB_OA_DY;
 		vposz = vposz + TDFSB_OA_DZ;
 		if (fabs(vposx - TDFSB_OA->posx) < 0.1 && fabs(vposz - TDFSB_OA->posz) < 0.1) {
 			// Set the delta's for the next step in the approach
 			TDFSB_OA_DX = -tposx / 50;
-			TDFSB_OA_DZ = (- 0.5 - tposz) / 50;	// Careful, what you change here affects the result of the "down" move later
+			TDFSB_OA_DZ = (-0.5 - tposz) / 50;	// Careful, what you change here affects the result of the "down" move later
 			TDFSB_OA_DY = -tposy / 50;
 			// Do it 50 times
 			TDFSB_ANIM_COUNT = 50;
@@ -1549,7 +1549,7 @@ static void approach(void)
 		}
 		break;
 
-	case 2: // This does the rotation so that we face the front of the object we are approaching
+	case 2:		// This does the rotation so that we face the front of the object we are approaching
 		// TODO: this will no longer be a TEXTFILE but something generic later on!
 		if (TDFSB_OA->regtype == IMAGEFILE || TDFSB_OA->regtype == VIDEOFILE || TDFSB_OA->regtype == VIDEOSOURCEFILE || TDFSB_OA->regtype == PDFFILE || TDFSB_OA->regtype == PROCESS || TDFSB_OA->regtype == TEXTFILE) {	// If we have a texture
 			if (TDFSB_ANIM_COUNT) {
@@ -1759,15 +1759,16 @@ static void mouse(int button, int state)
 	}
 }
 
-
-static void release_mouse(void) {
+static void release_mouse(void)
+{
 	TDFSB_FUNC_MOUSE = NULL;
 	TDFSB_FUNC_MOTION = NULL;
 	SDL_ShowCursor(SDL_ENABLE);
 	TDFSB_HAVE_MOUSE = 0;
 }
 
-static void grab_mouse(void) {
+static void grab_mouse(void)
+{
 	SDL_WarpMouse(SWX / 2, SWY / 2);
 	smoox = tposx;
 	smooy = tposy;
@@ -1778,7 +1779,8 @@ static void grab_mouse(void) {
 	TDFSB_HAVE_MOUSE = 1;
 }
 
-static void toggle_mouse_grab(void) {
+static void toggle_mouse_grab(void)
+{
 	if (TDFSB_HAVE_MOUSE) {
 		release_mouse();
 	} else {
@@ -1836,7 +1838,8 @@ static void apply_tool_on_object(struct tree_entry *object)
 		strcpy(command, OPEN_COMMAND);
 		strcat(command, "\"");
 		strcat(command, TDFSB_CURRENTPATH);
-		if (strlen(command) > 1) strcat(command, "/");
+		if (strlen(command) > 1)
+			strcat(command, "/");
 		strcat(command, object->name);
 		strcat(command, "\" &");
 		printf("Executing command to open file: %s\n", command);
@@ -1905,7 +1908,8 @@ static void display(void)
 		}
 		object_to_retexture = NULL;
 	}
-	if (TDFSB_HAVE_MOUSE) SDL_WarpMouse(SWX / 2, SWY / 2);
+	if (TDFSB_HAVE_MOUSE)
+		SDL_WarpMouse(SWX / 2, SWY / 2);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_LIGHTING);
@@ -2043,7 +2047,6 @@ static void display(void)
 			} else {
 				glScalef(0.005, 0.005, 0.005);
 			}
-
 
 			if (!((object->mode) & 0x20)) {
 				// Why are these colors so high, instead of the default 1.0, 1.0, 1.0?
@@ -2529,7 +2532,8 @@ static int speckey(int key)
 				}
 				system(TDFSB_CES_TEMP);
 				printf("EXECUTE COMMAND: %s\n", TDFSB_CES_TEMP);
-				if (TDFSB_HAVE_MOUSE) release_mouse();
+				if (TDFSB_HAVE_MOUSE)
+					release_mouse();
 			}
 			break;
 		case SDLK_F1:
@@ -2706,7 +2710,7 @@ static int speckey(int key)
 					play_media(fullpath, TDFSB_OBJECT_SELECTED);
 					TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 					calculate_scale(TDFSB_MEDIA_FILE);
-					tdb_gen_list();		// refresh scene, because where there was a textfile, will now be a cube
+					tdb_gen_list();	// refresh scene, because where there was a textfile, will now be a cube
 				}
 			}
 			break;
@@ -2802,8 +2806,7 @@ static int keyboard(unsigned char key)
 		if (key == 27) {
 			printf("\nBye bye...\n\n");
 			ende(0);
-		}
-		else if (key == TDFSB_KC_FLY) {
+		} else if (key == TDFSB_KC_FLY) {
 			TDFSB_MODE_FLY = 1 - TDFSB_MODE_FLY;
 			if (TDFSB_MODE_FLY)
 				strcpy(flybuf, "Flying: ON");
@@ -3022,7 +3025,8 @@ static int keyboard(unsigned char key)
 }
 
 /* Send an SDL_Event to the other X server */
-static void send_event_to_object(SDL_Event event) {
+static void send_event_to_object(SDL_Event event)
+{
 	xdo_t *xdo = xdo_new(":1");
 	if (event.type == SDL_MOUSEMOTION) {
 		int centerx = SWX / 2;
@@ -3036,51 +3040,103 @@ static void send_event_to_object(SDL_Event event) {
 		xdo_mouse_up(xdo, CURRENTWINDOW, event.button.button);
 	} else {
 		printf("Sending event of type %d with event.key.keysym.sym %d\n", event.type, event.key.keysym.sym);
-		char * keysequence = NULL;
+		char *keysequence = NULL;
 		unsigned int ukeycode = 0;
 		switch (event.key.keysym.sym) {
 			// Here we try to follow the same order as in SDL_keysym.h
-			case SDLK_NUMLOCK: keysequence = "Num_Lock"; break;
-			case SDLK_CAPSLOCK: keysequence = "Caps_Lock"; break;
+		case SDLK_NUMLOCK:
+			keysequence = "Num_Lock";
+			break;
+		case SDLK_CAPSLOCK:
+			keysequence = "Caps_Lock";
+			break;
 			//case SDLK_SCROLLLOCK: keysequence = "Scroll_Lock"; break; // SDL 2.0 has this, 1.2 doesn't ?
-			case SDLK_RSHIFT: keysequence = "Shift_R"; break;
-			case SDLK_LSHIFT: keysequence = "Shift_L"; break;
-			case SDLK_RCTRL: keysequence = "Control_R"; break;
-			case SDLK_LCTRL: keysequence = "Control_L"; break;
-			case SDLK_RALT: keysequence = "Alt_R"; break;
-			case SDLK_LALT: keysequence = "Alt_L"; break;
-			case SDLK_RMETA: keysequence = "Meta_R"; break;
-			case SDLK_LMETA: keysequence = "Meta_L"; break;
-			case SDLK_RSUPER: keysequence = "Super_R"; break;
-			case SDLK_LSUPER: keysequence = "Super_L"; break;
-			case SDLK_MODE: keysequence = "ISO_Level3_Shift"; break;	// AltGr
-			case SDLK_RETURN: keysequence = "Return"; break;
-			case SDLK_ESCAPE: keysequence = "Escape"; break;
-			case SDLK_UP: keysequence = "Up"; break;
-			case SDLK_DOWN: keysequence = "Down"; break;
-			case SDLK_LEFT: keysequence = "Left"; break;
-			case SDLK_RIGHT: keysequence = "Right"; break;
-			case SDLK_PAGEUP: keysequence = "Page_Up"; break;
-			case SDLK_PAGEDOWN: keysequence = "Page_Down"; break;
-			case SDLK_BACKSPACE: keysequence = "BackSpace"; break;
-			case SDLK_DELETE: keysequence = "Delete"; break;
-			case SDLK_TAB: keysequence = "Tab"; break;
-			case SDLK_HOME: keysequence = "Home"; break;
-			case SDLK_END: keysequence = "End"; break;
-			default:
-				ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
-				if (ukeycode) {
-					if (event.type == SDL_KEYDOWN) {
-						XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
-					} else if (event.type == SDL_KEYUP) {
-						XTestFakeKeyEvent(xdo->xdpy, ukeycode, 0, 0);
-					}
-					XSync(xdo->xdpy, False);
-					XFlush(xdo->xdpy);
-				} else {
-					printf("Not forwarding key %d\n", event.key.keysym.sym);
+		case SDLK_RSHIFT:
+			keysequence = "Shift_R";
+			break;
+		case SDLK_LSHIFT:
+			keysequence = "Shift_L";
+			break;
+		case SDLK_RCTRL:
+			keysequence = "Control_R";
+			break;
+		case SDLK_LCTRL:
+			keysequence = "Control_L";
+			break;
+		case SDLK_RALT:
+			keysequence = "Alt_R";
+			break;
+		case SDLK_LALT:
+			keysequence = "Alt_L";
+			break;
+		case SDLK_RMETA:
+			keysequence = "Meta_R";
+			break;
+		case SDLK_LMETA:
+			keysequence = "Meta_L";
+			break;
+		case SDLK_RSUPER:
+			keysequence = "Super_R";
+			break;
+		case SDLK_LSUPER:
+			keysequence = "Super_L";
+			break;
+		case SDLK_MODE:
+			keysequence = "ISO_Level3_Shift";
+			break;	// AltGr
+		case SDLK_RETURN:
+			keysequence = "Return";
+			break;
+		case SDLK_ESCAPE:
+			keysequence = "Escape";
+			break;
+		case SDLK_UP:
+			keysequence = "Up";
+			break;
+		case SDLK_DOWN:
+			keysequence = "Down";
+			break;
+		case SDLK_LEFT:
+			keysequence = "Left";
+			break;
+		case SDLK_RIGHT:
+			keysequence = "Right";
+			break;
+		case SDLK_PAGEUP:
+			keysequence = "Page_Up";
+			break;
+		case SDLK_PAGEDOWN:
+			keysequence = "Page_Down";
+			break;
+		case SDLK_BACKSPACE:
+			keysequence = "BackSpace";
+			break;
+		case SDLK_DELETE:
+			keysequence = "Delete";
+			break;
+		case SDLK_TAB:
+			keysequence = "Tab";
+			break;
+		case SDLK_HOME:
+			keysequence = "Home";
+			break;
+		case SDLK_END:
+			keysequence = "End";
+			break;
+		default:
+			ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
+			if (ukeycode) {
+				if (event.type == SDL_KEYDOWN) {
+					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
+				} else if (event.type == SDL_KEYUP) {
+					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 0, 0);
 				}
-				keysequence = NULL;	// Ensure the code below does not send any more keys
+				XSync(xdo->xdpy, False);
+				XFlush(xdo->xdpy);
+			} else {
+				printf("Not forwarding key %d\n", event.key.keysym.sym);
+			}
+			keysequence = NULL;	// Ensure the code below does not send any more keys
 			break;
 		}
 		// Only unbind at keydown, because a keyup could come from the previous F12 press
@@ -3102,7 +3158,6 @@ static void send_event_to_object(SDL_Event event) {
 	}
 	xdo_free(xdo);
 }
-
 
 int main(int argc, char **argv)
 {

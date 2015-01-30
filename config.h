@@ -18,16 +18,16 @@ unsigned char TDFSB_KC_FORWARD, TDFSB_KC_BACKWARD;
 char TDFSB_CURRENTPATH[4096];
 char TDFSB_CUSTOM_EXECUTE_STRING[4096];
 
-int SWX, SWY;		// Window size X,Y
-int PWX, PWY;		// Full screen window size X,Y
-int PWD;		// Full screen color depth
+int SWX, SWY;			// Window size X,Y
+int PWX, PWY;			// Full screen window size X,Y
+int PWD;			// Full screen color depth
 
 GLint TDFSB_BALL_DETAIL;
 GLint TDFSB_WAS_NOREAD;
 unsigned int TDFSB_MAX_TEX_SIZE;	// This cause Out-Of-Memory at 8192 and beyond if I enter a directory with high resolution images or video. So 1024 is a nice default, this uses around 150MB of RAM when going into a directory with around 300 high resolution images.
 GLfloat mousesense;
-GLfloat mousespeed;	// 1-20, with 1 being maximum
-GLfloat headspeed;	// 1.1-2.0, with 2.0 being maximum
+GLfloat mousespeed;		// 1-20, with 1 being maximum
+GLfloat headspeed;		// 1.1-2.0, with 2.0 being maximum
 
 GLfloat TDFSB_GG_R, TDFSB_GG_G, TDFSB_GG_B;
 GLfloat TDFSB_BG_R, TDFSB_BG_G, TDFSB_BG_B;

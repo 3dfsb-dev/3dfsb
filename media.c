@@ -53,7 +53,7 @@ void cleanup_media_player(void)
 		gst_object_unref(pipeline);
 	}
 	// Kill any running X session
-	system(STOPX);	// When we do this synchronously, we get killed (for stalling?)
+	system(STOPX);		// When we do this synchronously, we get killed (for stalling?)
 	TDFSB_MEDIA_FILE = NULL;
 }
 
@@ -229,17 +229,17 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 		// Get PID from path name
 		// Get Window ID(s) for this PID
 		//int pid = 5288;
-		int windowid = 37748743; // used system("xdotool search --pid 5288\n");
+		int windowid = 37748743;	// used system("xdotool search --pid 5288\n");
 		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! appsink name=sink sync=false caps=\"" CAPS "\"", windowid);
 
 		// Experiment with this?
 		//system("xdotool set_window  --overrideredirect 0 37748743");
 
 		// Works:
-		//system("xdotool windowraise 37748743\n"); sleep(1);	// Wait until the window is raised, otherwise we might end up with a gray screen
+		//system("xdotool windowraise 37748743\n"); sleep(1);   // Wait until the window is raised, otherwise we might end up with a gray screen
 
 		// Changes focus, but does not redraw:
-		//system("xdotool windowfocus 37748743\n"); sleep(0.5);	// Wait until the window is raised, otherwise we might end up with a gray screen
+		//system("xdotool windowfocus 37748743\n"); sleep(0.5); // Wait until the window is raised, otherwise we might end up with a gray screen
 		// Works, and is faster because we have --sync and therefore don't need sleep()
 		// BUT this may change the active desktop... perhaps fix this with get_desktop and set_desktop?
 		system("xdotool windowactivate --sync 37748743\n");
@@ -397,7 +397,7 @@ texture_description *get_image_from_file(char *filename, unsigned int filetype, 
 	// If we do this, the window is gone, and can't be brought back with windowraise
 	//system("xdotool windowminimize --sync 37748743\n");
 
-	// sleep(1);	// Wait until the window is raised, otherwise we might end up with a gray screen
+	// sleep(1);    // Wait until the window is raised, otherwise we might end up with a gray screen
 
 	// Cleanups
 	SDL_FreeSurface(loader);
@@ -471,7 +471,8 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		system("xdotool windowraise 37748743\n");
 		sleep(1);
 	} else if (TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
-		system(STARTX); sleep(2);
+		system(STARTX);
+		sleep(2);
 		TDFSB_OBJECT_SELECTED->texturewidth = 2048;
 		TDFSB_OBJECT_SELECTED->textureheight = 2048;
 		TDFSB_OBJECT_SELECTED->textureformat = GL_RGB;
@@ -479,7 +480,6 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		TDFSB_OBJECT_SELECTED->originalheight = 1080;
 		descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
 	}
-
 	// Use this for pulseaudio:
 	// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=3dfsb", uri);
 

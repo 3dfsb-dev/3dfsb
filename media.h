@@ -3,7 +3,7 @@
 
 #include "3dfsb.h"
 
-tree_entry * TDFSB_MEDIA_FILE;
+tree_entry *TDFSB_MEDIA_FILE;
 
 struct texture_description {
 	unsigned int originalwidth;
