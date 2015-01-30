@@ -51,7 +51,7 @@ char *param[] = { "BallDetail", "StartDir", "MaxTexSize", "WindowWidth", "Window
 unsigned int TDFSB_KEYLIST_NUM = 26;
 
 unsigned char *TDFSB_KEYLIST[] = { &TDFSB_KC_FLY, &TDFSB_KC_HELP, &TDFSB_KC_HOME,
-	&TDFSB_KC_FS, &TDFSB_KC_DOT, &TDFSB_KC_RELM,
+	&TDFSB_KC_FS, &TDFSB_KC_DOT, &TDFSB_KC_RELEASE_MOUSE,
 	&TDFSB_KC_RL, &TDFSB_KC_CDU, &TDFSB_KC_IMBR,
 	&TDFSB_KC_INFO, &TDFSB_KC_DISP, &TDFSB_KC_CRH,
 	&TDFSB_KC_FPS, &TDFSB_KC_GCR, &TDFSB_KC_SHD,
@@ -371,7 +371,7 @@ void setup_kc(void)
 	TDFSB_KC_HOME = '0';
 	TDFSB_KC_FS = 'f';
 	TDFSB_KC_DOT = '.';
-	TDFSB_KC_RELM = 'r';
+	TDFSB_KC_RELEASE_MOUSE = 'r';
 	TDFSB_KC_RL = 'l';
 	TDFSB_KC_CDU = 'u';
 	TDFSB_KC_IMBR = 'b';

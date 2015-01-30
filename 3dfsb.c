@@ -765,7 +765,7 @@ static void setup_help(void)
 	sprintf(tmpstr, "\"%c\"      dot files   \"%c\"      print FPS\n", TDFSB_KC_DOT, TDFSB_KC_FPS);
 	strcat(help_str, tmpstr);
 
-	sprintf(tmpstr, "\"%c\" rel./get mouse   \"%c\"     fullscreen\n", TDFSB_KC_RELM, TDFSB_KC_FS);
+	sprintf(tmpstr, "\"%c\" rel./get mouse   \"%c\"     fullscreen\n", TDFSB_KC_RELEASE_MOUSE, TDFSB_KC_FS);
 	strcat(help_str, tmpstr);
 
 	sprintf(tmpstr, "\"%c\"     reload dir   \"%c\"   image bricks\n", TDFSB_KC_RL, TDFSB_KC_IMBR);
@@ -2804,7 +2804,7 @@ static int keyboard(unsigned char key)
 			TDFSB_FUNC_DISP = noDisplay;
 		}
 
-		else if (key == TDFSB_KC_RELM) {
+		else if (key == TDFSB_KC_RELEASE_MOUSE) {
 			if (TDFSB_HAVE_MOUSE) {
 				TDFSB_HAVE_MOUSE = 0;
 				TDFSB_FUNC_MOUSE = NULL;

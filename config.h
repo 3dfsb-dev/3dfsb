@@ -6,7 +6,7 @@
 // The global variables below are used by 3dfsb.c
 
 unsigned char TDFSB_KC_FLY, TDFSB_KC_HELP, TDFSB_KC_HOME;
-unsigned char TDFSB_KC_FS, TDFSB_KC_DOT, TDFSB_KC_RELM;
+unsigned char TDFSB_KC_FS, TDFSB_KC_DOT, TDFSB_KC_RELEASE_MOUSE;
 unsigned char TDFSB_KC_RL, TDFSB_KC_CDU, TDFSB_KC_IMBR;
 unsigned char TDFSB_KC_INFO, TDFSB_KC_DISP, TDFSB_KC_CRH;
 unsigned char TDFSB_KC_FPS, TDFSB_KC_GCR, TDFSB_KC_SHD;
