@@ -13,16 +13,19 @@
 #endif
 
 #define CAPS "video/x-raw,format=RGB"
+
+// TurboVNC does strange things to the SHIFT key sequences
 //#define STARTX "/opt/TurboVNC/bin/vncserver -geometry 1920x1080 &"
+
 //#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile ./10.log -config ~/xorg.conf :1 & sleep 1; DISPLAY=:1 /usr/bin/lxterminal &"
-// TODO: remove the Xsession and move the mouse to 0,0 so that the focus is always on the one single window
+
 // setxkbmap is needed, otherwise the X server will have a us layout, which has different keys...
-#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile ./10.log -config ~/xorg.conf :1 & sleep 1; DISPLAY=:1 /etc/X11/Xsession & sleep 1 & DISPLAY=:1 setxkbmap be"
+#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile ./10.log -config ~/xorg.conf :1 & sleep 1; DISPLAY=:1 /etc/X11/Xsession & sleep 1; DISPLAY=:1 setxkbmap be"
 
 //#define STOPX "/opt/TurboVNC/bin/vncserver -kill :1 &"
 // killall Xorg != kill ($pidof Xorg)
 // TODO: save the new Xorg's PID and kill only that one
-#define STOPX "kill $(pidof Xorg) &"
+#define STOPX "kill $(pidof Xorg)"
 
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
