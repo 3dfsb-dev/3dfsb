@@ -76,6 +76,20 @@
 #define _GLUfuncptr void*
 #endif
 
+/*
+ * Some info:
+ * ----------
+ * xdg-open uses .desktop files, which can be found in /usr/share/applications/
+ * Local .desktop files of the user can be found in ~/.local/share/applications/
+ *
+ * You can get a file's default open command with:
+ * xdg-mime query default $(file --mime-type -b filename)
+ *
+ * You can set it with:
+ * xdg-mime default file.desktop mime/type
+ *
+ * xdg-open saves these associations of the user in ~/.local/share/applications/mimeapps.list
+ */
 #define OPEN_COMMAND "xdg-open "
 
 int CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding
@@ -326,7 +340,7 @@ static int get_file_type(char *filename)
 	unsigned int extensionnr;
 	const char *mime = magic_file(magic, filename);
 
-	//printf("Got mimetype: %s\n", mime);
+	//printf("Got mimetype: %s for file %s\n", mime, filename);
 	if (!strncmp(mime, MIME_TEXT, 5)) {
 		temptype = TEXTFILE;
 	} else if (!strncmp(mime, MIME_IMAGE, 6)) {
