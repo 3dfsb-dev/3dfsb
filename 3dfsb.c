@@ -249,8 +249,8 @@ static GLfloat verTex2[] = {
 static void display(void);
 static int keyboard(unsigned char key);
 static int keyboardup(unsigned char key);
-static int keyfinder(unsigned char key);
-static int keyupfinder(unsigned char key);
+//static int keyfinder(unsigned char key);
+//static int keyupfinder(unsigned char key);
 static int speckey(int key);
 static int specupkey(int key);
 static void standstillDisplay(void);
@@ -1663,7 +1663,6 @@ static void apply_tool_on_object(struct tree_entry *object)
 	}
 	// Unselect all objects, otherwise the open action might keep triggering
 	TDFSB_OBJECT_SELECTED = NULL;
-	//TDFSB_OBJECT_SEARCH = 0;
 	TDFSB_KEY_FINDER = 0;
 	TDFSB_FUNC_KEY = keyboard;
 	TDFSB_FUNC_UPKEY = keyboardup;
@@ -1717,8 +1716,8 @@ static void mouse(int button, int state)
 				if (TDFSB_OBJECT_SELECTED)
 					apply_tool_on_object(TDFSB_OBJECT_SELECTED);
 				TDFSB_KEY_FINDER = 0;
-				TDFSB_FUNC_KEY = keyfinder;
-				TDFSB_FUNC_UPKEY = keyupfinder;
+				//TDFSB_FUNC_KEY = keyfinder;
+				//TDFSB_FUNC_UPKEY = keyupfinder;
 			} else {
 				TDFSB_OBJECT_SELECTED = NULL;
 				TDFSB_KEY_FINDER = 0;
@@ -1748,7 +1747,6 @@ static void mouse(int button, int state)
 				TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
 				TDFSB_ANIM_STATE = 1;
 				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_OBJECT_SEARCH = 0;
 				TDFSB_FUNC_KEY = keyboard;
 				TDFSB_FUNC_UPKEY = keyboardup;
 				TDFSB_KEY_FINDER = 0;
@@ -2527,7 +2525,6 @@ static int speckey(int key)
 			} else {
 				if (TDFSB_OBJECT_SELECTED) {
 					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_OBJECT_SEARCH = 0;
 					TDFSB_KEY_FINDER = 0;
 					TDFSB_FUNC_KEY = keyboard;
 					TDFSB_FUNC_UPKEY = keyboardup;
@@ -2617,7 +2614,6 @@ static int speckey(int key)
 				// Ensure the normal keyboard handlers are enabled,
 				// because the mousebuttonup event will be consumed by the INPUT_OBJECT,
 				// so we'll stay in some kind of "finder" mode otherwise
-				TDFSB_OBJECT_SEARCH = 0;
 				TDFSB_KEY_FINDER = 0;
 				TDFSB_FUNC_KEY = keyboard;
 				TDFSB_FUNC_UPKEY = keyboardup;
@@ -2695,7 +2691,6 @@ static int speckey(int key)
 				TDFSB_ANIM_STATE = 1;
 
 				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_OBJECT_SEARCH = 0;
 				TDFSB_FUNC_KEY = keyboard;
 				TDFSB_FUNC_UPKEY = keyboardup;
 				TDFSB_KEY_FINDER = 0;
@@ -2767,6 +2762,13 @@ static int specupkey(int key)
 		return (0);
 }
 
+/*
+ * The key finder overlaps with the various setting keys,
+ * so either we activate the keyfinder when slash (/) is pressed,
+ * or we activate it by default and move the setting keys somewhere...
+ * Plan: activate the keyfinder when the user presses slash (/)
+ */
+/*
 static int keyfinder(unsigned char key)
 {
 	TDFSB_KEY_FINDER = key;
@@ -2779,6 +2781,7 @@ static int keyupfinder(unsigned char key)
 	TDFSB_KEY_FINDER = 0;
 	return (0);
 }
+*/
 
 static int keyboardup(unsigned char key)
 {
