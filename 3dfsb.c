@@ -147,6 +147,7 @@ GLdouble prevlen;
 char *xsuff[NUMBER_OF_EXTENSIONS];
 unsigned int tsuff[NUMBER_OF_EXTENSIONS];
 char *nsuff[NUMBER_OF_FILETYPES];
+char *tool[NUMBER_OF_TOOLS];
 
 GLfloat fh, fh2, mono;
 
@@ -758,6 +759,12 @@ static void set_filetypes(void)
 	nsuff[UNKNOWNFILE] = "UNKNOWN";
 	nsuff[PROCESS] = "PROCESS";
 }
+static void init_tools(void)
+{
+	tool[TOOL_SELECTOR] = "Do something with it";
+	tool[TOOL_OPENER] = "Open file";
+	tool[TOOL_WEAPON] = "Laser shooter (file not deleted)";
+}
 
 static void setup_help(void)
 {
@@ -1130,7 +1137,7 @@ static void leodir(void)
 		async_load_textures_thread_id = (pthread_t) NULL;
 	}
 	// The queue will be cleaned up when the refcount reaches 0
-	// This is important, otherwise the queue pop operation in the display() function might return some bogus, already free'd object
+	// This is important, otherwise the queue pop operation in the display function might return some bogus, already free'd object
 	g_async_queue_unref(loaded_textures_queue);
 
 	glDeleteTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
@@ -1867,7 +1874,7 @@ static void noDisplay(void)
 }
 
 /*
- * One big display() function that gets called ~60 times per second. About ~600 lines of code.
+ * One big display function that gets called ~60 times per second. About ~600 lines of code.
  *
  * The scene consists of some pre-made static elements (SolidList and BlendList)
  * on top of which some dynamic things are drawn (such as audio animation and textfile contents).
@@ -2403,7 +2410,6 @@ static void display(void)
 		glPopMatrix();
 		TDFSB_CLASSIC_DISPLAY--;
 	}
-
 	if (TDFSB_SPEED_DISPLAY) {
 		glColor4f(0.8, 1.0, 0.8, 0.25);
 		glPushMatrix();
@@ -2461,6 +2467,18 @@ static void display(void)
 		glPopMatrix();
 		TDFSB_ALERT_KC--;
 	}
+
+	// Show the current tool that is used
+	glPushMatrix();
+	char* current_tool_str = tool[CURRENT_TOOL];
+	glTranslatef(SWX - 104.76 * (strlen(current_tool_str)+1) * 0.1, SWY - 55, 0);
+	glScalef(0.10, 0.10, 1);
+	glColor3f(0.25, 0.5, 0.0);
+	for (charpos = 0; charpos < strlen(current_tool_str); charpos++) {
+		glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, current_tool_str[charpos]);
+	}
+	glPopMatrix();
+
 
 	glLoadIdentity();
 	gluPerspective(60, (GLfloat) SWX / (GLfloat) SWY, 0.5, 2000);
@@ -3196,6 +3214,7 @@ int main(int argc, char **argv)
 	glutInit(&fake_glut_argc, argv);
 
 	set_filetypes();
+	init_tools();
 	setup_kc();
 	if (read_or_create_config_file())
 		read_or_create_config_file();
