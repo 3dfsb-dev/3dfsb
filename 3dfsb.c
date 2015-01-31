@@ -1714,17 +1714,13 @@ static void mouse(int button, int state)
 	case SDL_BUTTON_LEFT:
 		if (!TDFSB_CLASSIC_NAV) {
 			if (state == SDL_PRESSED) {
-				//TDFSB_OBJECT_SELECTED = NULL;
-				//TDFSB_OBJECT_SEARCH = 1;
+				if (TDFSB_OBJECT_SELECTED)
+					apply_tool_on_object(TDFSB_OBJECT_SELECTED);
 				TDFSB_KEY_FINDER = 0;
 				TDFSB_FUNC_KEY = keyfinder;
 				TDFSB_FUNC_UPKEY = keyupfinder;
 			} else {
-				// If find_entry was found AND left mouse button is pressed, then do the selected tool action on it
-				if (TDFSB_OBJECT_SELECTED)
-					apply_tool_on_object(TDFSB_OBJECT_SELECTED);
 				TDFSB_OBJECT_SELECTED = NULL;
-				//TDFSB_OBJECT_SEARCH = 0;
 				TDFSB_KEY_FINDER = 0;
 				TDFSB_FUNC_KEY = keyboard;
 				TDFSB_FUNC_UPKEY = keyboardup;
