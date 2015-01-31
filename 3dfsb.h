@@ -56,4 +56,6 @@ struct tree_entry {
 
 typedef struct tree_entry tree_entry;
 
+void release_mouse(void);
+
 #endif

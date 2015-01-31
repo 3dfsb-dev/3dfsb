@@ -152,7 +152,7 @@ GLfloat fh, fh2, mono;
 
 int aSWX, aSWY, aPWX, aPWY;
 GLdouble centX, centY;
-int TDFSB_SHADE = 1, TDFSB_FILENAMES = 2, TDFSB_SHOW_DISPLAY = 3, TDFSB_XL_DISPLAY = 45, TDFSB_HAVE_MOUSE = 1, TDFSB_ANIM_COUNT = 0, TDFSB_OBJECT_SEARCH = 0;
+int TDFSB_SHADE = 1, TDFSB_FILENAMES = 2, TDFSB_SHOW_DISPLAY = 3, TDFSB_XL_DISPLAY = 45, TDFSB_HAVE_MOUSE = 1, TDFSB_ANIM_COUNT = 0, TDFSB_OBJECT_SEARCH = 1;
 int TDFSB_SPEED_DISPLAY = 200, TDFSB_SHOW_HELP = 1, TDFSB_NOTIFY;
 int TDFSB_SHOW_FPS = 0;
 int TDFSB_ANIM_STATE = 0;	// This keeps track of the state of the "approach" action that brings you closer to an object in 4 steps
@@ -1639,6 +1639,36 @@ static void approach(void)
 
 }
 
+// When a user points to and clicks on an object, the tool is applied on it
+static void apply_tool_on_object(struct tree_entry *object)
+{
+	if (CURRENT_TOOL == TOOL_WEAPON) {
+		// printf("TODO: Start some animation on the object to show it is being deleted ");
+		object->tombstone = 1;	// Mark the object as deleted
+		// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
+		tdb_gen_list();
+	} else if (CURRENT_TOOL == TOOL_OPENER) {
+		char command[4096];
+		strcpy(command, OPEN_COMMAND);
+		strcat(command, "\"");
+		strcat(command, TDFSB_CURRENTPATH);
+		if (strlen(command) > 1)
+			strcat(command, "/");
+		strcat(command, object->name);
+		strcat(command, "\" &");
+		printf("Executing command to open file: %s\n", command);
+		system(command);
+		release_mouse();
+
+	}
+	// Unselect all objects, otherwise the open action might keep triggering
+	TDFSB_OBJECT_SELECTED = NULL;
+	//TDFSB_OBJECT_SEARCH = 0;
+	TDFSB_KEY_FINDER = 0;
+	TDFSB_FUNC_KEY = keyboard;
+	TDFSB_FUNC_UPKEY = keyboardup;
+}
+
 /*
  * Input handling code starts here, about ~700 lines of code.
  */
@@ -1684,20 +1714,23 @@ static void mouse(int button, int state)
 	case SDL_BUTTON_LEFT:
 		if (!TDFSB_CLASSIC_NAV) {
 			if (state == SDL_PRESSED) {
-				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_OBJECT_SEARCH = 1;
+				//TDFSB_OBJECT_SELECTED = NULL;
+				//TDFSB_OBJECT_SEARCH = 1;
 				TDFSB_KEY_FINDER = 0;
 				TDFSB_FUNC_KEY = keyfinder;
 				TDFSB_FUNC_UPKEY = keyupfinder;
 			} else {
+				// If find_entry was found AND left mouse button is pressed, then do the selected tool action on it
+				if (TDFSB_OBJECT_SELECTED)
+					apply_tool_on_object(TDFSB_OBJECT_SELECTED);
 				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_OBJECT_SEARCH = 0;
+				//TDFSB_OBJECT_SEARCH = 0;
 				TDFSB_KEY_FINDER = 0;
 				TDFSB_FUNC_KEY = keyboard;
 				TDFSB_FUNC_UPKEY = keyboardup;
 			}
 			break;
-		} else {
+		} else {	// Classic mode means left mouse button is followed
 			if (state == SDL_PRESSED) {
 				forwardkeybuf = 1;
 				backwardkeybuf = 0;
@@ -1773,7 +1806,7 @@ static void mouse(int button, int state)
 	}
 }
 
-static void release_mouse(void)
+void release_mouse(void)
 {
 	TDFSB_FUNC_MOUSE = NULL;
 	TDFSB_FUNC_MOTION = NULL;
@@ -1837,36 +1870,6 @@ static void noDisplay(void)
 	leodir();
 	TDFSB_FUNC_DISP = display;
 	TDFSB_FUNC_IDLE = standstillDisplay;
-}
-
-// When a user points to and clicks on an object, the tool is applied on it
-static void apply_tool_on_object(struct tree_entry *object)
-{
-	if (CURRENT_TOOL == TOOL_WEAPON) {
-		// printf("TODO: Start some animation on the object to show it is being deleted ");
-		object->tombstone = 1;	// Mark the object as deleted
-		// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
-		tdb_gen_list();
-	} else if (CURRENT_TOOL == TOOL_OPENER) {
-		char command[4096];
-		strcpy(command, OPEN_COMMAND);
-		strcat(command, "\"");
-		strcat(command, TDFSB_CURRENTPATH);
-		if (strlen(command) > 1)
-			strcat(command, "/");
-		strcat(command, object->name);
-		strcat(command, "\" &");
-		printf("Executing command to open file: %s\n", command);
-		system(command);
-		release_mouse();
-
-	}
-	// Unselect all objects, otherwise the open action might keep triggering
-	TDFSB_OBJECT_SELECTED = NULL;
-	TDFSB_OBJECT_SEARCH = 0;
-	TDFSB_KEY_FINDER = 0;
-	TDFSB_FUNC_KEY = keyboard;
-	TDFSB_FUNC_UPKEY = keyboardup;
 }
 
 /*
@@ -2002,9 +2005,6 @@ static void display(void)
 									find_dist = odist;
 								}
 					}
-					// If find_entry was found, then do the selected tool action on it
-					if (find_entry)
-						apply_tool_on_object(find_entry);
 				}
 			}
 
@@ -2196,7 +2196,7 @@ static void display(void)
 	glPopMatrix();
 
 	// Draw cube around selected object
-	if (CURRENT_TOOL == TOOL_SELECTOR && TDFSB_OBJECT_SELECTED) {
+	if (TDFSB_OBJECT_SELECTED) {
 		glPushMatrix();
 
 		if ((TDFSB_OBJECT_SELECTED->mode) & 0x20) {
