@@ -69,6 +69,7 @@
 // Own headers
 #include "3dfsb.h"
 #include "str_replace.h"
+#include "tools.h"
 #include "media.h"
 #include "config.h"
 
@@ -2347,13 +2348,12 @@ static void display(void)
 		}
 		// Quite a dirty hack to show with which program a file will be opened
 		// TODO: xdg-mime query default $(file --mime-type -b filename)
-		/*
+		execute_binary();
 		if (CURRENT_TOOL == TOOL_OPENER) {
 			for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++) {
 				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
 			}
 		}
-		*/
 		glPopMatrix();
 	}
 	if (TDFSB_SHOW_FPS) {
