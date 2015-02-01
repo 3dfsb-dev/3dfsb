@@ -2265,6 +2265,7 @@ static void display(void)
 		glPopMatrix();
 	}
 
+	// If we are showing some heads up things in the left hand corner, like the current directory and the orientation
 	if (TDFSB_SHOW_DISPLAY) {
 		strcpy(fullpath, TDFSB_CURRENTPATH);
 		unsigned int fullpath_len = (int)strlen(fullpath);
@@ -2335,6 +2336,7 @@ static void display(void)
 		glPopMatrix();
 	}
 	// If an object is selected, then show it onscreen
+	// and also show some output from the tool
 	if (TDFSB_OBJECT_SELECTED) {
 		glPushMatrix();
 		glTranslatef(10, SWY - 18, 0);
@@ -2343,6 +2345,15 @@ static void display(void)
 		for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++) {
 			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
 		}
+		// Quite a dirty hack to show with which program a file will be opened
+		// TODO: xdg-mime query default $(file --mime-type -b filename)
+		/*
+		if (CURRENT_TOOL == TOOL_OPENER) {
+			for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
+			}
+		}
+		*/
 		glPopMatrix();
 	}
 	if (TDFSB_SHOW_FPS) {
