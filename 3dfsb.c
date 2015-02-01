@@ -2348,10 +2348,11 @@ static void display(void)
 		}
 		// Quite a dirty hack to show with which program a file will be opened
 		// TODO: xdg-mime query default $(file --mime-type -b filename)
-		execute_binary();
+		char *default_program_desktop_file = execute_binary();
+		printf("default_program_desktop_file = %s\n", default_program_desktop_file);
 		if (CURRENT_TOOL == TOOL_OPENER) {
-			for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
+			for (charpos = 0; charpos < strlen(default_program_desktop_file); charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, default_program_desktop_file[charpos]);
 			}
 		}
 		glPopMatrix();
