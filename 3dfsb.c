@@ -2967,7 +2967,7 @@ static int keyboard(unsigned char key)
 			printf("GL_VENDOR     = %s\n", (const char *)glGetString(GL_VENDOR));
 			printf("GL_EXTENSIONS = %s\n", (const char *)glGetString(GL_EXTENSIONS));
 			printf("\n");
-			printf("Max Texture %d x %d \n", (int)TDFSB_MAX_TEX_SIZE, (int)TDFSB_MAX_TEX_SIZE);
+			printf("Max Texture size %d x %d \n", (int)TDFSB_MAX_TEX_SIZE, (int)TDFSB_MAX_TEX_SIZE);
 			printf("\n");
 		}
 
