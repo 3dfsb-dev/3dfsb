@@ -2350,6 +2350,32 @@ static void display(void)
 			glutStrokeCharacter(GLUT_STROKE_ROMAN, fullpath[charpos]);
 		}
 
+		// Show filename of selected object
+		if (TDFSB_OBJECT_SELECTED) {
+			glutStrokeCharacter(GLUT_STROKE_ROMAN, '/');
+
+			for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++)
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
+
+			// Show with which program a file will be opened
+			if (CURRENT_TOOL == TOOL_OPENER) {
+				// Output the "will be opened with" string...
+				// Jeez, this should be a convenience method!
+				char open_string[OPEN_STRING_LENGTH];
+				strncpy(open_string, OPEN_STRING, OPEN_STRING_LENGTH);
+				for (charpos = 0; charpos < OPEN_STRING_LENGTH; charpos++)
+					glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, open_string[charpos]);
+
+				// Load this info only once!
+				if (!TDFSB_OBJECT_SELECTED->openwith)
+					TDFSB_OBJECT_SELECTED->openwith = xdg_query_default(TDFSB_OBJECT_SELECTED->mimetype);
+
+				//printf("default_program_desktop_file = %s\n", default_program_desktop_file);
+				for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->openwith); charpos++)
+					glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->openwith[charpos]);
+			}
+		}
+
 		glPopMatrix();
 	}
 
@@ -2361,35 +2387,7 @@ static void display(void)
 		glCallList(TDFSB_HelpList);
 		glPopMatrix();
 	}
-	// If an object is selected, then show it onscreen
-	// and also show some output from the tool
-	if (TDFSB_OBJECT_SELECTED) {
-		glPushMatrix();
-		glTranslatef(10, SWY - 18, 0);
-		glScalef(0.12, 0.12, 1);
-		glColor3f(0.5, 1.0, 0.25);
-		for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++)
-			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
 
-		// Show with which program a file will be opened
-		if (CURRENT_TOOL == TOOL_OPENER) {
-			// Output the "will be opened with" string...
-			// Jeez, this should be a convenience method!
-			char open_string[OPEN_STRING_LENGTH];
-			strncpy(open_string, OPEN_STRING, OPEN_STRING_LENGTH);
-			for (charpos = 0; charpos < OPEN_STRING_LENGTH; charpos++)
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, open_string[charpos]);
-
-			// Load this info only once!
-			if (!TDFSB_OBJECT_SELECTED->openwith)
-				TDFSB_OBJECT_SELECTED->openwith = xdg_query_default(TDFSB_OBJECT_SELECTED->mimetype);
-
-			//printf("default_program_desktop_file = %s\n", default_program_desktop_file);
-			for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->openwith); charpos++)
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->openwith[charpos]);
-		}
-		glPopMatrix();
-	}
 	if (TDFSB_SHOW_FPS) {
 		glPushMatrix();
 		glTranslatef(SWX / 2, SWY - 40, 0);
