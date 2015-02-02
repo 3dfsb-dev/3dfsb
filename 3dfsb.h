@@ -39,6 +39,7 @@
 
 struct tree_entry {
 	char *name;
+	char *mimetype;
 	unsigned long int namelen;
 	char *linkpath;
 	unsigned int mode, regtype, rasterx, rasterz;

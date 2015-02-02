@@ -338,22 +338,21 @@ static tree_entry *calculate_scale(tree_entry * object)
 	return object;
 }
 
-static int get_file_type(char *filename)
+static int get_file_type(char *filename, const char *mimetype)
 {
 	unsigned int temptype = 0;	// temptype needs to be 0 to check if we found a match later on!
 	unsigned int extensionnr;
-	const char *mime = magic_file(magic, filename);
 
-	//printf("Got mimetype: %s for file %s\n", mime, filename);
-	if (!strncmp(mime, MIME_TEXT, 5)) {
+	//printf("Got mimetype: %s for file %s\n", mimetype, filename);
+	if (!strncmp(mimetype, MIME_TEXT, 5)) {
 		temptype = TEXTFILE;
-	} else if (!strncmp(mime, MIME_IMAGE, 6)) {
+	} else if (!strncmp(mimetype, MIME_IMAGE, 6)) {
 		temptype = IMAGEFILE;
-	} else if (!strncmp(mime, MIME_VIDEO, 6)) {
+	} else if (!strncmp(mimetype, MIME_VIDEO, 6)) {
 		temptype = VIDEOFILE;
-	} else if (!strncmp(mime, MIME_AUDIO, 6)) {
+	} else if (!strncmp(mimetype, MIME_AUDIO, 6)) {
 		temptype = AUDIOFILE;
-	} else if (!strncmp(mime, MIME_PDF, 15)) {
+	} else if (!strncmp(mimetype, MIME_PDF, 15)) {
 		temptype = PDFFILE;
 	} else {
 		// Some files are not identified by magic_file(), so we fallback to extension-based identification here
@@ -959,10 +958,11 @@ static void reshape(int w, int h)
 	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 }
 
-static void insert(char *value, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int texturewidth, unsigned int textureheight, unsigned int textureformat, unsigned int textureid, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
+static void insert(char *value, const char *mimetype, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int texturewidth, unsigned int textureheight, unsigned int textureformat, unsigned int textureid, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
 {
 	char *temp;
 	struct tree_entry *help;
+	char *mimetypetemp;
 
 	temp = (char *)malloc(strlen(value) + 1);
 	if (temp == NULL) {
@@ -971,6 +971,14 @@ static void insert(char *value, char *linkpath, unsigned int mode, off_t size, u
 	}
 	strcpy(temp, value);
 
+	mimetypetemp = (char *)malloc(strlen(mimetype) + 1);
+	if (mimetypetemp == NULL) {
+		printf("low mem while inserting object!\n");
+		ende(1);
+	}
+	strcpy(mimetypetemp, mimetype);
+
+
 	if (root == NULL) {
 		root = (struct tree_entry *)malloc(sizeof(struct tree_entry));
 		if (root == NULL) {
@@ -978,6 +986,7 @@ static void insert(char *value, char *linkpath, unsigned int mode, off_t size, u
 			ende(1);
 		}
 		root->name = temp;
+		root->mimetype = mimetypetemp;
 		root->namelen = strlen(temp);
 		root->linkpath = linkpath;
 		root->mode = mode;
@@ -1007,6 +1016,7 @@ static void insert(char *value, char *linkpath, unsigned int mode, off_t size, u
 			ende(1);
 		}
 		(help->next)->name = temp;
+		(help->next)->mimetype = mimetypetemp;
 		(help->next)->namelen = strlen(temp);
 		(help->next)->linkpath = linkpath;
 		(help->next)->mode = mode;
@@ -1261,8 +1271,9 @@ static void leodir(void)
 			}
 
 /* Data File Identifizierung */
+			const char *mimetype = magic_file(magic, fullpath);
 			if ((mode & 0x1F) == 0) {	// Is it a regular file?
-				temptype = get_file_type(fullpath);
+				temptype = get_file_type(fullpath, mimetype);
 			} else if (((mode & 0x1F) == 2) && strncmp(fullpath, PATH_DEV_V4L, strlen(PATH_DEV_V4L)) == 0) {
 				printf("This is a v4l file!\n");
 				temptype = VIDEOSOURCEFILE;
@@ -1307,7 +1318,7 @@ static void leodir(void)
 				locpy = locsy - 1;	// vertical position of the object
 			}
 
-			insert(entry, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, locpx, locpy, locpz, locsx, locsy, locsz);
+			insert(entry, mimetype, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
 		}
 
@@ -2355,7 +2366,7 @@ static void display(void)
 			for (charpos = 0; charpos < OPEN_STRING_LENGTH; charpos++) {
 				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, open_string[charpos]);
 			}
-			char *default_program_desktop_file = execute_binary();
+			char *default_program_desktop_file = xdg_query_default(TDFSB_OBJECT_SELECTED->mimetype);
 			//printf("default_program_desktop_file = %s\n", default_program_desktop_file);
 			for (charpos = 0; charpos < strlen(default_program_desktop_file); charpos++) {
 				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, default_program_desktop_file[charpos]);

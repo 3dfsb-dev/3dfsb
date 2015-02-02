@@ -4,7 +4,23 @@
 
 #include "tools.h"
 
-char *execute_binary(void)
+#define XDG_QUERY_DEFAULT	"/usr/bin/xdg-mime query default "
+
+char *xdg_query_default(char *mimetype) {
+	char *command = malloc(sizeof(char) * 1024);
+
+	strcpy(command,XDG_QUERY_DEFAULT);
+	strcat(command,mimetype);
+
+	char *default_program_desktop_file = execute_binary(command);
+
+	free(command);
+
+	return default_program_desktop_file;
+
+}
+
+char *execute_binary(char *toexec)
 {
 	FILE *fp;
 	int i;
@@ -16,7 +32,7 @@ char *execute_binary(void)
 		toreturn[i] = 0;
 
 	// xdg-mime query default $(file --mime-type -b filename)
-	fp = popen("/usr/bin/xdg-mime query default text/plain", "r");
+	fp = popen(toexec, "r");
 	if (fp == NULL) {
 		printf("ERROR: Failed to run the command\n" );
 	}
