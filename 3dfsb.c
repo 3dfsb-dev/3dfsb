@@ -91,7 +91,9 @@
  *
  * xdg-open saves these associations of the user in ~/.local/share/applications/mimeapps.list
  */
-#define OPEN_COMMAND "xdg-open "
+#define OPEN_COMMAND		"xdg-open "
+#define OPEN_STRING		" will be opened with "
+#define OPEN_STRING_LENGTH	21
 
 int CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding
 
@@ -2346,11 +2348,15 @@ static void display(void)
 		for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++) {
 			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
 		}
-		// Quite a dirty hack to show with which program a file will be opened
-		// TODO: xdg-mime query default $(file --mime-type -b filename)
-		char *default_program_desktop_file = execute_binary();
-		printf("default_program_desktop_file = %s\n", default_program_desktop_file);
+		// Show with which program a file will be opened
 		if (CURRENT_TOOL == TOOL_OPENER) {
+			char open_string[OPEN_STRING_LENGTH];
+			strncpy(open_string, OPEN_STRING, OPEN_STRING_LENGTH);
+			for (charpos = 0; charpos < OPEN_STRING_LENGTH; charpos++) {
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, open_string[charpos]);
+			}
+			char *default_program_desktop_file = execute_binary();
+			//printf("default_program_desktop_file = %s\n", default_program_desktop_file);
 			for (charpos = 0; charpos < strlen(default_program_desktop_file); charpos++) {
 				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, default_program_desktop_file[charpos]);
 			}
