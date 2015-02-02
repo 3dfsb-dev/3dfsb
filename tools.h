@@ -6,6 +6,10 @@
 #define TOOL_OPENER     1
 #define TOOL_WEAPON     2
 
+int CURRENT_TOOL;	// The tool (or weapon) we are currently holding
+
+char *tool[NUMBER_OF_TOOLS];
+
 void init_tools(void);
 
 char *xdg_query_default(char *mimetype);

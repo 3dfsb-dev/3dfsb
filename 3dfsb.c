@@ -98,8 +98,6 @@
 // Initial width of the transparent background in the left bottom of the screen
 #define TDFSB_XL_DISPLAY_INIT	180
 
-int CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding
-
 const SDL_VideoInfo *info = NULL;
 SDL_Surface *window;
 int bpp = 0, rgb_size[3];
