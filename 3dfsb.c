@@ -288,6 +288,10 @@ static void ende(int code)
 			FMptr = help;
 			FCptr = help->name;
 			free(FCptr);
+
+			if (help->openwith!= NULL)
+				free(help->openwith);
+
 			if (help->textfilecontents != NULL) {
 				FCptr = (char *)help->textfilecontents;
 				free(FCptr);
@@ -1172,7 +1176,12 @@ static void leodir(void)
 			FMptr = help;
 			FCptr = help->name;
 			free(FCptr);
-			free(help->mimetype);
+			if (help->mimetype)
+				free(help->mimetype);
+
+			if (help->openwith != NULL)
+				free(help->openwith);
+
 			if (help->textfilecontents != NULL) {
 				FCptr = (char *)help->textfilecontents;
 				free(FCptr);
