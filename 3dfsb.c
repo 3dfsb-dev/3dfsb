@@ -971,13 +971,13 @@ static void insert(char *value, const char *mimetype, char *linkpath, unsigned i
 	}
 	strcpy(temp, value);
 
+	// Copy the mimetype in
 	mimetypetemp = (char *)malloc(strlen(mimetype) + 1);
 	if (mimetypetemp == NULL) {
 		printf("low mem while inserting object!\n");
 		ende(1);
 	}
 	strcpy(mimetypetemp, mimetype);
-
 
 	if (root == NULL) {
 		root = (struct tree_entry *)malloc(sizeof(struct tree_entry));
@@ -987,6 +987,7 @@ static void insert(char *value, const char *mimetype, char *linkpath, unsigned i
 		}
 		root->name = temp;
 		root->mimetype = mimetypetemp;
+		root->openwith = NULL;
 		root->namelen = strlen(temp);
 		root->linkpath = linkpath;
 		root->mode = mode;
@@ -1017,6 +1018,7 @@ static void insert(char *value, const char *mimetype, char *linkpath, unsigned i
 		}
 		(help->next)->name = temp;
 		(help->next)->mimetype = mimetypetemp;
+		(help->next)->openwith = NULL;
 		(help->next)->namelen = strlen(temp);
 		(help->next)->linkpath = linkpath;
 		(help->next)->mode = mode;
@@ -2357,21 +2359,25 @@ static void display(void)
 		glTranslatef(10, SWY - 18, 0);
 		glScalef(0.12, 0.12, 1);
 		glColor3f(0.5, 1.0, 0.25);
-		for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++) {
+		for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++)
 			glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
-		}
+
 		// Show with which program a file will be opened
 		if (CURRENT_TOOL == TOOL_OPENER) {
+			// Output the "will be opened with" string...
+			// Jeez, this should be a convenience method!
 			char open_string[OPEN_STRING_LENGTH];
 			strncpy(open_string, OPEN_STRING, OPEN_STRING_LENGTH);
-			for (charpos = 0; charpos < OPEN_STRING_LENGTH; charpos++) {
+			for (charpos = 0; charpos < OPEN_STRING_LENGTH; charpos++)
 				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, open_string[charpos]);
-			}
-			char *default_program_desktop_file = xdg_query_default(TDFSB_OBJECT_SELECTED->mimetype);
+
+			// Load this info only once!
+			if (!TDFSB_OBJECT_SELECTED->openwith)
+				TDFSB_OBJECT_SELECTED->openwith = xdg_query_default(TDFSB_OBJECT_SELECTED->mimetype);
+
 			//printf("default_program_desktop_file = %s\n", default_program_desktop_file);
-			for (charpos = 0; charpos < strlen(default_program_desktop_file); charpos++) {
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, default_program_desktop_file[charpos]);
-			}
+			for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->openwith); charpos++)
+				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->openwith[charpos]);
 		}
 		glPopMatrix();
 	}
