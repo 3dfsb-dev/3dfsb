@@ -95,6 +95,9 @@
 #define OPEN_STRING		" will be opened with "
 #define OPEN_STRING_LENGTH	21
 
+// Initial width of the transparent background in the left bottom of the screen
+#define TDFSB_XL_DISPLAY_INIT	180
+
 int CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding
 
 const SDL_VideoInfo *info = NULL;
@@ -156,7 +159,7 @@ GLfloat fh, fh2, mono;
 
 int aSWX, aSWY, aPWX, aPWY;
 GLdouble centX, centY;
-int TDFSB_SHADE = 1, TDFSB_FILENAMES = 2, TDFSB_SHOW_DISPLAY = 3, TDFSB_XL_DISPLAY = 45, TDFSB_HAVE_MOUSE = 1, TDFSB_ANIM_COUNT = 0, TDFSB_OBJECT_SEARCH = 1;
+int TDFSB_SHADE = 1, TDFSB_FILENAMES = 2, TDFSB_SHOW_DISPLAY = 3, TDFSB_XL_DISPLAY = TDFSB_XL_DISPLAY_INIT, TDFSB_HAVE_MOUSE = 1, TDFSB_ANIM_COUNT = 0, TDFSB_OBJECT_SEARCH = 1;
 int TDFSB_SPEED_DISPLAY = 200, TDFSB_SHOW_HELP = 1, TDFSB_NOTIFY;
 int TDFSB_SHOW_FPS = 0;
 int TDFSB_ANIM_STATE = 0;	// This keeps track of the state of the "approach" action that brings you closer to an object in 4 steps
@@ -2305,6 +2308,7 @@ static void display(void)
 			glEnable(GL_BLEND);
 			glDepthMask(GL_FALSE);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			// Show some kind of transparent square under the name...
 			glBegin(GL_QUADS);
 			glVertex3f(5, 45, 1);
 			glVertex3f(cc + 20 + TDFSB_XL_DISPLAY, 45, 1);
@@ -2343,7 +2347,8 @@ static void display(void)
 			glDisable(GL_BLEND);
 		}
 
-		glTranslatef(10 + TDFSB_XL_DISPLAY, 18, 1);
+		// Show the path
+		glTranslatef(55, 18, 1);
 		glColor3f(0.4, 0.8, 0.6);
 		glScalef(0.14, 0.14, 1);
 		for (charpos = 0; charpos < fullpath_len; charpos++) {
@@ -2973,7 +2978,7 @@ static int keyboard(unsigned char key)
 				TDFSB_SPEED_DISPLAY = 200;
 			} else if (TDFSB_SHOW_DISPLAY == 2) {
 				TDFSB_SHOW_DISPLAY = 3;
-				TDFSB_XL_DISPLAY = 45;
+				TDFSB_XL_DISPLAY = TDFSB_XL_DISPLAY_INIT;
 				TDFSB_SPEED_DISPLAY = 200;
 			} else if (TDFSB_SHOW_DISPLAY == 3) {
 				TDFSB_SHOW_DISPLAY = 0;
