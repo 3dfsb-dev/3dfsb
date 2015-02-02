@@ -2679,7 +2679,7 @@ static int speckey(int key)
 				INPUT_OBJECT = TDFSB_MEDIA_FILE;
 				// Ensure the normal keyboard handlers are enabled,
 				// because the mousebuttonup event will be consumed by the INPUT_OBJECT,
-				// so we'll stay in some kind of "finder" mode otherwise
+				// so we'll stay in some kind of (currently disabled?) "finder" mode otherwise...
 				TDFSB_KEY_FINDER = 0;
 				TDFSB_FUNC_KEY = keyboard;
 				TDFSB_FUNC_UPKEY = keyboardup;
