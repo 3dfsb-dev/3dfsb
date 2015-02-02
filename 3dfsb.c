@@ -1170,6 +1170,7 @@ static void leodir(void)
 			FMptr = help;
 			FCptr = help->name;
 			free(FCptr);
+			free(help->mimetype);
 			if (help->textfilecontents != NULL) {
 				FCptr = (char *)help->textfilecontents;
 				free(FCptr);
