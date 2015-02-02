@@ -32,11 +32,6 @@
 
 #define PATH_DEV_V4L    "/dev/video"
 
-#define NUMBER_OF_TOOLS 3
-#define TOOL_SELECTOR   0
-#define TOOL_OPENER     1
-#define TOOL_WEAPON     2
-
 struct tree_entry {
 	char *name;
 	char *mimetype;

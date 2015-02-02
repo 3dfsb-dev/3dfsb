@@ -153,7 +153,6 @@ GLdouble prevlen;
 char *xsuff[NUMBER_OF_EXTENSIONS];
 unsigned int tsuff[NUMBER_OF_EXTENSIONS];
 char *nsuff[NUMBER_OF_FILETYPES];
-char *tool[NUMBER_OF_TOOLS];
 
 GLfloat fh, fh2, mono;
 
@@ -767,12 +766,6 @@ static void set_filetypes(void)
 	nsuff[VIDEOSOURCEFILE] = "VIDEOSOURCE";
 	nsuff[UNKNOWNFILE] = "UNKNOWN";
 	nsuff[PROCESS] = "PROCESS";
-}
-static void init_tools(void)
-{
-	tool[TOOL_SELECTOR] = "Do something with it";
-	tool[TOOL_OPENER] = "Open file";
-	tool[TOOL_WEAPON] = "Laser shooter (file not deleted)";
 }
 
 static void setup_help(void)

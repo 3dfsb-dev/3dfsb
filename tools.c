@@ -6,6 +6,15 @@
 
 #define XDG_QUERY_DEFAULT	"/usr/bin/xdg-mime query default "
 
+char *tool[NUMBER_OF_TOOLS];
+
+void init_tools(void)
+{
+	tool[TOOL_SELECTOR] = "Do something with it";
+	tool[TOOL_OPENER] = "Open file";
+	tool[TOOL_WEAPON] = "Laser shooter (file not deleted)";
+}
+
 char *xdg_query_default(char *mimetype) {
 	char *command = malloc(sizeof(char) * 1024);
 
