@@ -473,7 +473,7 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 		//system("xdotool search --pid 5288\n");
 		system("xdotool windowraise 37748743\n");
 		sleep(1);
-	} else if (TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
+	} else {
 		system(STARTX);
 		sleep(2);
 		TDFSB_OBJECT_SELECTED->texturewidth = 2048;
