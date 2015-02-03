@@ -38,6 +38,10 @@ find_package(LibMagic REQUIRED)
 find_package(ImageMagick COMPONENTS mogrify REQUIRED)
 find_package(LibM REQUIRED)
 find_package(GLIB COMPONENTS gobject REQUIRED)
+find_package(X11 REQUIRED)
+find_package(Xdo REQUIRED)
+
+find_library(X11_XTest_LIB Xtst ${X11_LIB_SEARCH_PATH})
 
 include_directories(${SDL_INCLUDE_DIR}
                     ${GSTREAMER_INCLUDE_DIRS}
@@ -51,7 +55,8 @@ add_custom_command(OUTPUT images
 add_library(str_replace str_replace.c)
 add_library(media media.c)
 add_library(config config.c)
+add_library(tools tools.c)
 
 add_executable(3dfsb 3dfsb.c)
 add_dependencies(3dfsb images)
-target_link_libraries(3dfsb str_replace media config ${SDL_LIBRARY} ${SDL_IMAGE_LIBRARIES} ${OPENGL_LIBRARIES} ${GSTREAMER_LIBRARIES} ${GLUT_glut_LIBRARY} ${LibMagic_LIBRARY} ${LibM_LIBRARY} ${GLIB_GOBJECT_LIBRARIES} ${GLIB_LIBRARIES})
+target_link_libraries(3dfsb str_replace media config tools ${SDL_LIBRARY} ${SDL_IMAGE_LIBRARIES} ${OPENGL_LIBRARIES} ${GSTREAMER_LIBRARIES} ${GLUT_glut_LIBRARY} ${LibMagic_LIBRARY} ${LibM_LIBRARY} ${GLIB_GOBJECT_LIBRARIES} ${GLIB_LIBRARIES} ${XDO_LIBRARIES} ${X11_XTest_LIB})
