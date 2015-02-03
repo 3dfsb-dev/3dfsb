@@ -2316,7 +2316,7 @@ static void display(void)
 				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
 
 			// Show with which program a file will be opened
-			if (CURRENT_TOOL == TOOL_OPENER) {
+			if (CURRENT_TOOL == TOOL_EXTERNAL_OPENER) {
 				// Output the "will be opened with" string...
 				// Jeez, this should be a convenience method!
 				char open_string[OPEN_STRING_LENGTH];

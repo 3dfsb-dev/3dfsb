@@ -3,10 +3,10 @@
 
 #include "3dfsb.h"
 
-#define NUMBER_OF_TOOLS 3
-#define TOOL_SELECTOR   0
-#define TOOL_OPENER     1
-#define TOOL_WEAPON     2
+#define NUMBER_OF_TOOLS		3
+#define TOOL_OPENER		0
+#define TOOL_EXTERNAL_OPENER	1
+#define TOOL_WEAPON		2
 
 /*
  * Some info:

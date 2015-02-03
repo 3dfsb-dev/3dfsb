@@ -19,7 +19,7 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 		strcat(fullpath, "/");
 	strcat(fullpath, object->name);
 
-	if (CURRENT_TOOL == TOOL_SELECTOR) {
+	if (CURRENT_TOOL == TOOL_OPENER) {
 		// If we have an in-world handler for the file, use it
 		if (object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE || object->regtype == AUDIOFILE || object->regtype == PROCESS) {
 			if (object == TDFSB_MEDIA_FILE) {
@@ -47,7 +47,7 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 			}
 		}
 		*/
-	} else if (CURRENT_TOOL == TOOL_OPENER) {
+	} else if (CURRENT_TOOL == TOOL_EXTERNAL_OPENER) {
 		char command[4096];
 		strcpy(command, OPEN_COMMAND);
 		strcat(command, "\"");
@@ -70,9 +70,9 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 
 void init_tools(void)
 {
-	CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding
-	tool[TOOL_SELECTOR] = "Do something with it";
-	tool[TOOL_OPENER] = "Open file";
+	CURRENT_TOOL = TOOL_OPENER;	// The tool (or weapon) we are currently holding
+	tool[TOOL_OPENER] = "Open file in 3D world";
+	tool[TOOL_EXTERNAL_OPENER] = "Open file externally";
 	tool[TOOL_WEAPON] = "Laser shooter (file not deleted)";
 }
 
