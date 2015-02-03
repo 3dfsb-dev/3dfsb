@@ -1683,7 +1683,7 @@ static void MouseLift(int x, int y)
 	}
 }
 
-static void do_object(tree_entry *object) {
+static void activate_object(tree_entry *object) {
 	if (!object)
 		return;
 
@@ -1708,7 +1708,7 @@ static void mouse(int button, int state)
 	case SDL_BUTTON_LEFT:
 		if (!TDFSB_CLASSIC_NAV) {
 			if (state == SDL_PRESSED) {
-				do_object(TDFSB_OBJECT_SELECTED);
+				activate_object(TDFSB_OBJECT_SELECTED);
 			} else {
 				TDFSB_OBJECT_SELECTED = NULL;
 				TDFSB_KEY_FINDER = 0;
@@ -2715,7 +2715,7 @@ static int speckey(int key)
 			}
 			break;
 		case SDLK_RETURN:
-			do_object(TDFSB_OBJECT_SELECTED);
+			activate_object(TDFSB_OBJECT_SELECTED);
 			break;
 
 		default:
