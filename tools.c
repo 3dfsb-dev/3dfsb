@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "media.h"
 #include "tools.h"
 
 #define XDG_QUERY_DEFAULT	"/usr/bin/xdg-mime query default "
@@ -10,7 +11,43 @@
 int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 {
 	int toreturn = 0;
-	if (CURRENT_TOOL == TOOL_WEAPON) {
+
+	// We'll need the full path
+	char fullpath[4096] = { 0 };
+	strcat(fullpath, currentpath);
+	if (strlen(fullpath) > 1)
+		strcat(fullpath, "/");
+	strcat(fullpath, object->name);
+
+	if (CURRENT_TOOL == TOOL_SELECTOR) {
+		// If we have an in-world handler for the file
+		if (object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE || object->regtype == AUDIOFILE || object->regtype == PROCESS) {
+			if (object == TDFSB_MEDIA_FILE) {
+				toggle_media_pipeline();
+			} else {
+				cleanup_media_player();	// Stop all other playing media
+				play_media(fullpath, object);
+				TDFSB_MEDIA_FILE = object;
+			}
+		}
+		// TODO:
+		// - if it is a binary, then start it in-world
+		// - else, if we have an xdg-open result, then start that one to open it in-world
+		/*
+		} else if (object && object->regtype == TEXTFILE) {
+			if (object == TDFSB_MEDIA_FILE) {
+				// Re-connect the input
+				INPUT_OBJECT = TDFSB_MEDIA_FILE;
+			} else {
+				cleanup_media_player();	// Stop all other playing media
+				play_media(fullpath, object);
+				TDFSB_MEDIA_FILE = object;
+				calculate_scale(TDFSB_MEDIA_FILE);
+				tdb_gen_list();	// refresh scene, because where there was a textfile, will now be a cube
+			}
+		}
+		*/
+	} else if (CURRENT_TOOL == TOOL_WEAPON) {
 		// printf("TODO: Start some animation on the object to show it is being deleted ");
 		object->tombstone = 1;	// Mark the object as deleted
 		// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
@@ -19,15 +56,11 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 		char command[4096];
 		strcpy(command, OPEN_COMMAND);
 		strcat(command, "\"");
-		strcat(command, currentpath);
-		if (strlen(command) > 1)
-			strcat(command, "/");
-		strcat(command, object->name);
+		strcat(command, fullpath);
 		strcat(command, "\" &");
 		printf("Executing command to open file: %s\n", command);
 		system(command);
 		release_mouse();
-
 	}
 	return toreturn;
 }

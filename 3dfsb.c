@@ -1683,6 +1683,21 @@ static void MouseLift(int x, int y)
 	}
 }
 
+static void do_object(tree_entry *object) {
+	if (!object)
+		return;
+
+	// apply_tool_on_object returns 1 when we have to refresh the directory
+	if (apply_tool_on_object(object, TDFSB_CURRENTPATH))
+		tdb_gen_list();
+
+	// Unselect all objects, otherwise the open action might keep triggering
+	TDFSB_OBJECT_SELECTED = NULL;
+	TDFSB_KEY_FINDER = 0;
+	TDFSB_FUNC_KEY = keyboard;
+	TDFSB_FUNC_UPKEY = keyboardup;
+}
+
 static void mouse(int button, int state)
 {
 	if (TDFSB_ANIM_STATE)
@@ -1693,20 +1708,7 @@ static void mouse(int button, int state)
 	case SDL_BUTTON_LEFT:
 		if (!TDFSB_CLASSIC_NAV) {
 			if (state == SDL_PRESSED) {
-				if (TDFSB_OBJECT_SELECTED) {
-					// apply_tool_on_object returns 1 when we have to refresh the directory
-					if (apply_tool_on_object(TDFSB_OBJECT_SELECTED, TDFSB_CURRENTPATH))
-						tdb_gen_list();
-
-					// Unselect all objects, otherwise the open action might keep triggering
-					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_KEY = keyboard;
-					TDFSB_FUNC_UPKEY = keyboardup;
-				}
-				TDFSB_KEY_FINDER = 0;
-				//TDFSB_FUNC_KEY = keyfinder;
-				//TDFSB_FUNC_UPKEY = keyupfinder;
+				do_object(TDFSB_OBJECT_SELECTED);
 			} else {
 				TDFSB_OBJECT_SELECTED = NULL;
 				TDFSB_KEY_FINDER = 0;
@@ -2713,26 +2715,7 @@ static int speckey(int key)
 			}
 			break;
 		case SDLK_RETURN:
-			if (TDFSB_OBJECT_SELECTED && (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE || TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE || TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE || TDFSB_OBJECT_SELECTED->regtype == PROCESS)) {
-				if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
-					toggle_media_pipeline();
-				} else {
-					cleanup_media_player();	// Stop all other playing media
-					play_media(fullpath, TDFSB_OBJECT_SELECTED);
-					TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
-				}
-			} else if (TDFSB_OBJECT_SELECTED && TDFSB_OBJECT_SELECTED->regtype == TEXTFILE) {
-				if (TDFSB_OBJECT_SELECTED == TDFSB_MEDIA_FILE) {
-					// Re-connect the input
-					INPUT_OBJECT = TDFSB_MEDIA_FILE;
-				} else {
-					cleanup_media_player();	// Stop all other playing media
-					play_media(fullpath, TDFSB_OBJECT_SELECTED);
-					TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
-					calculate_scale(TDFSB_MEDIA_FILE);
-					tdb_gen_list();	// refresh scene, because where there was a textfile, will now be a cube
-				}
-			}
+			do_object(TDFSB_OBJECT_SELECTED);
 			break;
 
 		default:
