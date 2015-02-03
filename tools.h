@@ -26,7 +26,7 @@
 #define OPEN_STRING		" will be opened with "
 #define OPEN_STRING_LENGTH	21
 
-int CURRENT_TOOL;	// The tool (or weapon) we are currently holding
+int CURRENT_TOOL;		// The tool (or weapon) we are currently holding
 
 char *tool[NUMBER_OF_TOOLS];
 

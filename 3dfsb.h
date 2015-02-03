@@ -35,7 +35,7 @@
 struct tree_entry {
 	char *name;
 	char *mimetype;
-	char *openwith; // with what to open the file, currently this is the string name of the .desktop file, such as leafpad.desktop
+	char *openwith;		// with what to open the file, currently this is the string name of the .desktop file, such as leafpad.desktop
 	unsigned long int namelen;
 	char *linkpath;
 	unsigned int mode, regtype, rasterx, rasterz;

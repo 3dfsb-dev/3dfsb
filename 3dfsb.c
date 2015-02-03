@@ -271,7 +271,7 @@ static void ende(int code)
 			FCptr = help->name;
 			free(FCptr);
 
-			if (help->openwith!= NULL)
+			if (help->openwith != NULL)
 				free(help->openwith);
 
 			if (help->textfilecontents != NULL) {
@@ -2246,7 +2246,6 @@ static void display(void)
 		glEnd();
 		glPopMatrix();
 	}
-
 	// If we are showing some heads up things in the left hand corner, like the current directory and the orientation
 	if (TDFSB_SHOW_DISPLAY) {
 		strcpy(fullpath, TDFSB_CURRENTPATH);
@@ -2299,7 +2298,6 @@ static void display(void)
 			glDepthMask(GL_TRUE);
 			glDisable(GL_BLEND);
 		}
-
 		// Show the path
 		glTranslatef(55, 18, 1);
 		glColor3f(0.4, 0.8, 0.6);
@@ -2468,18 +2466,16 @@ static void display(void)
 		glPopMatrix();
 		TDFSB_ALERT_KC--;
 	}
-
 	// Show the current tool that is used
 	glPushMatrix();
-	char* current_tool_str = tool[CURRENT_TOOL];
-	glTranslatef(SWX - 104.76 * (strlen(current_tool_str)+1) * 0.1, SWY - 55, 0);
+	char *current_tool_str = tool[CURRENT_TOOL];
+	glTranslatef(SWX - 104.76 * (strlen(current_tool_str) + 1) * 0.1, SWY - 55, 0);
 	glScalef(0.10, 0.10, 1);
 	glColor3f(0.25, 0.5, 0.0);
 	for (charpos = 0; charpos < strlen(current_tool_str); charpos++) {
 		glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, current_tool_str[charpos]);
 	}
 	glPopMatrix();
-
 
 	glLoadIdentity();
 	gluPerspective(60, (GLfloat) SWX / (GLfloat) SWY, 0.5, 2000);
