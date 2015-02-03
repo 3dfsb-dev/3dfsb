@@ -20,7 +20,7 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 	strcat(fullpath, object->name);
 
 	if (CURRENT_TOOL == TOOL_SELECTOR) {
-		// If we have an in-world handler for the file
+		// If we have an in-world handler for the file, use it
 		if (object->regtype == VIDEOFILE || object->regtype == VIDEOSOURCEFILE || object->regtype == AUDIOFILE || object->regtype == PROCESS) {
 			if (object == TDFSB_MEDIA_FILE) {
 				toggle_media_pipeline();
@@ -47,11 +47,6 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 			}
 		}
 		*/
-	} else if (CURRENT_TOOL == TOOL_WEAPON) {
-		// printf("TODO: Start some animation on the object to show it is being deleted ");
-		object->tombstone = 1;	// Mark the object as deleted
-		// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
-		toreturn = 1;
 	} else if (CURRENT_TOOL == TOOL_OPENER) {
 		char command[4096];
 		strcpy(command, OPEN_COMMAND);
@@ -61,6 +56,14 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 		printf("Executing command to open file: %s\n", command);
 		system(command);
 		release_mouse();
+	} else if (CURRENT_TOOL == TOOL_WEAPON) {
+		// printf("TODO: Start some animation on the object to show it is being deleted ");
+		object->tombstone = 1;	// Mark the object as deleted
+		// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
+		toreturn = 1;
+
+	} else {
+		printf("ERROR: invalid tool type %d cannot be applied on object %s\n", CURRENT_TOOL, object->name);
 	}
 	return toreturn;
 }
