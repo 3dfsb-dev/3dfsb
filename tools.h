@@ -8,21 +8,6 @@
 #define TOOL_EXTERNAL_OPENER	1
 #define TOOL_WEAPON		2
 
-/*
- * Some info:
- * ----------
- * xdg-open uses .desktop files, which can be found in /usr/share/applications/
- * Local .desktop files of the user can be found in ~/.local/share/applications/
- *
- * You can get a file's default open command with:
- * xdg-mime query default $(file --mime-type -b filename)
- *
- * You can set it with:
- * xdg-mime default file.desktop mime/type
- *
- * xdg-open saves these associations of the user in ~/.local/share/applications/mimeapps.list
- */
-#define OPEN_COMMAND		"xdg-open "
 #define OPEN_STRING		" will be opened with "
 #define OPEN_STRING_LENGTH	21
 

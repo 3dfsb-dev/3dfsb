@@ -5,7 +5,33 @@
 #include "media.h"
 #include "tools.h"
 
-#define XDG_QUERY_DEFAULT	"/usr/bin/xdg-mime query default "
+/*
+ * Some info:
+ * ----------
+ * xdg-open uses .desktop files, which can be found in /usr/share/applications/
+ * Local .desktop files of the user can be found in ~/.local/share/applications/
+ *
+ * You can get a file's default open command with:
+ * xdg-mime query default $(file --mime-type -b filename)
+ *
+ * You can set it with:
+ * xdg-mime default file.desktop mime/type
+ *
+ * xdg-open saves these associations of the user in ~/.local/share/applications/mimeapps.list
+ */
+#define OPEN_COMMAND		"DISPLAY=:%d xdg-open "
+
+#define XDG_QUERY_DEFAULT	"xdg-mime query default "
+
+static void xdg_open(char *fullpath, int display_number) {
+	char command[4096];
+	snprintf(command, 40, OPEN_COMMAND, display_number);
+	strcat(command, "\"");
+	strcat(command, fullpath);
+	strcat(command, "\" &");
+	printf("Executing command to open file: %s\n", command);
+	system(command);
+}
 
 // When a user points to and clicks on an object, the tool is applied on it
 int apply_tool_on_object(struct tree_entry *object, char *currentpath)
@@ -30,33 +56,15 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 				TDFSB_MEDIA_FILE = object;
 			}
 		} else if (object->openwith) {
-			cleanup_media_player();	// Stop all other playing media
-			play_media(fullpath, object);
-			// TODO: xdg-open of the file in the new X server
+			cleanup_media_player();
+			play_media(fullpath, object);	// Start an X server
+			xdg_open(fullpath, 1);		// Start the program that opens the file
 			TDFSB_MEDIA_FILE = object;
 			calculate_scale(TDFSB_MEDIA_FILE);
 			toreturn = 1;
 		}
-		// TODO:
-		// - if it is a binary, then start it in-world
-		/*
-		} else if (object && object->regtype == TEXTFILE) {
-			if (object == TDFSB_MEDIA_FILE) {
-				// Re-connect the input
-				INPUT_OBJECT = TDFSB_MEDIA_FILE;
-			} else {
-				tdb_gen_list();	// refresh scene, because where there was a textfile, will now be a cube
-			}
-		}
-		*/
 	} else if (CURRENT_TOOL == TOOL_EXTERNAL_OPENER) {
-		char command[4096];
-		strcpy(command, OPEN_COMMAND);
-		strcat(command, "\"");
-		strcat(command, fullpath);
-		strcat(command, "\" &");
-		printf("Executing command to open file: %s\n", command);
-		system(command);
+		xdg_open(fullpath, 0);
 		release_mouse();
 	} else if (CURRENT_TOOL == TOOL_WEAPON) {
 		// printf("TODO: Start some animation on the object to show it is being deleted ");
