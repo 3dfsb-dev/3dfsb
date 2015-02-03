@@ -2316,7 +2316,7 @@ static void display(void)
 			glutStrokeCharacter(GLUT_STROKE_ROMAN, '/');
 
 			for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->name); charpos++)
-				glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
+				glutStrokeCharacter(GLUT_STROKE_ROMAN, TDFSB_OBJECT_SELECTED->name[charpos]);
 
 			// Show with which program a file will be opened
 			if (CURRENT_TOOL == TOOL_EXTERNAL_OPENER) {
@@ -2325,11 +2325,11 @@ static void display(void)
 				char open_string[OPEN_STRING_LENGTH];
 				strncpy(open_string, OPEN_STRING, OPEN_STRING_LENGTH);
 				for (charpos = 0; charpos < OPEN_STRING_LENGTH; charpos++)
-					glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, open_string[charpos]);
+					glutStrokeCharacter(GLUT_STROKE_ROMAN, open_string[charpos]);
 
 				//printf("default_program_desktop_file = %s\n", default_program_desktop_file);
 				for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->openwith); charpos++)
-					glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, TDFSB_OBJECT_SELECTED->openwith[charpos]);
+					glutStrokeCharacter(GLUT_STROKE_ROMAN, TDFSB_OBJECT_SELECTED->openwith[charpos]);
 			}
 		}
 
