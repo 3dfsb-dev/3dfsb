@@ -52,6 +52,7 @@ add_custom_command(OUTPUT images
                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/images
                   )
 
+add_library(input input.c)
 add_library(str_replace str_replace.c)
 add_library(media media.c)
 add_library(config config.c)
@@ -59,4 +60,4 @@ add_library(tools tools.c)
 
 add_executable(3dfsb 3dfsb.c)
 add_dependencies(3dfsb images)
-target_link_libraries(3dfsb str_replace media config tools ${SDL_LIBRARY} ${SDL_IMAGE_LIBRARIES} ${OPENGL_LIBRARIES} ${GSTREAMER_LIBRARIES} ${GLUT_glut_LIBRARY} ${LibMagic_LIBRARY} ${LibM_LIBRARY} ${GLIB_GOBJECT_LIBRARIES} ${GLIB_LIBRARIES} ${XDO_LIBRARIES} ${X11_XTest_LIB})
+target_link_libraries(3dfsb input str_replace media config tools ${SDL_LIBRARY} ${SDL_IMAGE_LIBRARIES} ${OPENGL_LIBRARIES} ${GSTREAMER_LIBRARIES} ${GLUT_glut_LIBRARY} ${LibMagic_LIBRARY} ${LibM_LIBRARY} ${GLIB_GOBJECT_LIBRARIES} ${GLIB_LIBRARIES} ${XDO_LIBRARIES} ${X11_XTest_LIB})

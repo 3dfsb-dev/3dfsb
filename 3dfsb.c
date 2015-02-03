@@ -68,6 +68,7 @@
 
 // Own headers
 #include "3dfsb.h"
+#include "input.h"
 #include "str_replace.h"
 #include "tools.h"
 #include "media.h"
@@ -137,11 +138,9 @@ char *nsuff[NUMBER_OF_FILETYPES];
 GLfloat fh, fh2, mono;
 
 int aSWX, aSWY, aPWX, aPWY;
-GLdouble centX, centY;
 int TDFSB_SHADE = 1, TDFSB_FILENAMES = 2, TDFSB_SHOW_DISPLAY = 3, TDFSB_XL_DISPLAY = TDFSB_XL_DISPLAY_INIT, TDFSB_HAVE_MOUSE = 1, TDFSB_ANIM_COUNT = 0, TDFSB_OBJECT_SEARCH = 1;
 int TDFSB_SPEED_DISPLAY = 200, TDFSB_SHOW_HELP = 1, TDFSB_NOTIFY;
 int TDFSB_SHOW_FPS = 0;
-int TDFSB_ANIM_STATE = 0;	// This keeps track of the state of the "approach" action that brings you closer to an object in 4 steps
 int TDFSB_FLY_DISPLAY = 0, TDFSB_CLASSIC_DISPLAY = 0;
 int TDFSB_SHOW_THROTTLE = 0, TDFSB_SHOW_BALL = 0;
 int TDFSB_FPS_DISP = 0, TDFSB_FPS_DT = 1000, TDFSB_SHOW_CONFIG_FPS = 0;
@@ -154,7 +153,7 @@ GLdouble TDFSB_NORTH_X = 0, TDFSB_NORTH_Z = 0;
 GLfloat TDFSB_MAXX, TDFSB_MAXZ;
 GLfloat TDFSB_MINX, TDFSB_MINZ;
 GLfloat TDFSB_STEPX, TDFSB_STEPZ;
-GLdouble vposx, vposy, vposz, tposx, tposy, tposz, smoox, smooy, smooz, smoou, lastposz, lastposx, uposy;
+GLdouble vposx, vposy, vposz, smoox, smooy, smooz, smoou, lastposz, lastposx, uposy;
 
 GLfloat mat_ambient[] = { 0.7, 0.7, 0.7, 1.0 };
 GLfloat mat_ambient_red[] = { 1.0, 0.0, 0.0, 0.5 };
@@ -1649,24 +1648,6 @@ static void approach(void)
 
 	TDFSB_FUNC_DISP();
 
-}
-
-/*
- * Input handling code, continued later on as well
- */
-static void MouseMove(int x, int y)
-{
-	if (!TDFSB_ANIM_STATE) {
-		centX = centX - (GLdouble) (headspeed * (floor(((double)SWX) / 2) - (double)x));
-		centY = centY - (GLdouble) (headspeed * (floor(((double)SWY) / 2) - (double)y));
-		if (centY >= SWY / 2)
-			centY = SWY / 2;
-		if (centY <= ((-SWY) / 2))
-			centY = ((-SWY) / 2);
-		tposz = ((GLdouble) sin((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
-		tposx = ((GLdouble) cos((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
-		tposy = -((GLdouble) sin((((double)centY) / (double)(SWY / PI))));
-	}
 }
 
 static void MouseLift(int x, int y)
@@ -3186,8 +3167,10 @@ int main(int argc, char **argv)
 		}
 	}
 
+	// Init variables
 	SWX = SWY = PWX = PWY = 0;
 	TDFSB_CURRENTPATH[0] = 0;
+	TDFSB_ANIM_STATE = 0;	// This keeps track of the state of the "approach" action that brings you closer to an object in 4 steps
 
 	fake_glut_argc = 1;
 	glutInit(&fake_glut_argc, argv);

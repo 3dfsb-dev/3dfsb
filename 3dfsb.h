@@ -35,7 +35,7 @@
 struct tree_entry {
 	char *name;
 	char *mimetype;
-	char *openwith;		// with what to open the file, currently this is the string name of the .desktop file, such as leafpad.desktop
+	char *openwith;		// with what to open the file, currently this is the name of the .desktop file, such as leafpad.desktop
 	unsigned long int namelen;
 	char *linkpath;
 	unsigned int mode, regtype, rasterx, rasterz;
@@ -55,5 +55,12 @@ typedef struct tree_entry tree_entry;
 
 void release_mouse(void);
 tree_entry *calculate_scale(tree_entry * object);
+
+/*
+ * Global variables
+ */
+int TDFSB_ANIM_STATE;	// This keeps track of the state of the "approach" action that brings you closer to an object in 4 steps
+GLdouble centX, centY;
+GLdouble tposx, tposy, tposz;
 
 #endif
