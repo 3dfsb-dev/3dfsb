@@ -54,5 +54,6 @@ struct tree_entry {
 typedef struct tree_entry tree_entry;
 
 void release_mouse(void);
+tree_entry *calculate_scale(tree_entry * object);
 
 #endif

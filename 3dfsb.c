@@ -310,7 +310,7 @@ static char *uppercase(char *str)
 	return newstr;
 }
 
-static tree_entry *calculate_scale(tree_entry * object)
+tree_entry *calculate_scale(tree_entry * object)
 {
 	if (object->originalwidth < object->originalheight) {
 		object->scalex = object->scalez = ((GLfloat) log(((double)object->originalwidth / 128) + 1)) + 1;
@@ -482,8 +482,8 @@ static void tdb_gen_list(void)
 				glutSolidSphere(0.5, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
 			else
 				glutSolidSphere(1, TDFSB_BALL_DETAIL, TDFSB_BALL_DETAIL);
-		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE)) || (help->regtype == PROCESS) || (help->regtype == TEXTFILE && help == TDFSB_MEDIA_FILE)) {	// Regular file, except VIDEOSOURCEFILE's, which are character devices
-			if ((((help->regtype == IMAGEFILE) || (help->regtype == PDFFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) || (help->regtype == PROCESS) || (help->regtype == TEXTFILE && help == TDFSB_MEDIA_FILE)) {
+		} else if ((((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 10) || ((((help->mode) & 0x1F) == 2) && (help->regtype == VIDEOSOURCEFILE)) || (help->regtype == PROCESS) || (help == TDFSB_MEDIA_FILE)) {	// Regular file, except VIDEOSOURCEFILE's, which are character devices
+			if ((((help->regtype == IMAGEFILE) || (help->regtype == PDFFILE) || (help->regtype == VIDEOFILE) || (help->regtype == VIDEOSOURCEFILE)) && (((help->mode) & 0x1F) == 0 || ((help->mode) & 0x1F) == 2)) || (help->regtype == PROCESS) || (help == TDFSB_MEDIA_FILE)) {
 				if ((help->mode) & 0x20) {
 					glTranslatef(mx, 0, mz);
 					if (help->scalex > help->scaley) {
@@ -509,6 +509,7 @@ static void tdb_gen_list(void)
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+				// Draw the cube
 				if (TDFSB_ICUBE)
 					cc1 = 20;
 				else
@@ -1291,9 +1292,9 @@ static void leodir(void)
 				/* Free compiled regular expression if you want to use the regex_t again */
 				regfree(&regex);
 			}
-			// Count the number of textures we'll need, so we can allocate them already below
-			if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS || temptype == TEXTFILE)
-				TDFSB_TEX_NUM++;
+
+			// Every object *can* have a texture
+			TDFSB_TEX_NUM++;
 
 			// Setting some default scale (before having read the file) and position
 			// Note: locpx (posx) and locpz (posz) are calculated later on, when the grid size is determined

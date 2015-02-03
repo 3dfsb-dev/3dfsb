@@ -29,20 +29,22 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 				play_media(fullpath, object);
 				TDFSB_MEDIA_FILE = object;
 			}
+		} else if (object->openwith) {
+			cleanup_media_player();	// Stop all other playing media
+			play_media(fullpath, object);
+			// TODO: xdg-open of the file in the new X server
+			TDFSB_MEDIA_FILE = object;
+			calculate_scale(TDFSB_MEDIA_FILE);
+			toreturn = 1;
 		}
 		// TODO:
 		// - if it is a binary, then start it in-world
-		// - else, if we have an xdg-open result, then start that one to open it in-world
 		/*
 		} else if (object && object->regtype == TEXTFILE) {
 			if (object == TDFSB_MEDIA_FILE) {
 				// Re-connect the input
 				INPUT_OBJECT = TDFSB_MEDIA_FILE;
 			} else {
-				cleanup_media_player();	// Stop all other playing media
-				play_media(fullpath, object);
-				TDFSB_MEDIA_FILE = object;
-				calculate_scale(TDFSB_MEDIA_FILE);
 				tdb_gen_list();	// refresh scene, because where there was a textfile, will now be a cube
 			}
 		}
