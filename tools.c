@@ -6,6 +6,32 @@
 
 #define XDG_QUERY_DEFAULT	"/usr/bin/xdg-mime query default "
 
+// When a user points to and clicks on an object, the tool is applied on it
+int apply_tool_on_object(struct tree_entry *object, char *currentpath)
+{
+	int toreturn = 0;
+	if (CURRENT_TOOL == TOOL_WEAPON) {
+		// printf("TODO: Start some animation on the object to show it is being deleted ");
+		object->tombstone = 1;	// Mark the object as deleted
+		// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
+		toreturn = 1;
+	} else if (CURRENT_TOOL == TOOL_OPENER) {
+		char command[4096];
+		strcpy(command, OPEN_COMMAND);
+		strcat(command, "\"");
+		strcat(command, currentpath);
+		if (strlen(command) > 1)
+			strcat(command, "/");
+		strcat(command, object->name);
+		strcat(command, "\" &");
+		printf("Executing command to open file: %s\n", command);
+		system(command);
+		release_mouse();
+
+	}
+	return toreturn;
+}
+
 void init_tools(void)
 {
 	CURRENT_TOOL = TOOL_SELECTOR;	// The tool (or weapon) we are currently holding

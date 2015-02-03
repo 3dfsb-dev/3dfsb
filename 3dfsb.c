@@ -77,24 +77,6 @@
 #define _GLUfuncptr void*
 #endif
 
-/*
- * Some info:
- * ----------
- * xdg-open uses .desktop files, which can be found in /usr/share/applications/
- * Local .desktop files of the user can be found in ~/.local/share/applications/
- *
- * You can get a file's default open command with:
- * xdg-mime query default $(file --mime-type -b filename)
- *
- * You can set it with:
- * xdg-mime default file.desktop mime/type
- *
- * xdg-open saves these associations of the user in ~/.local/share/applications/mimeapps.list
- */
-#define OPEN_COMMAND		"xdg-open "
-#define OPEN_STRING		" will be opened with "
-#define OPEN_STRING_LENGTH	21
-
 // Initial width of the transparent background in the left bottom of the screen
 #define TDFSB_XL_DISPLAY_INIT	180
 
@@ -1666,35 +1648,6 @@ static void approach(void)
 
 }
 
-// When a user points to and clicks on an object, the tool is applied on it
-static void apply_tool_on_object(struct tree_entry *object)
-{
-	if (CURRENT_TOOL == TOOL_WEAPON) {
-		// printf("TODO: Start some animation on the object to show it is being deleted ");
-		object->tombstone = 1;	// Mark the object as deleted
-		// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
-		tdb_gen_list();
-	} else if (CURRENT_TOOL == TOOL_OPENER) {
-		char command[4096];
-		strcpy(command, OPEN_COMMAND);
-		strcat(command, "\"");
-		strcat(command, TDFSB_CURRENTPATH);
-		if (strlen(command) > 1)
-			strcat(command, "/");
-		strcat(command, object->name);
-		strcat(command, "\" &");
-		printf("Executing command to open file: %s\n", command);
-		system(command);
-		release_mouse();
-
-	}
-	// Unselect all objects, otherwise the open action might keep triggering
-	TDFSB_OBJECT_SELECTED = NULL;
-	TDFSB_KEY_FINDER = 0;
-	TDFSB_FUNC_KEY = keyboard;
-	TDFSB_FUNC_UPKEY = keyboardup;
-}
-
 /*
  * Input handling code starts here, about ~700 lines of code.
  */
@@ -1740,8 +1693,17 @@ static void mouse(int button, int state)
 	case SDL_BUTTON_LEFT:
 		if (!TDFSB_CLASSIC_NAV) {
 			if (state == SDL_PRESSED) {
-				if (TDFSB_OBJECT_SELECTED)
-					apply_tool_on_object(TDFSB_OBJECT_SELECTED);
+				if (TDFSB_OBJECT_SELECTED) {
+					// apply_tool_on_object returns 1 when we have to refresh the directory
+					if (apply_tool_on_object(TDFSB_OBJECT_SELECTED, TDFSB_CURRENTPATH))
+						tdb_gen_list();
+
+					// Unselect all objects, otherwise the open action might keep triggering
+					TDFSB_OBJECT_SELECTED = NULL;
+					TDFSB_KEY_FINDER = 0;
+					TDFSB_FUNC_KEY = keyboard;
+					TDFSB_FUNC_UPKEY = keyboardup;
+				}
 				TDFSB_KEY_FINDER = 0;
 				//TDFSB_FUNC_KEY = keyfinder;
 				//TDFSB_FUNC_UPKEY = keyupfinder;
