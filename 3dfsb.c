@@ -228,8 +228,8 @@ static GLfloat verTex2[] = {
 "L/R arrow   strafe   F9     change tool\n" \
 "PgUp/Down or MMB+Mouse move up/downward\n" \
 "HOME     start pos   END    ground zero\n" \
-"LMB  select object  + RMB|CTRL approach\n" \
-"+ENTER  play media or enter directory\n\n" \
+"CTRL      approach   F12     send input\n" \
+"Left Mouse/ENTER   apply tool on object\n\n" \
 
 static void display(void);
 static int keyboard(unsigned char key);
