@@ -1649,7 +1649,7 @@ static void approach(void)
 }
 
 /*
- * Input handling code starts here, about ~700 lines of code.
+ * Input handling code, continued later on as well
  */
 static void MouseMove(int x, int y)
 {
