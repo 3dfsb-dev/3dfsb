@@ -34,7 +34,7 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath);
 
 void init_tools(void);
 
-char *xdg_query_default(char *mimetype);
+char *xdg_query_default(const char *mimetype);
 
 char *execute_binary(char *toexec);
 

@@ -78,7 +78,7 @@ void init_tools(void)
 	tool[TOOL_WEAPON] = "Laser shooter (file not deleted)";
 }
 
-char *xdg_query_default(char *mimetype)
+char *xdg_query_default(const char *mimetype)
 {
 	char *command = malloc(sizeof(char) * 1024);
 

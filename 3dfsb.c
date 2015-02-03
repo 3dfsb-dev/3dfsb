@@ -939,7 +939,7 @@ static void reshape(int w, int h)
 	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 }
 
-static void insert(char *value, const char *mimetype, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int texturewidth, unsigned int textureheight, unsigned int textureformat, unsigned int textureid, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
+static void insert(char *value, const char *mimetype, char *openwith, char *linkpath, unsigned int mode, off_t size, unsigned int type, unsigned int texturewidth, unsigned int textureheight, unsigned int textureformat, unsigned int textureid, GLfloat posx, GLfloat posy, GLfloat posz, GLfloat scalex, GLfloat scaley, GLfloat scalez)
 {
 	char *temp;
 	struct tree_entry *help;
@@ -968,7 +968,7 @@ static void insert(char *value, const char *mimetype, char *linkpath, unsigned i
 		}
 		root->name = temp;
 		root->mimetype = mimetypetemp;
-		root->openwith = NULL;
+		root->openwith = openwith;
 		root->namelen = strlen(temp);
 		root->linkpath = linkpath;
 		root->mode = mode;
@@ -999,7 +999,7 @@ static void insert(char *value, const char *mimetype, char *linkpath, unsigned i
 		}
 		(help->next)->name = temp;
 		(help->next)->mimetype = mimetypetemp;
-		(help->next)->openwith = NULL;
+		(help->next)->openwith = openwith;
 		(help->next)->namelen = strlen(temp);
 		(help->next)->linkpath = linkpath;
 		(help->next)->mode = mode;
@@ -1261,6 +1261,8 @@ static void leodir(void)
 
 /* Data File Identifizierung */
 			const char *mimetype = magic_file(magic, fullpath);
+			char *openwith = xdg_query_default(mimetype);
+
 			if ((mode & 0x1F) == 0) {	// Is it a regular file?
 				temptype = get_file_type(fullpath, mimetype);
 			} else if (((mode & 0x1F) == 2) && strncmp(fullpath, PATH_DEV_V4L, strlen(PATH_DEV_V4L)) == 0) {
@@ -1307,7 +1309,7 @@ static void leodir(void)
 				locpy = locsy - 1;	// vertical position of the object
 			}
 
-			insert(entry, mimetype, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, locpx, locpy, locpz, locsx, locsy, locsz);
+			insert(entry, mimetype, openwith, linkpath, mode, buf.st_size, temptype, texturewidth, textureheight, textureformat, textureid, locpx, locpy, locpz, locsx, locsy, locsz);
 			free(entry);
 		}
 
@@ -2324,10 +2326,6 @@ static void display(void)
 				strncpy(open_string, OPEN_STRING, OPEN_STRING_LENGTH);
 				for (charpos = 0; charpos < OPEN_STRING_LENGTH; charpos++)
 					glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, open_string[charpos]);
-
-				// Load this info only once!
-				if (!TDFSB_OBJECT_SELECTED->openwith)
-					TDFSB_OBJECT_SELECTED->openwith = xdg_query_default(TDFSB_OBJECT_SELECTED->mimetype);
 
 				//printf("default_program_desktop_file = %s\n", default_program_desktop_file);
 				for (charpos = 0; charpos < strlen(TDFSB_OBJECT_SELECTED->openwith); charpos++)
