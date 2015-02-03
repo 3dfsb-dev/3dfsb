@@ -53,14 +53,12 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 			} else {
 				cleanup_media_player();	// Stop all other playing media
 				play_media(fullpath, object);
-				TDFSB_MEDIA_FILE = object;
 			}
 		} else if (object->openwith) {
 			cleanup_media_player();
 			play_media(fullpath, object);	// Start an X server
 			xdg_open(fullpath, 1);		// Start the program that opens the file
-			TDFSB_MEDIA_FILE = object;
-			calculate_scale(TDFSB_MEDIA_FILE);
+			calculate_scale(object);
 			toreturn = 1;
 		}
 	} else if (CURRENT_TOOL == TOOL_EXTERNAL_OPENER) {
@@ -71,7 +69,6 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 		object->tombstone = 1;	// Mark the object as deleted
 		// Refresh (fairly static) GLCallLists with Solids and Blends so that the tool applications will be applied
 		toreturn = 1;
-
 	} else {
 		printf("ERROR: invalid tool type %d cannot be applied on object %s\n", CURRENT_TOOL, object->name);
 	}

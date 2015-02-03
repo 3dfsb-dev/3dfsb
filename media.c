@@ -514,4 +514,5 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 	framecounter = displayedframenumber = 0;
 	gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
+	TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
 }
