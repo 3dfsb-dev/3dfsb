@@ -32,6 +32,9 @@
 
 #define PATH_DEV_V4L    "/dev/video"
 
+// Initial width of the transparent background in the left bottom of the screen
+#define TDFSB_XL_DISPLAY_INIT	180
+
 struct tree_entry {
 	char *name;
 	char *mimetype;
@@ -54,7 +57,34 @@ struct tree_entry {
 typedef struct tree_entry tree_entry;
 
 void release_mouse(void);
+
 tree_entry *calculate_scale(tree_entry * object);
+
+void check_standstill(void);
+
+void move(void);
+void stop_move(void);
+void ground(void);
+void approach(void);
+
+void activate_object(tree_entry *object);
+
+void viewm(void);
+
+void reshape(int w, int h);
+
+void ende(int code);
+
+void nullDisplay(void);
+void noDisplay(void);
+
+Uint32 fps_timer(void);
+
+/* Global function variables */
+void (*TDFSB_FUNC_IDLE) (void), (*TDFSB_FUNC_DISP) (void);
+void (*TDFSB_FUNC_MOUSE) (int button, int state), (*TDFSB_FUNC_MOTION) (int x, int y);
+int (*TDFSB_FUNC_KEY) (unsigned char key);
+int (*TDFSB_FUNC_UPKEY) (unsigned char key);
 
 /*
  * Global variables
@@ -62,5 +92,29 @@ tree_entry *calculate_scale(tree_entry * object);
 int TDFSB_ANIM_STATE;	// This keeps track of the state of the "approach" action that brings you closer to an object in 4 steps
 GLdouble centX, centY;
 GLdouble tposx, tposy, tposz;
+GLdouble vposx, vposy, vposz, uposy;
+GLdouble smoox, smooy, smooz, smoou;
+GLdouble lastposz, lastposx;
+int forwardkeybuf, leftkeybuf, rightkeybuf, backwardkeybuf, upkeybuf, downkeybuf;
+
+GLdouble TDFSB_OA_DX, TDFSB_OA_DY, TDFSB_OA_DZ;
+
+int TDFSB_SHADE, TDFSB_FILENAMES, TDFSB_SHOW_DISPLAY, TDFSB_XL_DISPLAY, TDFSB_HAVE_MOUSE, TDFSB_ANIM_COUNT, TDFSB_OBJECT_SEARCH;
+int TDFSB_SPEED_DISPLAY, TDFSB_SHOW_HELP, TDFSB_SHOW_FPS, TDFSB_FLY_DISPLAY, TDFSB_CLASSIC_DISPLAY;
+int TDFSB_SHOW_THROTTLE, TDFSB_SHOW_BALL, TDFSB_FPS_DISP, TDFSB_FPS_DT, TDFSB_SHOW_CONFIG_FPS;
+
+tree_entry *TDFSB_OBJECT_SELECTED;
+tree_entry *INPUT_OBJECT;
+tree_entry *TDFSB_OA;
+
+/* The help text is printed out by:
+ * - the input system's "help" key handler for the console out)
+ * - the display() function for the on-screen display
+ */
+char *help_str;
+
+unsigned char TDFSB_KEY_FINDER;
+
+char cfpsbuf[12], throttlebuf[14], flybuf[12], classicbuf[12], ballbuf[20], fpsbuf[12];
 
 #endif

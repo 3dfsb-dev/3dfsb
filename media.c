@@ -443,7 +443,7 @@ void toggle_media_pipeline(void)
 	}
 }
 
-void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
+void play_media(char *fullpath, tree_entry * object)
 {
 	GstBus *bus = NULL;
 	GstElement *fakesink = NULL;
@@ -457,18 +457,18 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 	}
 
 	gchar *descr;
-	if (TDFSB_OBJECT_SELECTED->regtype == VIDEOFILE) {
-		descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
-	} else if (TDFSB_OBJECT_SELECTED->regtype == AUDIOFILE) {
+	if (object->regtype == VIDEOFILE) {
+		descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! playsink", uri, object->texturewidth, object->textureheight);
+	} else if (object->regtype == AUDIOFILE) {
 		descr = g_strdup_printf("uridecodebin uri=%s ! audioconvert ! playsink", uri);
-	} else if (TDFSB_OBJECT_SELECTED->regtype == VIDEOSOURCEFILE) {
-		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", fullpath, TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
-	} else if (TDFSB_OBJECT_SELECTED->regtype == PROCESS) {
+	} else if (object->regtype == VIDEOSOURCEFILE) {
+		descr = g_strdup_printf("v4l2src device=%s ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", fullpath, object->texturewidth, object->textureheight);
+	} else if (object->regtype == PROCESS) {
 		// Get PID from filename
 		// Get Window ID(s) for this PID
 		//int pid = 5288;
 		int windowid = 37748743;
-		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink     name=fakesink0 sync=1", windowid, TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
+		descr = g_strdup_printf("ximagesrc xid=%d ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink     name=fakesink0 sync=1", windowid, object->texturewidth, object->textureheight);
 		//sleep(1);
 		//system("xdotool search --pid 5288\n");
 		system("xdotool windowraise 37748743\n");
@@ -476,12 +476,12 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 	} else {
 		system(STARTX);
 		sleep(2);
-		TDFSB_OBJECT_SELECTED->texturewidth = 2048;
-		TDFSB_OBJECT_SELECTED->textureheight = 2048;
-		TDFSB_OBJECT_SELECTED->textureformat = GL_RGB;
-		TDFSB_OBJECT_SELECTED->originalwidth = 1920;
-		TDFSB_OBJECT_SELECTED->originalheight = 1080;
-		descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", TDFSB_OBJECT_SELECTED->texturewidth, TDFSB_OBJECT_SELECTED->textureheight);
+		object->texturewidth = 2048;
+		object->textureheight = 2048;
+		object->textureformat = GL_RGB;
+		object->originalwidth = 1920;
+		object->originalheight = 1080;
+		descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", object->texturewidth, object->textureheight);
 	}
 	// Use this for pulseaudio:
 	// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=3dfsb", uri);
@@ -514,5 +514,5 @@ void play_media(char *fullpath, tree_entry * TDFSB_OBJECT_SELECTED)
 	framecounter = displayedframenumber = 0;
 	gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
-	TDFSB_MEDIA_FILE = TDFSB_OBJECT_SELECTED;
+	TDFSB_MEDIA_FILE = object;
 }

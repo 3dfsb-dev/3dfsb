@@ -52,9 +52,6 @@
 
 #include <regex.h>
 
-#include <xdo.h>
-#include <X11/extensions/XTest.h>
-
 // For saving pixbuf's to a file for debugging
 /*
 #pragma GCC diagnostic push
@@ -78,19 +75,8 @@
 #define _GLUfuncptr void*
 #endif
 
-// Initial width of the transparent background in the left bottom of the screen
-#define TDFSB_XL_DISPLAY_INIT	180
-
 const SDL_VideoInfo *info = NULL;
-SDL_Surface *window;
-int bpp = 0, rgb_size[3];
 GLUquadricObj *aua1, *aua2;
-SDL_TimerID TDFSB_TIMER_ID;
-void (*TDFSB_FUNC_IDLE) (void), (*TDFSB_FUNC_DISP) (void);
-void (*TDFSB_FUNC_MOUSE) (int button, int state), (*TDFSB_FUNC_MOTION) (int x, int y);
-int (*TDFSB_FUNC_KEY) (unsigned char key);
-int (*TDFSB_FUNC_UPKEY) (unsigned char key);
-
 //unsigned long int www, hhh, p2w, p2h, cglmode;
 
 long int c1, cc, cc1;
@@ -106,27 +92,18 @@ unsigned long int total_objects_in_grid;
 unsigned int total_objects_in_grid_ratio;
 GLdouble mx, my, mz, r, u, v;
 
-struct tree_entry *root, *FMptr, *TDFSB_OBJECT_SELECTED = NULL, *TDFSB_OA = NULL;
+struct tree_entry *root, *FMptr;
 char *FCptr;
 
-char temp_trunc[4096];
-char fullpath[4096], yabuf[4096], fpsbuf[12], cfpsbuf[12], throttlebuf[14], ballbuf[20], flybuf[12], classicbuf[12];
-char TDFSB_CES_TEMP[4096];
+char fullpath[4096], yabuf[4096];
 char *alert_kc = "MALFORMED KEYBOARD MAP";
 char *alert_kc2 = "USING DEFAULTS";
-unsigned char ch, TDFSB_KEY_FINDER = 0;
+unsigned char ch;
 GLuint TDFSB_TEX_NUM;
 GLuint *TDFSB_TEX_NAMES;
 
-char *help_str, *help_copy;
+char *help_copy;
 int cnt;
-int forwardkeybuf = 0;
-int leftkeybuf = 0;
-int rightkeybuf = 0;
-int backwardkeybuf = 0;
-int upkeybuf = 0;
-int downkeybuf = 0;
-
 GLdouble prevlen;
 
 #define NUMBER_OF_EXTENSIONS	3
@@ -137,23 +114,13 @@ char *nsuff[NUMBER_OF_FILETYPES];
 
 GLfloat fh, fh2, mono;
 
-int aSWX, aSWY, aPWX, aPWY;
-int TDFSB_SHADE = 1, TDFSB_FILENAMES = 2, TDFSB_SHOW_DISPLAY = 3, TDFSB_XL_DISPLAY = TDFSB_XL_DISPLAY_INIT, TDFSB_HAVE_MOUSE = 1, TDFSB_ANIM_COUNT = 0, TDFSB_OBJECT_SEARCH = 1;
-int TDFSB_SPEED_DISPLAY = 200, TDFSB_SHOW_HELP = 1, TDFSB_NOTIFY;
-int TDFSB_SHOW_FPS = 0;
-int TDFSB_FLY_DISPLAY = 0, TDFSB_CLASSIC_DISPLAY = 0;
-int TDFSB_SHOW_THROTTLE = 0, TDFSB_SHOW_BALL = 0;
-int TDFSB_FPS_DISP = 0, TDFSB_FPS_DT = 1000, TDFSB_SHOW_CONFIG_FPS = 0;
-
 struct timeval ltime, ttime, rtime, wtime;
 long sec;
 
-GLdouble TDFSB_OA_DX, TDFSB_OA_DY, TDFSB_OA_DZ;
 GLdouble TDFSB_NORTH_X = 0, TDFSB_NORTH_Z = 0;
 GLfloat TDFSB_MAXX, TDFSB_MAXZ;
 GLfloat TDFSB_MINX, TDFSB_MINZ;
 GLfloat TDFSB_STEPX, TDFSB_STEPZ;
-GLdouble vposx, vposy, vposz, smoox, smooy, smooz, smoou, lastposz, lastposx, uposy;
 
 GLfloat mat_ambient[] = { 0.7, 0.7, 0.7, 1.0 };
 GLfloat mat_ambient_red[] = { 1.0, 0.0, 0.0, 0.5 };
@@ -232,13 +199,14 @@ static GLfloat verTex2[] = {
 "Left Mouse/ENTER   apply tool on object\n\n" \
 
 static void display(void);
-static int keyboard(unsigned char key);
-static int keyboardup(unsigned char key);
-//static int keyfinder(unsigned char key);
-//static int keyupfinder(unsigned char key);
-static int speckey(int key);
-static int specupkey(int key);
 static void standstillDisplay(void);
+
+int keyboard(unsigned char key);
+int keyboardup(unsigned char key);
+//int keyfinder(unsigned char key);
+//int keyupfinder(unsigned char key);
+int speckey(int key);
+int specupkey(int key);
 
 // Mimetype database handle
 magic_t magic;
@@ -247,10 +215,7 @@ magic_t magic;
 pthread_t async_load_textures_thread_id = NULL;
 GAsyncQueue *loaded_textures_queue = NULL;
 
-// Input events go to an object
-tree_entry *INPUT_OBJECT = NULL;
-
-static void ende(int code)
+void ende(int code)
 {
 	struct tree_entry *help;
 
@@ -800,7 +765,7 @@ static void setup_help(void)
 	free(tmpstr);
 }
 
-static void viewm(void)
+void viewm(void)
 {
 	if ((centY = (asin(-tposy)) * (((double)SWY) / PI)) > SWY / 2)
 		centY = SWY / 2;
@@ -813,18 +778,18 @@ static void viewm(void)
 		centX = -(GLdouble) acos(tposx / ((GLdouble) cos((((double)centY) / (double)((double)SWY / PI))))) * (GLdouble) ((GLdouble) SWX / mousesense / PI);
 }
 
-static void check_standstill(void)
+void check_standstill(void)
 {
 	if (!(forwardkeybuf + backwardkeybuf + leftkeybuf + rightkeybuf + upkeybuf + downkeybuf))
 		TDFSB_FUNC_IDLE = standstillDisplay;
 }
 
-static void stop_move(void)
+void stop_move(void)
 {
 	forwardkeybuf = backwardkeybuf = leftkeybuf = rightkeybuf = upkeybuf = downkeybuf = 0;
 }
 
-static Uint32 fps_timer(void)
+Uint32 fps_timer(void)
 {
 	sprintf(fpsbuf, "FPS: %d", (int)((1000 * TDFSB_FPS_DISP) / TDFSB_FPS_DT));
 	TDFSB_FPS_DISP = 0;
@@ -928,7 +893,7 @@ static void init(void)
 	mono = glutStrokeWidth(GLUT_STROKE_MONO_ROMAN, 'W');
 }
 
-static void reshape(int w, int h)
+void reshape(int w, int h)
 {
 	centY = ((((GLdouble) h) * centY) / ((GLdouble) SWY));
 	centX = ((((GLdouble) w) * centX) / ((GLdouble) SWX));
@@ -1485,8 +1450,7 @@ static void leodir(void)
 }
 
 /* TDFSB IDLE FUNCTIONS */
-
-static void move(void)
+void move(void)
 {
 	if (upkeybuf) {
 		uposy = vposy = vposy + 1 / mousespeed;
@@ -1537,7 +1501,7 @@ static void startstandstillDisplay(void)
 	TDFSB_FUNC_DISP();
 }
 
-static void ground(void)
+void ground(void)
 {
 	if (TDFSB_ANIM_STATE) {
 		uposy = vposy -= TDFSB_OA_DY;
@@ -1553,7 +1517,7 @@ static void ground(void)
 }
 
 /* Fly to an object */
-static void approach(void)
+void approach(void)
 {
 	switch (TDFSB_ANIM_STATE) {
 	case 1:		// Approach vposx,uposy,vposz until we are close in either dimension
@@ -1650,24 +1614,7 @@ static void approach(void)
 
 }
 
-static void MouseLift(int x, int y)
-{
-	if (!TDFSB_ANIM_STATE) {
-		uposy += ((GLfloat) ((GLfloat) (SWY / 2) - (GLfloat) y) / 25);
-
-		centX = centX - (GLdouble) (headspeed * (floor(((double)SWX) / 2) - (double)x));
-/*        	centY=centY-(GLdouble)(headspeed*(floor(((double)SWY)/2)-(double)y));*/
-		if (centY >= SWY / 2)
-			centY = SWY / 2;
-		if (centY <= ((-SWY) / 2))
-			centY = ((-SWY) / 2);
-		tposz = ((GLdouble) sin((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
-		tposx = ((GLdouble) cos((((double)centX) / (double)(SWX / mousesense / PI)))) * ((GLdouble) cos((((double)centY) / (double)(SWY / PI))));
-		tposy = -((GLdouble) sin((((double)centY) / (double)(SWY / PI))));
-	}
-}
-
-static void activate_object(tree_entry *object) {
+void activate_object(tree_entry *object) {
 	if (!object)
 		return;
 
@@ -1682,136 +1629,12 @@ static void activate_object(tree_entry *object) {
 	TDFSB_FUNC_UPKEY = keyboardup;
 }
 
-static void mouse(int button, int state)
+void nullDisplay(void)
 {
-	if (TDFSB_ANIM_STATE)
-		return;		// We don't react to mouse buttons when we are in animation state, such as flying somewhere
-
-	switch (button) {
-
-	case SDL_BUTTON_LEFT:
-		if (!TDFSB_CLASSIC_NAV) {
-			if (state == SDL_PRESSED) {
-				activate_object(TDFSB_OBJECT_SELECTED);
-			} else {
-				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_KEY_FINDER = 0;
-				TDFSB_FUNC_KEY = keyboard;
-				TDFSB_FUNC_UPKEY = keyboardup;
-			}
-			break;
-		} else {	// Classic mode means left mouse button is followed
-			if (state == SDL_PRESSED) {
-				forwardkeybuf = 1;
-				backwardkeybuf = 0;
-				TDFSB_FUNC_IDLE = move;
-			} else {
-				forwardkeybuf = 0;
-				check_standstill();
-			}
-			break;
-		}
-
-	case SDL_BUTTON_RIGHT:
-		if (!TDFSB_CLASSIC_NAV) {
-			if (state == SDL_PRESSED && TDFSB_OBJECT_SELECTED) {
-				stop_move();
-				TDFSB_OA = TDFSB_OBJECT_SELECTED;
-				TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
-				TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
-				TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
-				TDFSB_ANIM_STATE = 1;
-				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_FUNC_KEY = keyboard;
-				TDFSB_FUNC_UPKEY = keyboardup;
-				TDFSB_KEY_FINDER = 0;
-				TDFSB_FUNC_IDLE = approach;
-			}
-			break;
-		} else {
-			if (state == SDL_PRESSED) {
-				backwardkeybuf = 1;
-				forwardkeybuf = 0;
-				TDFSB_FUNC_IDLE = move;
-			} else {
-				backwardkeybuf = 0;
-				check_standstill();
-			}
-			break;
-		}
-
-	case SDL_BUTTON_MIDDLE:
-		if (state == SDL_PRESSED) {
-			TDFSB_FUNC_MOTION = MouseLift;
-			TDFSB_FUNC_IDLE = move;
-		} else {
-			TDFSB_FUNC_MOTION = MouseMove;
-			TDFSB_FUNC_IDLE = move;
-			check_standstill();
-			uposy = vposy;
-		}
-		break;
-
-	case 4:		// SDL_SCROLLUP?
-		if (state == SDL_PRESSED)
-			uposy = vposy = vposy + TDFSB_MW_STEPS;
-		if (vposy < 0)
-			vposy = uposy = 0;
-		break;
-
-	case 5:		// SDL_SCROLLDOWN?
-		if (state == SDL_PRESSED)
-			uposy = vposy = vposy - TDFSB_MW_STEPS;
-		if (vposy < 0)
-			vposy = uposy = 0;
-		break;
-
-	case 6:
-		printf("No function for button 6 yet\n");
-		break;
-
-	default:
-		break;
-	}
-}
-
-void release_mouse(void)
-{
-	TDFSB_FUNC_MOUSE = NULL;
-	TDFSB_FUNC_MOTION = NULL;
-	SDL_ShowCursor(SDL_ENABLE);
-	TDFSB_HAVE_MOUSE = 0;
-}
-
-static void grab_mouse(void)
-{
-	SDL_WarpMouse(SWX / 2, SWY / 2);
-	smoox = tposx;
-	smooy = tposy;
-	smooz = tposz;
-	TDFSB_FUNC_MOUSE = mouse;
-	TDFSB_FUNC_MOTION = MouseMove;
-	SDL_ShowCursor(SDL_DISABLE);
-	TDFSB_HAVE_MOUSE = 1;
-}
-
-static void toggle_mouse_grab(void)
-{
-	if (TDFSB_HAVE_MOUSE) {
-		release_mouse();
-	} else {
-		grab_mouse();
-	}
-}
-
-static void nullDisplay(void)
-{
-
 	TDFSB_FUNC_DISP();
-
 }
 
-static void noDisplay(void)
+void noDisplay(void)
 {
 	char warpmess[] = "WARPING...";
 	unsigned int charpos;
@@ -2060,6 +1883,7 @@ static void display(void)
 /* see if we entered a sphere */
 		if (((object->mode) == 1) || (((object->mode) & 0x20) && (((object->mode) & 0x1F) < 10))) {
 			if (vposx > mx - 1 && vposx < mx + 1 && vposz > mz - 1 && vposz < mz + 1 && vposy < 1.5) {
+				char temp_trunc[4096];
 				temp_trunc[0] = 0;
 				strcat(TDFSB_CURRENTPATH, "/");
 				strcat(TDFSB_CURRENTPATH, object->name);
@@ -2499,660 +2323,10 @@ static void display(void)
 		TDFSB_FPS_DISP++;
 }
 
-/* Returns 1 when the key still has to be handled by the keyboard function */
-static int speckey(int key)
-{
-	if (!TDFSB_ANIM_STATE) {
-
-		// Update the fullpath variable
-		strcpy(fullpath, TDFSB_CURRENTPATH);
-		if (strlen(fullpath) > 1)
-			strcat(fullpath, "/");
-		if (TDFSB_OBJECT_SELECTED)
-			strcat(fullpath, TDFSB_OBJECT_SELECTED->name);
-
-		switch (key) {
-
-		case SDLK_TAB:
-			if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == PROCESS) {
-				printf("tab pressed while focussed on a PROCESS, sending TAB to the process...\n");
-				system("DISPLAY=:0 xdotool key --window 37748743 Tab");
-			} else if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
-				system("DISPLAY=:1 xdotool key a");
-			} else {
-				if (TDFSB_OBJECT_SELECTED) {
-					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_KEY = keyboard;
-					TDFSB_FUNC_UPKEY = keyboardup;
-				}
-				if (SDL_GetModState() & 0x0003)
-					snprintf(TDFSB_CES_TEMP, 4096, "cd \"%s\"; xterm&", TDFSB_CURRENTPATH);
-				else {
-					if (TDFSB_CSE_FLAG)
-						str_replace(TDFSB_CUSTOM_EXECUTE_STRING, strlen(TDFSB_CUSTOM_EXECUTE_STRING), "%s", fullpath);
-					else
-						strncpy(TDFSB_CES_TEMP, TDFSB_CUSTOM_EXECUTE_STRING, 4096);
-				}
-				system(TDFSB_CES_TEMP);
-				printf("EXECUTE COMMAND: %s\n", TDFSB_CES_TEMP);
-				if (TDFSB_HAVE_MOUSE)
-					release_mouse();
-			}
-			break;
-		case SDLK_F1:
-			if (mousespeed > 1)
-				mousespeed = mousespeed - 1;
-			TDFSB_SPEED_DISPLAY = 100;
-			break;
-		case SDLK_F2:
-			if (mousespeed < 20)
-				mousespeed = mousespeed + 1;
-			TDFSB_SPEED_DISPLAY = 100;
-			break;
-
-		case SDLK_F4:
-			headspeed = headspeed - .1;
-			if (headspeed < 0.1)
-				headspeed = 0.1;
-			TDFSB_SPEED_DISPLAY = 100;
-			break;
-		case SDLK_F3:
-			headspeed = headspeed + .1;
-			if (headspeed > 2.0)
-				headspeed = 2.0;
-			TDFSB_SPEED_DISPLAY = 100;
-			break;
-
-		case SDLK_F5:
-			TDFSB_BALL_DETAIL++;
-			sprintf(ballbuf, "Ball Detail: %d\n", (int)TDFSB_BALL_DETAIL);
-			TDFSB_SHOW_BALL = 100;
-			break;
-		case SDLK_F6:
-			if (TDFSB_BALL_DETAIL > 4) {
-				TDFSB_BALL_DETAIL--;
-			}
-			sprintf(ballbuf, "Ball Detail: %d\n", (int)TDFSB_BALL_DETAIL);
-			TDFSB_SHOW_BALL = 100;
-			break;
-
-		case SDLK_F7:
-			TDFSB_FPS_CONFIG++;
-			TDFSB_US_RUN = 1000000 / TDFSB_FPS_CONFIG;
-			sprintf(cfpsbuf, "MaxFPS: %d", TDFSB_FPS_CONFIG);
-			if (TDFSB_FPS_CONFIG)
-				strcpy(throttlebuf, "Throttle: ON");
-			else
-				strcpy(throttlebuf, "Throttle:OFF");
-			TDFSB_SHOW_CONFIG_FPS = 100;
-			break;
-		case SDLK_F8:
-			if (TDFSB_FPS_CONFIG > 0)
-				TDFSB_FPS_CONFIG--;
-			if (TDFSB_FPS_CONFIG > 0) {
-				TDFSB_US_RUN = 1000000 / TDFSB_FPS_CONFIG;
-			}
-			sprintf(cfpsbuf, "MaxFPS: %d", TDFSB_FPS_CONFIG);
-			if (TDFSB_FPS_CONFIG)
-				strcpy(throttlebuf, "Throttle: ON");
-			else
-				strcpy(throttlebuf, "Throttle:OFF");
-			TDFSB_SHOW_CONFIG_FPS = 100;
-			break;
-		case SDLK_F9:
-			CURRENT_TOOL++;
-			if (CURRENT_TOOL >= NUMBER_OF_TOOLS)
-				CURRENT_TOOL = 0;
-			break;
-		case SDLK_F12:
-			if (TDFSB_MEDIA_FILE) {
-				INPUT_OBJECT = TDFSB_MEDIA_FILE;
-				// Ensure the normal keyboard handlers are enabled,
-				// because the mousebuttonup event will be consumed by the INPUT_OBJECT,
-				// so we'll stay in some kind of (currently disabled?) "finder" mode otherwise...
-				TDFSB_KEY_FINDER = 0;
-				TDFSB_FUNC_KEY = keyboard;
-				TDFSB_FUNC_UPKEY = keyboardup;
-			} else {
-				printf("Cannot bind to any object because none is active!\n");
-			}
-			break;
-		case SDLK_HOME:
-			vposy = 0;
-			lastposx = lastposz = vposx = vposz = -10;
-			smooy = tposy = 0;
-			smoox = tposx = SQF;
-			smooz = tposz = SQF;
-			smoou = 0;
-			uposy = 0;
-			viewm();
-			break;
-
-		case SDLK_UP:
-			forwardkeybuf = 1;
-			backwardkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-			break;
-		case SDLK_DOWN:
-			backwardkeybuf = 1;
-			forwardkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-			break;
-		case SDLK_LEFT:
-			leftkeybuf = 1;
-			rightkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-			break;
-		case SDLK_RIGHT:
-			rightkeybuf = 1;
-			leftkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-			break;
-
-		case SDLK_PAGEUP:
-			upkeybuf = 1;
-			downkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-			break;
-		case SDLK_PAGEDOWN:
-			downkeybuf = 1;
-			upkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-			break;
-		case SDLK_END:
-			TDFSB_OA_DY = vposy / 25;
-			TDFSB_ANIM_COUNT = 25;
-			TDFSB_ANIM_STATE = 1;
-			TDFSB_FUNC_IDLE = ground;
-			break;
-		case SDLK_RCTRL:
-			if (TDFSB_OBJECT_SELECTED) {
-				stop_move();
-				TDFSB_OA = TDFSB_OBJECT_SELECTED;
-				TDFSB_OA_DX = (TDFSB_OA->posx - vposx) / 100;
-				if (!((TDFSB_OA->mode) & 0x20)) {	// if not a symlink
-					TDFSB_OA_DY = (TDFSB_OA->posy + TDFSB_OA->scaley + 4 - vposy) / 100;
-				} else {
-					TDFSB_OA_DY = (5 - vposy) / 100;
-				}
-				TDFSB_OA_DZ = (TDFSB_OA->posz - vposz) / 100;
-
-				// Fly straight into directories
-				if (TDFSB_OA->regtype == DIRECTORY) {
-					TDFSB_OA_DY = ((TDFSB_OA->posy - vposy) / 100) * 2;	// Straight into the center, not above
-					// Do it at double speed
-					TDFSB_OA_DX = TDFSB_OA_DX * 2;
-					TDFSB_OA_DZ = TDFSB_OA_DZ * 2;
-				}
-				TDFSB_ANIM_STATE = 1;
-
-				TDFSB_OBJECT_SELECTED = NULL;
-				TDFSB_FUNC_KEY = keyboard;
-				TDFSB_FUNC_UPKEY = keyboardup;
-				TDFSB_KEY_FINDER = 0;
-				TDFSB_FUNC_IDLE = approach;
-			}
-			break;
-		case SDLK_RETURN:
-			activate_object(TDFSB_OBJECT_SELECTED);
-			break;
-
-		default:
-			return (1);
-			break;
-		}
-	}
-
-	return (0);
-}
-
-/*
- * When a keyup event is received, check whether a special key [1] is received, to stop some motion in a direction
- * [1]: special keys are: up, down, left, right, pageup, pagedown
- */
-static int specupkey(int key)
-{
-	if (!TDFSB_ANIM_STATE) {
-		if (key == SDLK_UP) {
-			forwardkeybuf = 0;
-			check_standstill();
-		} else if (key == SDLK_DOWN) {
-			backwardkeybuf = 0;
-			check_standstill();
-		} else if (key == SDLK_LEFT) {
-			leftkeybuf = 0;
-			check_standstill();
-		} else if (key == SDLK_RIGHT) {
-			rightkeybuf = 0;
-			check_standstill();
-		} else if (key == SDLK_PAGEUP) {
-			upkeybuf = 0;
-			check_standstill();
-		} else if (key == SDLK_PAGEDOWN) {
-			downkeybuf = 0;
-			check_standstill();
-		} else
-			return (1);
-
-		return (0);
-	} else
-		return (0);
-}
-
-/*
- * The key finder overlaps with the various setting keys,
- * so either we activate the keyfinder when slash (/) is pressed,
- * or we activate it by default and move the setting keys somewhere...
- * Plan: activate the keyfinder when the user presses slash (/)
- */
-/*
-static int keyfinder(unsigned char key)
-{
-	TDFSB_KEY_FINDER = key;
-	return (0);
-}
-
-static int keyupfinder(unsigned char key)
-{
-	UNUSED(key);		// Can't change the function signature because keyfinder() *does* need the key
-	TDFSB_KEY_FINDER = 0;
-	return (0);
-}
-*/
-
-static int keyboardup(unsigned char key)
-{
-	if (!TDFSB_ANIM_STATE) {
-		if (key == TDFSB_KC_FORWARD) {
-			forwardkeybuf = 0;
-			check_standstill();
-		} else if (key == TDFSB_KC_BACKWARD) {
-			backwardkeybuf = 0;
-			check_standstill();
-		} else if (key == TDFSB_KC_LEFT) {
-			leftkeybuf = 0;
-			check_standstill();
-		} else if (key == TDFSB_KC_RIGHT) {
-			rightkeybuf = 0;
-			check_standstill();
-		} else if (key == TDFSB_KC_UP) {
-			upkeybuf = 0;
-			check_standstill();
-		} else if (key == TDFSB_KC_DOWN) {
-			downkeybuf = 0;
-			check_standstill();
-		} else
-			return (1);
-
-		return (0);
-	} else
-		return (0);
-}
-
-/* Handle a keydown event */
-static int keyboard(unsigned char key)
-{
-	if (!TDFSB_ANIM_STATE) {
-		if (key == 27) {
-			printf("\nBye bye...\n\n");
-			ende(0);
-		} else if (key == TDFSB_KC_FLY) {
-			TDFSB_MODE_FLY = 1 - TDFSB_MODE_FLY;
-			if (TDFSB_MODE_FLY)
-				strcpy(flybuf, "Flying: ON");
-			else
-				strcpy(flybuf, "Flying:OFF");
-			TDFSB_FLY_DISPLAY = 100;
-		} else if (key == TDFSB_KC_HELP) {
-			TDFSB_SHOW_HELP = 1 - TDFSB_SHOW_HELP;
-			if (TDFSB_SHOW_HELP) {
-				printf("\n=======================================\n");
-				puts(help_str);
-				printf("=======================================\n\n");
-			}
-		} else if (key == TDFSB_KC_FS) {
-			if (TDFSB_FULLSCREEN) {
-				if ((window = SDL_SetVideoMode(aSWX, aSWY, bpp, SDL_OPENGL | SDL_RESIZABLE)) == 0) {
-					printf("SDL ERROR Video mode set failed: %s\n", SDL_GetError());
-					ende(1);
-				}
-				reshape(window->w, window->h);
-				TDFSB_CONFIG_FULLSCREEN = 0;
-
-			} else {
-				aSWX = SWX;
-				aSWY = SWY;
-				if ((window = SDL_SetVideoMode(PWX, PWY, PWD, SDL_OPENGL | SDL_FULLSCREEN)) == 0) {
-					printf("SDL ERROR Video mode set failed: %s\n", SDL_GetError());
-					ende(1);
-				}
-				reshape(window->w, window->h);
-				TDFSB_CONFIG_FULLSCREEN = 1;
-			}
-			TDFSB_FULLSCREEN = 1 - TDFSB_FULLSCREEN;
-		}
-
-		else if (key == TDFSB_KC_DOT) {
-			TDFSB_SHOW_DOTFILES = 1 - TDFSB_SHOW_DOTFILES;
-			TDFSB_FUNC_IDLE = nullDisplay;
-			TDFSB_FUNC_DISP = noDisplay;
-		} else if (key == TDFSB_KC_RELEASE_MOUSE) {
-			toggle_mouse_grab();
-		}
-
-		else if (key == TDFSB_KC_RL) {
-			TDFSB_FUNC_IDLE = nullDisplay;
-			TDFSB_FUNC_DISP = noDisplay;
-		}
-
-		else if (key == TDFSB_KC_CDU) {
-			strcat(TDFSB_CURRENTPATH, "/..");
-			temp_trunc[0] = 0;
-			if (realpath(TDFSB_CURRENTPATH, &temp_trunc[0]) != &temp_trunc[0]) {
-				printf("Cannot resolve path \"%s\".\n", TDFSB_CURRENTPATH);
-				ende(1);
-			} else {
-				strcpy(TDFSB_CURRENTPATH, temp_trunc);
-				TDFSB_FUNC_IDLE = nullDisplay;
-				TDFSB_FUNC_DISP = noDisplay;
-				return 0;
-			}
-			TDFSB_FUNC_IDLE = nullDisplay;
-			TDFSB_FUNC_DISP = noDisplay;
-		}
-
-		else if (key == TDFSB_KC_IMBR) {
-			if (TDFSB_ICUBE == 1) {
-				TDFSB_ICUBE = 0;
-			} else {
-				TDFSB_ICUBE = 1;
-			}
-			TDFSB_FUNC_IDLE = nullDisplay;
-			TDFSB_FUNC_DISP = noDisplay;
-		}
-
-		else if (key == TDFSB_KC_INFO) {
-			printf("\n");
-			printf("GL_RENDERER   = %s\n", (const char *)glGetString(GL_RENDERER));
-			printf("GL_VERSION    = %s\n", (const char *)glGetString(GL_VERSION));
-			printf("GL_VENDOR     = %s\n", (const char *)glGetString(GL_VENDOR));
-			printf("GL_EXTENSIONS = %s\n", (const char *)glGetString(GL_EXTENSIONS));
-			printf("\n");
-			printf("Max Texture size %d x %d \n", (int)TDFSB_MAX_TEX_SIZE, (int)TDFSB_MAX_TEX_SIZE);
-			printf("\n");
-		}
-
-		else if (key == TDFSB_KC_DISP) {
-			if (TDFSB_SHOW_DISPLAY == 1) {
-				TDFSB_SHOW_DISPLAY = 2;
-				TDFSB_XL_DISPLAY = 0;
-				TDFSB_SPEED_DISPLAY = 200;
-			} else if (TDFSB_SHOW_DISPLAY == 2) {
-				TDFSB_SHOW_DISPLAY = 3;
-				TDFSB_XL_DISPLAY = TDFSB_XL_DISPLAY_INIT;
-				TDFSB_SPEED_DISPLAY = 200;
-			} else if (TDFSB_SHOW_DISPLAY == 3) {
-				TDFSB_SHOW_DISPLAY = 0;
-				TDFSB_XL_DISPLAY = 0;
-			} else {
-				TDFSB_SHOW_DISPLAY = 1;
-				TDFSB_XL_DISPLAY = 0;
-				TDFSB_SPEED_DISPLAY = 200;
-			}
-		}
-
-		else if (key == TDFSB_KC_CRH) {
-			TDFSB_SHOW_CROSSHAIR = 1 - TDFSB_SHOW_CROSSHAIR;
-		}
-
-		else if (key == TDFSB_KC_FPS) {
-			TDFSB_SHOW_FPS = 1 - TDFSB_SHOW_FPS;
-			if (TDFSB_SHOW_FPS) {
-				sprintf(fpsbuf, "FPS: <wait>");
-				TDFSB_FPS_DISP = 0;
-				TDFSB_TIMER_ID = SDL_AddTimer(TDFSB_FPS_DT, (SDL_NewTimerCallback) fps_timer, 0);
-			} else {
-				SDL_RemoveTimer(TDFSB_TIMER_ID);
-			}
-		}
-
-		else if (key == TDFSB_KC_GCR) {
-			TDFSB_GROUND_CROSS = 1 - TDFSB_GROUND_CROSS;
-		}
-
-		else if (key == TDFSB_KC_SHD) {
-			if (TDFSB_SHADE == 1) {
-				glShadeModel(GL_FLAT);
-				TDFSB_SHADE = 0;
-			} else {
-				glShadeModel(GL_SMOOTH);
-				TDFSB_SHADE = 1;
-			}
-		}
-
-		else if (key == TDFSB_KC_NAME) {
-			TDFSB_FILENAMES++;
-			if (TDFSB_FILENAMES == 3)
-				TDFSB_FILENAMES = 0;
-		}
-
-		else if (key == TDFSB_KC_SORT) {
-			TDFSB_DIR_ALPHASORT = 1 - TDFSB_DIR_ALPHASORT;
-			TDFSB_FUNC_IDLE = nullDisplay;
-			TDFSB_FUNC_DISP = noDisplay;
-		}
-
-		else if (key == TDFSB_KC_HOME) {
-			strcpy(TDFSB_CURRENTPATH, getenv("HOME"));
-			TDFSB_FUNC_IDLE = nullDisplay;
-			TDFSB_FUNC_DISP = noDisplay;
-		}
-
-		else if (key == TDFSB_KC_CLASS) {
-			TDFSB_CLASSIC_NAV = 1 - TDFSB_CLASSIC_NAV;
-			if (TDFSB_CLASSIC_NAV)
-				strcpy(classicbuf, "Classic: ON");
-			else
-				strcpy(classicbuf, "Classic:OFF");
-			TDFSB_CLASSIC_DISPLAY = 100;
-		} else if (key == TDFSB_KC_SAVE) {
-			save_config();
-		}
-
-		else if (key == TDFSB_KC_FTH) {
-			if (TDFSB_FPS_CONFIG) {
-				strcpy(throttlebuf, "Throttle:OFF");
-				TDFSB_FPS_CACHE = TDFSB_FPS_CONFIG;
-				TDFSB_FPS_CONFIG = 0;
-			} else {
-				strcpy(throttlebuf, "Throttle: ON");
-				TDFSB_FPS_CONFIG = TDFSB_FPS_CACHE;
-			}
-
-			if (TDFSB_FPS_CONFIG)
-				strcpy(throttlebuf, "Throttle: ON");
-			else
-				strcpy(throttlebuf, "Throttle:OFF");
-
-			sprintf(cfpsbuf, "MaxFPS: %d", TDFSB_FPS_CONFIG);
-			TDFSB_SHOW_CONFIG_FPS = 100;
-			TDFSB_SHOW_THROTTLE = 100;
-		}
-
-		else if (key == TDFSB_KC_FORWARD) {
-			forwardkeybuf = 1;
-			backwardkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-		} else if (key == TDFSB_KC_BACKWARD) {
-			backwardkeybuf = 1;
-			forwardkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-		} else if (key == TDFSB_KC_UP) {
-			upkeybuf = 1;
-			downkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-		} else if (key == TDFSB_KC_DOWN) {
-			downkeybuf = 1;
-			upkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-		} else if (key == TDFSB_KC_LEFT) {
-			leftkeybuf = 1;
-			rightkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-		} else if (key == TDFSB_KC_RIGHT) {
-			rightkeybuf = 1;
-			leftkeybuf = 0;
-			TDFSB_FUNC_IDLE = move;
-		}
-
-		else
-			return (1);
-
-		return (0);
-
-	} else
-		return (0);
-}
-
-/* Send an SDL_Event to the other X server */
-static void send_event_to_object(SDL_Event event)
-{
-	xdo_t *xdo = xdo_new(":1");
-	if (event.type == SDL_MOUSEMOTION) {
-		int centerx = SWX / 2;
-		int centery = SWY / 2;
-		int diffx = event.motion.x - centerx;
-		int diffy = event.motion.y - centery;
-		xdo_move_mouse_relative(xdo, diffx, diffy);
-	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-		xdo_mouse_down(xdo, CURRENTWINDOW, event.button.button);
-	} else if (event.type == SDL_MOUSEBUTTONUP) {
-		xdo_mouse_up(xdo, CURRENTWINDOW, event.button.button);
-	} else {
-		printf("Sending event of type %d with event.key.keysym.sym %d\n", event.type, event.key.keysym.sym);
-		char *keysequence = NULL;
-		unsigned int ukeycode = 0;
-		switch (event.key.keysym.sym) {
-			// Here we try to follow the same order as in SDL_keysym.h
-		case SDLK_NUMLOCK:
-			keysequence = "Num_Lock";
-			break;
-		case SDLK_CAPSLOCK:
-			keysequence = "Caps_Lock";
-			break;
-			//case SDLK_SCROLLLOCK: keysequence = "Scroll_Lock"; break; // SDL 2.0 has this, 1.2 doesn't ?
-		case SDLK_RSHIFT:
-			keysequence = "Shift_R";
-			break;
-		case SDLK_LSHIFT:
-			keysequence = "Shift_L";
-			break;
-		case SDLK_RCTRL:
-			keysequence = "Control_R";
-			break;
-		case SDLK_LCTRL:
-			keysequence = "Control_L";
-			break;
-		case SDLK_RALT:
-			keysequence = "Alt_R";
-			break;
-		case SDLK_LALT:
-			keysequence = "Alt_L";
-			break;
-		case SDLK_RMETA:
-			keysequence = "Meta_R";
-			break;
-		case SDLK_LMETA:
-			keysequence = "Meta_L";
-			break;
-		case SDLK_RSUPER:
-			keysequence = "Super_R";
-			break;
-		case SDLK_LSUPER:
-			keysequence = "Super_L";
-			break;
-		case SDLK_MODE:
-			keysequence = "ISO_Level3_Shift";
-			break;	// AltGr
-		case SDLK_RETURN:
-			keysequence = "Return";
-			break;
-		case SDLK_ESCAPE:
-			keysequence = "Escape";
-			break;
-		case SDLK_UP:
-			keysequence = "Up";
-			break;
-		case SDLK_DOWN:
-			keysequence = "Down";
-			break;
-		case SDLK_LEFT:
-			keysequence = "Left";
-			break;
-		case SDLK_RIGHT:
-			keysequence = "Right";
-			break;
-		case SDLK_PAGEUP:
-			keysequence = "Page_Up";
-			break;
-		case SDLK_PAGEDOWN:
-			keysequence = "Page_Down";
-			break;
-		case SDLK_BACKSPACE:
-			keysequence = "BackSpace";
-			break;
-		case SDLK_DELETE:
-			keysequence = "Delete";
-			break;
-		case SDLK_TAB:
-			keysequence = "Tab";
-			break;
-		case SDLK_HOME:
-			keysequence = "Home";
-			break;
-		case SDLK_END:
-			keysequence = "End";
-			break;
-		default:
-			ukeycode = XKeysymToKeycode(xdo->xdpy, event.key.keysym.sym);
-			if (ukeycode) {
-				if (event.type == SDL_KEYDOWN) {
-					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 1, 0);
-				} else if (event.type == SDL_KEYUP) {
-					XTestFakeKeyEvent(xdo->xdpy, ukeycode, 0, 0);
-				}
-				XSync(xdo->xdpy, False);
-				XFlush(xdo->xdpy);
-			} else {
-				printf("Not forwarding key %d\n", event.key.keysym.sym);
-			}
-			keysequence = NULL;	// Ensure the code below does not send any more keys
-			break;
-		}
-		// Only unbind at keydown, because a keyup could come from the previous F12 press
-		if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_F12) {
-			printf("Unbinding mouse and keyboard input from %s\n", INPUT_OBJECT->name);
-			INPUT_OBJECT = NULL;
-		} else if (keysequence) {	// Gets set by the code above
-			// This works fine in a normal Xorg session but with Xvnc it generates strange stuff;
-			// xev shows just 2 events for a shiftdown, a press, shiftup
-			if (event.type == SDL_KEYDOWN) {
-				printf("keydown %s\n", keysequence);
-				xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, keysequence, 0);
-				//char * todo
-			} else if (event.type == SDL_KEYUP) {
-				printf("keyup %s\n", keysequence);
-				xdo_send_keysequence_window_up(xdo, CURRENTWINDOW, keysequence, 0);
-			}
-		}
-	}
-	xdo_free(xdo);
-}
-
 int main(int argc, char **argv)
 {
 	int fake_glut_argc;
+	char temp_trunc[4096];
 
 	if (argc > 3) {
 		printf("Wrong args(3).\n");
@@ -3171,6 +2345,36 @@ int main(int argc, char **argv)
 	SWX = SWY = PWX = PWY = 0;
 	TDFSB_CURRENTPATH[0] = 0;
 	TDFSB_ANIM_STATE = 0;	// This keeps track of the state of the "approach" action that brings you closer to an object in 4 steps
+	TDFSB_OBJECT_SELECTED = NULL;
+	INPUT_OBJECT = NULL;
+	TDFSB_OA = NULL;
+	TDFSB_KEY_FINDER = 0; 
+
+	// Lots of settings
+	TDFSB_SHADE = 1;
+	TDFSB_FILENAMES = 2;
+	TDFSB_SHOW_DISPLAY = 3;
+	TDFSB_XL_DISPLAY = TDFSB_XL_DISPLAY_INIT;
+	TDFSB_HAVE_MOUSE = 1;
+	TDFSB_ANIM_COUNT = 0;
+	TDFSB_OBJECT_SEARCH = 1;
+	TDFSB_SPEED_DISPLAY = 200;
+	TDFSB_SHOW_HELP = 1;
+	TDFSB_SHOW_FPS = 0;
+	TDFSB_FLY_DISPLAY = 0;
+	TDFSB_CLASSIC_DISPLAY = 0;
+	TDFSB_SHOW_THROTTLE = 0;
+	TDFSB_SHOW_BALL = 0;
+	TDFSB_FPS_DISP = 0;
+	TDFSB_FPS_DT = 1000;
+	TDFSB_SHOW_CONFIG_FPS = 0;
+
+	forwardkeybuf = 0;
+	leftkeybuf = 0;
+	rightkeybuf = 0;
+	backwardkeybuf = 0;
+	upkeybuf = 0;
+	downkeybuf = 0;
 
 	fake_glut_argc = 1;
 	glutInit(&fake_glut_argc, argv);
@@ -3216,7 +2420,10 @@ int main(int argc, char **argv)
 		ende(1);
 	}
 
-	bpp = info->vfmt->BitsPerPixel;
+	int bpp = info->vfmt->BitsPerPixel;
+	int rgb_size[3];
+	// If the configuration did not specify a BPP value, we set it now (so it will be saved when the user presses the save key...)
+	// This means the global color depth is in PWD and the local one (used here just for getting and setting it) is kept in bpp.
 	if (!PWD)
 		PWD = bpp;
 	switch (bpp) {
@@ -3244,7 +2451,7 @@ int main(int argc, char **argv)
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	if ((window = SDL_SetVideoMode(SWX, SWY, bpp, SDL_OPENGL | SDL_RESIZABLE)) == 0) {
+	if ((SDL_SetVideoMode(SWX, SWY, bpp, SDL_OPENGL | SDL_RESIZABLE)) == 0) {
 		printf("SDL ERROR Video mode set failed: %s\n", SDL_GetError());
 		ende(1);
 	}
@@ -3273,53 +2480,12 @@ int main(int argc, char **argv)
 
 	leodir();
 
+	// This variable is defined as locally as possible (this means: in a function (not globally) and close to their usage)
 	SDL_Event event;
 	while (1) {
 		TDFSB_FUNC_IDLE();
 		while (SDL_PollEvent(&event)) {
-			switch (event.type) {
-			case SDL_QUIT:
-				ende(0);
-				break;
-			case SDL_VIDEORESIZE:
-				if ((window = SDL_SetVideoMode(event.resize.w, event.resize.h, bpp, SDL_OPENGL | SDL_RESIZABLE)) == 0) {
-					printf("SDL ERROR Video mode set failed: %s\n", SDL_GetError());
-					ende(1);
-				}
-				reshape(event.resize.w, event.resize.h);
-				break;
-			case SDL_MOUSEMOTION:
-				if (INPUT_OBJECT) {
-					send_event_to_object(event);
-				} else if (TDFSB_FUNC_MOTION) {
-					TDFSB_FUNC_MOTION(event.motion.x, event.motion.y);
-				}
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-				if (INPUT_OBJECT) {
-					send_event_to_object(event);
-				} else if (TDFSB_FUNC_MOUSE) {
-					TDFSB_FUNC_MOUSE(event.button.button, event.button.state);
-				}
-				break;
-			case SDL_KEYDOWN:
-				if (INPUT_OBJECT) {
-					send_event_to_object(event);
-				} else if (speckey(event.key.keysym.sym)) {
-					TDFSB_FUNC_KEY((unsigned char)(event.key.keysym.unicode & 0x7F));
-				}
-				break;
-			case SDL_KEYUP:
-				if (INPUT_OBJECT) {
-					send_event_to_object(event);
-				} else if (specupkey(event.key.keysym.sym)) {
-					TDFSB_FUNC_UPKEY((unsigned char)(event.key.keysym.sym & 0x7F));	// no unicode for key up's
-				}
-				break;
-			default:
-				break;
-			}
+			input_process_event(event);
 		}
 	}
 
