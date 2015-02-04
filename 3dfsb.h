@@ -67,7 +67,7 @@ void stop_move(void);
 void ground(void);
 void approach(void);
 
-void activate_object(tree_entry *object);
+void activate_object(tree_entry * object);
 
 void viewm(void);
 
@@ -89,7 +89,7 @@ int (*TDFSB_FUNC_UPKEY) (unsigned char key);
 /*
  * Global variables
  */
-int TDFSB_ANIM_STATE;	// This keeps track of the state of the "approach" action that brings you closer to an object in 4 steps
+int TDFSB_ANIM_STATE;		// This keeps track of the state of the "approach" action that brings you closer to an object in 4 steps
 GLdouble centX, centY;
 GLdouble tposx, tposy, tposz;
 GLdouble vposx, vposy, vposz, uposy;

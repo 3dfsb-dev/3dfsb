@@ -23,7 +23,8 @@
 
 #define XDG_QUERY_DEFAULT	"xdg-mime query default "
 
-static void xdg_open(char *fullpath, int display_number) {
+static void xdg_open(char *fullpath, int display_number)
+{
 	char command[4096];
 	snprintf(command, 40, OPEN_COMMAND, display_number);
 	strcat(command, "\"");
@@ -57,7 +58,7 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 		} else if (object->openwith) {
 			cleanup_media_player();
 			play_media(fullpath, object);	// Start an X server
-			xdg_open(fullpath, 1);		// Start the program that opens the file
+			xdg_open(fullpath, 1);	// Start the program that opens the file
 			calculate_scale(object);
 			toreturn = 1;
 		}

@@ -836,7 +836,8 @@ void send_event_to_object(SDL_Event event)
 }
 
 /* Main input processing funtion, initiated by SDL when a new event is received */
-void input_process_event(SDL_Event event) {
+void input_process_event(SDL_Event event)
+{
 	SDL_Surface *window;
 	switch (event.type) {
 	case SDL_QUIT:

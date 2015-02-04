@@ -1258,7 +1258,6 @@ static void leodir(void)
 				/* Free compiled regular expression if you want to use the regex_t again */
 				regfree(&regex);
 			}
-
 			// Every object *can* have a texture
 			TDFSB_TEX_NUM++;
 
@@ -1614,7 +1613,8 @@ void approach(void)
 
 }
 
-void activate_object(tree_entry *object) {
+void activate_object(tree_entry * object)
+{
 	if (!object)
 		return;
 
@@ -2340,7 +2340,6 @@ int main(int argc, char **argv)
 			exit(0);
 		}
 	}
-
 	// Init variables
 	SWX = SWY = PWX = PWY = 0;
 	TDFSB_CURRENTPATH[0] = 0;
@@ -2348,7 +2347,7 @@ int main(int argc, char **argv)
 	TDFSB_OBJECT_SELECTED = NULL;
 	INPUT_OBJECT = NULL;
 	TDFSB_OA = NULL;
-	TDFSB_KEY_FINDER = 0; 
+	TDFSB_KEY_FINDER = 0;
 
 	// Lots of settings
 	TDFSB_SHADE = 1;
