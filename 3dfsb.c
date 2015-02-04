@@ -2398,10 +2398,12 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (strlen(TDFSB_CURRENTPATH) < 1)
-		if (realpath(getenv("HOME"), &temp_trunc[0]) != &temp_trunc[0])
+	if (strlen(TDFSB_CURRENTPATH) < 1) {
+		if (realpath(getenv("HOME"), &temp_trunc[0]) != &temp_trunc[0]) {
 			strcpy(&temp_trunc[0], "/");
-	strcpy(TDFSB_CURRENTPATH, temp_trunc);
+			strcpy(TDFSB_CURRENTPATH, temp_trunc);
+		}
+	}
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
 		printf("SDL ERROR Video initialization failed: %s\n", SDL_GetError());
