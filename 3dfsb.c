@@ -1384,13 +1384,9 @@ static void leodir(void)
 	glGenTextures(TDFSB_TEX_NUM, TDFSB_TEX_NAMES);
 
 	// Assign them to the directory entry objects
-	c1 = 0;
-	for (help = root; help; help = help->next) {
-		temptype = help->regtype;
-		// TODO: this is also checked somewhere above, can't we do this in the same loop as above instead of a seperate one?
-		if (temptype == IMAGEFILE || temptype == VIDEOFILE || temptype == VIDEOSOURCEFILE || temptype == PDFFILE || temptype == PROCESS || temptype == TEXTFILE)
-			help->textureid = TDFSB_TEX_NAMES[c1++];
-	}
+	int index = 0;
+	for (help = root; help; help = help->next)
+		help->textureid = TDFSB_TEX_NAMES[index++];
 
 /* Creating Display List */
 
