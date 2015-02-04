@@ -1045,7 +1045,10 @@ static char **leoscan(char *ls_path)
 		ende(1);
 	}
 
-	if (TDFSB_DIR_ALPHASORT) {	/* yes,yes,yes only bubblesort, will change that later... ;) */
+	/* Bubblesort the files
+	 * When we move to a library datastructure for the files, we'll chose a datastructure that has a .sort() function :-)
+	 */
+	if (TDFSB_DIR_ALPHASORT) {
 		printf("Sorting...\n");
 		count = 1;
 		while (count) {
