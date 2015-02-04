@@ -284,7 +284,7 @@ tree_entry *calculate_scale(tree_entry * object)
 		object->scalex = object->scalez = (object->originalwidth * (object->scaley)) / object->originalheight;
 	}
 	object->posy = object->scaley - 1;	// vertical position of the object
-	object->scalez = 0.5;	// flatscreens instead of the default ugly big square blocks
+	object->scalez = 0.5;	// make the objects flatscreens because I don't like the big square blocks :-)
 	return object;
 }
 
