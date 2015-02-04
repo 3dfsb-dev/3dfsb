@@ -85,6 +85,8 @@ void update_media_texture(tree_entry * media_tree_entry)
 	// Free up memory again
 	gst_buffer_unmap(videobuffer, &map);
 
+	// Mark this buffer as cleared, otherwise this function could be re-entered
+	videobuffer = NULL;
 }
 
 static void putpixel(SDL_Surface * surface, int x, int y, Uint32 pixel)
@@ -482,6 +484,14 @@ void play_media(char *fullpath, tree_entry * object)
 		object->originalwidth = 1920;
 		object->originalheight = 1080;
 		descr = g_strdup_printf("ximagesrc display-name=:1 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=1", object->texturewidth, object->textureheight);
+		// This prolly crashed it:
+		//descr = g_strdup_printf("ximagesrc display-name=:1 show-pointer=false ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB,framerate=60/1 ! fakesink name=fakesink0 sync=1", object->texturewidth, object->textureheight);
+		// This crashes it:
+		//descr = g_strdup_printf("ximagesrc display-name=:1 use-damage=0 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB,framerate=60/1 ! fakesink name=fakesink0 sync=0", object->texturewidth, object->textureheight);
+		// Also crashes it:
+		//descr = g_strdup_printf("ximagesrc display-name=:1 use-damage=0 ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d,format=RGB ! fakesink name=fakesink0 sync=0", object->texturewidth, object->textureheight);
+		// Conclusion: adding show-pointer=false or use-damage crashes it if sync=0, and also probably with sync=1...
+		// + use-damage=0 makes it SLOW
 	}
 	// Use this for pulseaudio:
 	// gchar *descr = g_strdup_printf("uridecodebin uri=%s name=player ! videoconvert ! videoscale ! video/x-raw,width=256,height=256,format=RGB ! fakesink name=fakesink0 sync=1 player. ! audioconvert ! pulsesink client-name=3dfsb", uri);
