@@ -879,6 +879,41 @@ void input_process_event(SDL_Event event)
 			TDFSB_FUNC_UPKEY((unsigned char)(event.key.keysym.sym & 0x7F));	// no unicode for key up's
 		}
 		break;
+	case SDL_ACTIVEEVENT:
+		//If the window was iconified or restored
+		if (event.active.state & SDL_APPACTIVE) {
+			//If the application is no longer active
+			if (event.active.gain == 0) {
+				//printf( "Window iconified\n");
+				release_mouse();
+			} else {
+				//printf( "Window un-iconified\n" );
+				grab_mouse();
+			}
+		}
+		//If something happened to the keyboard focus
+		else if (event.active.state & SDL_APPINPUTFOCUS) {
+			//If the application lost keyboard focus
+			if (event.active.gain == 0) {
+				//printf( "Window lost keyboard focus\n");
+				release_mouse();
+			} else {
+				//printf( "Window gained keyboard focus\n" );
+				grab_mouse();
+			}
+		}
+		//If something happened to the mouse focus
+		else if (event.active.state & SDL_APPMOUSEFOCUS) {
+			//If the application lost mouse focus
+			if (event.active.gain == 0) {
+				//printf( "Window lost mouse focus\n" );
+				release_mouse();
+			} else {
+				//printf( "Window gained mouse focus\n" );
+				grab_mouse();
+			}
+		}
+		break;
 	default:
 		break;
 	}

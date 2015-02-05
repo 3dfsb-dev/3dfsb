@@ -64,7 +64,6 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 		}
 	} else if (CURRENT_TOOL == TOOL_EXTERNAL_OPENER) {
 		xdg_open(fullpath, 0);
-		release_mouse();
 	} else if (CURRENT_TOOL == TOOL_WEAPON) {
 		// printf("TODO: Start some animation on the object to show it is being deleted ");
 		object->tombstone = 1;	// Mark the object as deleted
