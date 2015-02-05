@@ -202,24 +202,17 @@ int speckey(int key)
 				system("DISPLAY=:1 xdotool key a");
 			} else {
 				char TDFSB_CES_TEMP[4096];
-				if (TDFSB_OBJECT_SELECTED) {
-					TDFSB_OBJECT_SELECTED = NULL;
-					TDFSB_KEY_FINDER = 0;
-					TDFSB_FUNC_KEY = keyboard;
-					TDFSB_FUNC_UPKEY = keyboardup;
-				}
 				if (SDL_GetModState() & 0x0003)
 					snprintf(TDFSB_CES_TEMP, 4096, "cd \"%s\"; xterm&", TDFSB_CURRENTPATH);
 				else {
-					if (TDFSB_CSE_FLAG)
+					if (TDFSB_CSE_FLAG) {
+						// FIXME: str_replace() does not seem to have any effect here
 						str_replace(TDFSB_CUSTOM_EXECUTE_STRING, strlen(TDFSB_CUSTOM_EXECUTE_STRING), "%s", fullpath);
-					else
-						strncpy(TDFSB_CES_TEMP, TDFSB_CUSTOM_EXECUTE_STRING, 4096);
+					}
+					strncpy(TDFSB_CES_TEMP, TDFSB_CUSTOM_EXECUTE_STRING, 4096);
 				}
 				system(TDFSB_CES_TEMP);
-				printf("EXECUTE COMMAND: %s\n", TDFSB_CES_TEMP);
-				if (TDFSB_HAVE_MOUSE)
-					release_mouse();
+				printf("EXECUTING COMMAND: %s\n", TDFSB_CES_TEMP);
 			}
 			break;
 		case SDLK_F1:
