@@ -78,6 +78,27 @@ USAGE
   and press SHIFT+TAB from a directory, xmms will be started with the directory given as argument. 
   If you select an audio file and press SHIFT-TAB, xmms will play the file.
 
+- If you open a video, audio or /dev/video* file in the 3D World, it will be played in the 3D World. If you open an other type of file in the 3D World, a new X session will be started in the 3D World and in that X session, xdg-open will be started to open your file. Use F12 to bind  your input (mouse, keyboard) to the in-world X server and F12 again to unbind it.
+
+- If you open a file in the 2D desktop with the "open in 2D desktop" tool, xdg-open will be used to open your file.
+
+	Info about xdg-open / xdg-mime:
+	-------------------------------
+	xdg-open uses .desktop files, which can be found in /usr/share/applications/
+	Local .desktop files of the user can be found in ~/.local/share/applications/
+
+	You can get a file's default open command with:
+	xdg-mime query default $(file --mime-type -b filename)
+
+	You can set it with:
+	xdg-mime default file.desktop mime/type
+
+	xdg-open saves these associations of the user in ~/.local/share/applications/mimeapps.list
+	See also: /usr/share/applications/defaults.list
+
+	More info: https://wiki.archlinux.org/index.php/xdg-open
+
+
 Dependencies
 ============
 
