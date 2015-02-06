@@ -78,9 +78,9 @@ int apply_tool_on_object(struct tree_entry *object, char *currentpath)
 void init_tools(void)
 {
 	CURRENT_TOOL = TOOL_OPENER;	// The tool (or weapon) we are currently holding
-	tool[TOOL_OPENER] = "Open file in 3D world";
-	tool[TOOL_EXTERNAL_OPENER] = "Open file externally";
-	tool[TOOL_WEAPON] = "Laser shooter (file not deleted)";
+	tool[TOOL_OPENER] = "Open file/folder in 3D world";
+	tool[TOOL_EXTERNAL_OPENER] = "Open file/folder in 2D desktop";
+	tool[TOOL_WEAPON] = "Laser shooter demo (file not really deleted :-)";
 }
 
 char *xdg_query_default(const char *mimetype)

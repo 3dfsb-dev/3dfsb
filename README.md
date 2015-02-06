@@ -157,8 +157,9 @@ So please try:
 ./compile.sh
 
 Alternatively, CMake can be used to compile.
-For this, try:
+Run:
 
+rm CMakeCache.txt	# To be sure the cache is clean, not necessary every time
 cmake .
 make
 
@@ -182,7 +183,7 @@ BeOS/Haiku:
 This package does not contain a BeOS binary, because I don't 
 have BeOS/Haiku installed on my computer anymore.
 
-The source should compile anyway.
+Compile the code report any issues you may experience.
 
 NVidia Cards under Linux (+FreeBSD?)
 ------------------------------------
