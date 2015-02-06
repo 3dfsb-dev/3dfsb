@@ -55,7 +55,14 @@ NOPKGCONFIG_LIBS="-lglut -lmagic -lm -lxdo -lX11 -lXtst"
 echo "Converting built-in images to XPM format with imagemagick's 'mogrify' tool..."
 mogrify -format xpm images/*.png
 if [ $? -ne 0 ]; then
-	echo "ERROR converting built-in images to XPM format..."
+	echo "ERROR converting built-in images to XPM format"
+	exit 1
+fi
+
+echo "Converting other built-in files to .h file format with the xxd tool..."
+xxd -i resources/xorg.conf > resources/xorg.conf.h
+if [ $? -ne 0 ]; then
+	echo "ERROR creating resources/xorg.conf.h"
 	exit 1
 fi
 

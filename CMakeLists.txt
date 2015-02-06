@@ -36,6 +36,13 @@ IF(NOT MOGRIFY)
    SET(MOGRIFY "${MOGRIFY}" CACHE STRING "Mogrify")
 ENDIF(NOT MOGRIFY)
 
+# Generate .h files from resource files
+IF(NOT XXD)
+   EXEC_PROGRAM(xxd ARGS -i resources/xorg.conf resources/xorg.conf.h
+                OUTPUT_VARIABLE XXD)
+   SET(XXD "${XXD}" CACHE STRING "XXD")
+ENDIF(NOT XXD)
+
 find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
 find_package(OpenGL REQUIRED)

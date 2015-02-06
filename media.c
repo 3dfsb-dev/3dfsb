@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <unistd.h>
 
 #pragma GCC diagnostic push
@@ -7,6 +8,7 @@
 
 #include "3dfsb.h"
 #include "media.h"
+#include "resources/xorg.conf.h"
 
 #ifndef _GLUfuncptr
 #define _GLUfuncptr void*
@@ -18,7 +20,7 @@
 //#define STARTX "/opt/TurboVNC/bin/vncserver -geometry 1920x1080 &"
 
 // setxkbmap is needed, otherwise the X server will have a us layout, which has different keys...
-#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile ./10.log -config ~/xorg.conf :1 & sleep 1; DISPLAY=:1 /etc/X11/Xsession & sleep 1; DISPLAY=:1 setxkbmap be"
+#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile /tmp/Xorg.log.1 -config /tmp/xorg.conf :1 & sleep 1; DISPLAY=:1 /etc/X11/Xsession & sleep 1; DISPLAY=:1 setxkbmap be"
 
 //#define STOPX "/opt/TurboVNC/bin/vncserver -kill :1 &"
 // killall Xorg != kill ($pidof Xorg)
@@ -34,6 +36,16 @@ unsigned int displayedframenumber;
 
 // GstBuffer with the new frame
 GstBuffer *videobuffer;
+
+/* Create a new xorg.conf file,
+ * which is needed to start a new X server
+ */
+static void create_xorg_conf(void) {
+	FILE *fptr;
+	fptr=fopen("/tmp/xorg.conf","wb");
+	fwrite(resources_xorg_conf, 1, resources_xorg_conf_len, fptr);
+	fclose(fptr);
+}
 
 /* fakesink handoff callback */
 static void on_gst_buffer(GstElement * fakesink, GstBuffer * buf, GstPad * pad, gpointer data)
@@ -474,6 +486,7 @@ void play_media(char *fullpath, tree_entry * object)
 		system("xdotool windowraise 37748743\n");
 		sleep(1);
 	} else {
+		create_xorg_conf();
 		system(STARTX);
 		sleep(2);
 		object->texturewidth = 2048;
