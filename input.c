@@ -198,8 +198,6 @@ int speckey(int key)
 			if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == PROCESS) {
 				printf("tab pressed while focussed on a PROCESS, sending TAB to the process...\n");
 				system("DISPLAY=:0 xdotool key --window 37748743 Tab");
-			} else if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == TEXTFILE) {
-				system("DISPLAY=:1 xdotool key a");
 			} else {
 				char TDFSB_CES_TEMP[4096];
 				if (SDL_GetModState() & 0x0003)
