@@ -38,8 +38,8 @@ Screenshots
 ![Screenshot: you can use different tools to operate on your files, for example: blast them with the laser to delete them! And don't worry: for safety reasons, the program doesn't actually delete them from your disk unless you explicitly configure it to do so.](/screenshots/04_laser_weapon_tool.png?raw=true "Laserweapon tool to delete your files")
 *Above: you can use different tools to operate on your files, for example: blast them with the laser to delete them! And don't worry: for safety reasons, the program doesn't actually delete them from your disk unless you explicitly configure it to do so.*
 
-![Screenshot: Open files and run programsin the 3D World](/screenshots/05_libreoffice_in_3D_world.png?raw=true "Open files and run programs in the 3D World")
-*Above: with the "open in 3D world" tool, you can open any file in the 3D world. In the screenshot, where LibreOffice is running in the 3D world.*
+![Screenshot: Open files and run programs in the 3D World](/screenshots/05_libreoffice_in_3D_world.png?raw=true "Open files and run programs in the 3D World")
+*Above: an OpenDocument Text file is opened with its default handler (LibreOffice) in the 3D world.*
 
 
 USAGE
