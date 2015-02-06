@@ -3,6 +3,7 @@ Version 1.2 (unreleased)
 - Open any file and folder: you can now open any file with its default handler in the 3D World and on the 2D desktop
 - Improved on-screen displays which show tool you are holding and which program will be used to open a file
 - Seamless focus handling: use alt-tab to switch between the 3D World and other programs
+- CMake compilation is now also supported
 
 Version 1.1.1 (18-01-2015)
 **************************
