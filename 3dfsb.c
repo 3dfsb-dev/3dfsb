@@ -196,6 +196,7 @@ static GLfloat verTex2[] = {
 "PgUp/Down or MMB+Mouse move up/downward\n" \
 "HOME     start pos   END    ground zero\n" \
 "CTRL      approach   F12     send input\n" \
+"SHIFT+TAB     start x-terminal-emulator\n" \
 "Left Mouse/ENTER   apply tool on object\n\n" \
 
 static void display(void);

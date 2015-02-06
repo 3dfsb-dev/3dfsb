@@ -44,6 +44,12 @@ static inline bool locate_backward(const char **needle_ptr, char *read_ptr, cons
 	return false;
 }
 
+/*
+ * Replace oldneedle by newneedle in hackstack.
+ *
+ * NOTE: hackstacksize needs to be big enough to contain newneedle instead of oldneedle.
+ * A good practice is to pass in the total buffer size of haystack.
+ */
 char *str_replace(char *haystack, size_t haystacksize, const char *oldneedle, const char *newneedle)
 {
 	size_t oldneedle_len = strlen(oldneedle);

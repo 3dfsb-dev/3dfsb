@@ -203,17 +203,6 @@ int read_or_create_config_file(void)
 
 		printf(" * some values may be truncated later if out of range\n");
 
-		if (!strstr(TDFSB_CUSTOM_EXECUTE_STRING, "%s")) {
-			TDFSB_CSE_FLAG = 0;
-			printf("WARNING: no %%s found in custom execute string. will not insert current path or file.\n");
-		} else if (strstr(&(strstr(TDFSB_CUSTOM_EXECUTE_STRING, "%s"))[2], "%s")) {
-			printf("WARNING: more than one %%s found in the custom execute string! falling back to default string.\n");
-			sprintf(TDFSB_CUSTOM_EXECUTE_STRING, "cd \"%%s\"; x-terminal-emulator&");
-			TDFSB_CSE_FLAG = 1;
-		} else {
-			TDFSB_CSE_FLAG = 1;
-		}
-
 		if (TDFSB_BALL_DETAIL < 4)
 			TDFSB_BALL_DETAIL = 4;
 		if (TDFSB_FPS_CONFIG) {
