@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#define TDFSB_CUSTOM_EXECUTE_STRING_INIT	"cd \"%%s\"; x-terminal-emulator &"
+
 const char *TDFSB_KEYLIST_NAMES[] = { "KeyFlying", "KeyHelp", "KeyJumpHome",
 	"KeyFullScreen", "KeyDotFilter", "KeyMouseRelease",
 	"KeyReload", "KeyCDup", "KeyImageBricks",
@@ -77,7 +79,7 @@ char *pdef[] = { "20", "/", "0", "1024", "768", "1024", "768",
 	"yes", "X", "yes", "no", "no", "yes",
 	"0", "2.0", "1.3",	// FPS, mousespeed, headspeed
 	"1.0", "1.0", "1.0",	// TDFSB_FB_R/G/B
-	"1", "cd \"%s\"; x-terminal-emulator&"
+	"1", TDFSB_CUSTOM_EXECUTE_STRING_INIT
 };
 int param_type[] = { 1, 2, 1, 1, 1, 1, 1, 1, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 5, 4, 4, 4, 4, 1, 3, 3, 3, 3, 3, 1, 2 };	/* 1=int 2=string 3=float 4=boolean 5=keyboard */
 
@@ -202,6 +204,9 @@ int read_or_create_config_file(void)
 		fclose(config);
 
 		printf(" * some values may be truncated later if out of range\n");
+
+		if (!strlen(TDFSB_CUSTOM_EXECUTE_STRING))
+			sprintf(TDFSB_CUSTOM_EXECUTE_STRING, TDFSB_CUSTOM_EXECUTE_STRING_INIT);
 
 		if (TDFSB_BALL_DETAIL < 4)
 			TDFSB_BALL_DETAIL = 4;
