@@ -9,11 +9,9 @@ Homepage: https://github.com/tomvanbraeckel/3dfsb
 
 Forked, cleaned up and improved by Tom Van Braeckel, originally written by Leander Seige.
 
-Improvements made so far
-************************
-
-Major changes
--------------
+Biggest improvements
+********************
+- Open any file, either in the 3D world or on your 2D desktop
 - Extended audio and video support: more than 100 additional container formats and decoders are now supported through the latest GStreamer 1.4.3
 - Better file identification: filetype is now determined by the contents of the file (with libmagic) with the extension of the file as a fallback
 - High-resolution video previews: cranked up from the old 256x256 pixels to however high your graphics card supports (eg: 8192x8192)
@@ -21,16 +19,6 @@ Major changes
 ou explicitly configure the program to do so.
 - Video input device (eg: webcam) file previews: Video4Linux (V4L2) capture devices are now visible in the 3D world and can be viewed just like your movies!
 - No more waiting: fly into your directories instantly, with file previews being loaded asynchronously in the background
-
-Minor changes
--------------
-- Faster navigation by default
-- Visible on-screen info by default
-- Uncapped framerate by default
-- Uncapped texture size by default
-- Higher rendering resolution by default
-- Lots and lots of code cleanups, bugfixes and comments added
-- No more dependency on libsmpeg
 
 Performance
 -----------
