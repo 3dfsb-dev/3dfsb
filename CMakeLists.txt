@@ -29,6 +29,13 @@ IF(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
   ENDIF(UNIX)
 ENDIF(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 
+# Generate xpm images from png images
+IF(NOT MOGRIFY)
+   EXEC_PROGRAM(mogrify ARGS -format xpm images/*.png
+                OUTPUT_VARIABLE MOGRIFY)
+   SET(MOGRIFY "${MOGRIFY}" CACHE STRING "Mogrify")
+ENDIF(NOT MOGRIFY)
+
 find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -46,11 +53,6 @@ find_library(X11_XTest_LIB Xtst ${X11_LIB_SEARCH_PATH})
 include_directories(${SDL_INCLUDE_DIR}
                     ${GSTREAMER_INCLUDE_DIRS}
                    )
-
-add_custom_command(OUTPUT images
-                   COMMAND mogrify -format xpm *
-                   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/images
-                  )
 
 add_library(input input.c)
 add_library(str_replace str_replace.c)
