@@ -9,6 +9,7 @@
 #include "3dfsb.h"
 #include "media.h"
 #include "resources/xorg.conf.h"
+#include "tools.h"
 
 #ifndef _GLUfuncptr
 #define _GLUfuncptr void*
@@ -20,12 +21,15 @@
 //#define STARTX "/opt/TurboVNC/bin/vncserver -geometry 1920x1080 &"
 
 // setxkbmap is needed, otherwise the X server will have a us layout, which has different keys...
-#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile /tmp/Xorg.log.1 -config /tmp/xorg.conf :1 & sleep 1; DISPLAY=:1 /etc/X11/Xsession & sleep 1; DISPLAY=:1 setxkbmap be"
+#define STARTX "Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile /tmp/Xorg.log.1 -config /tmp/xorg.conf :1 & sleep 1; DISPLAY=:1 /etc/X11/Xsession & sleep 1; DISPLAY=:1 setxkbmap %s"
 
 //#define STOPX "/opt/TurboVNC/bin/vncserver -kill :1 &"
 // killall Xorg != kill ($pidof Xorg)
 // TODO: save the new Xorg's PID and kill only that one
 #define STOPX "kill $(pidof Xorg)"
+
+// Quite ugly, but we need the keyboard map to run setxkbmap after STARTX
+#define	GETXKBMAP	"DISPLAY=:0 setxkbmap -query | grep layout | cut -c 13-15"
 
 /* GStreamer stuff */
 GstPipeline *pipeline = NULL;
@@ -45,6 +49,16 @@ static void create_xorg_conf(void) {
 	fptr=fopen("/tmp/xorg.conf","wb");
 	fwrite(resources_xorg_conf, 1, resources_xorg_conf_len, fptr);
 	fclose(fptr);
+}
+
+static void startx(void) {
+	create_xorg_conf();
+	char *keymap = execute_binary(GETXKBMAP);
+	char torun[4096];
+	snprintf(torun, 4096, STARTX, keymap);
+	printf("Starting new X session with: %s\n", torun);
+	system(torun);
+	sleep(2);
 }
 
 /* fakesink handoff callback */
@@ -486,9 +500,7 @@ void play_media(char *fullpath, tree_entry * object)
 		system("xdotool windowraise 37748743\n");
 		sleep(1);
 	} else {
-		create_xorg_conf();
-		system(STARTX);
-		sleep(2);
+		startx();
 		object->texturewidth = 2048;
 		object->textureheight = 2048;
 		object->textureformat = GL_RGB;
