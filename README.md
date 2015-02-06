@@ -55,50 +55,28 @@ USAGE
   
 3dfsb --dir /path/to/dir
 
-- the config file is $HOME/.3dfsb (e.g. /home/user/.3dfsb). if it does not
+- The config file is $HOME/.3dfsb (e.g. /home/user/.3dfsb). If it does not
   exist tdsfb will generate one with all available options. this is strongly
   recommended.
 
-- if you start the 3dfsb the first time, press 'h' for the help menu
-  (will also be printed to the terminal)
+- To bring up the help screen, press 'h' (will also be printed to the terminal)
 
-- simply walk into the spheres for cd'ing into another directory
+- Simply walk into the spheres for cd'ing into another directory
 
-- select an object by pointing at it with the crosshair and press the left
-  mouse button. or hold the left mouse button and press any key to select
-  the first object that begins with that character (case sensitive).
-    -   while an object is selected press the right mouse button simultaneously to
-        automatic approach the object
-        [unfortunately doesn't work on BeOS/Haiku as well as resizing the window, afaik
-        these are issues of the SDL implementation, use the right CTRL for now].
-    -   if an mp3 or mpeg1 video file is selected press the RETURN key to start
-        the playback
+- Select an object by looking at it or pointing at it with the crosshair
 
-- some of the displays are not visible while the help display is active
+- Press F9 to cycle through the different tools that you can apply to the selected object
 
-- it is possible to execute a custom command from within 3dfsb. configure
-  your command in the config file! the command can be called by pressing
-  the tabulator key. put a "%s" in the command line, this will be replaced
-  by the current directory or selected file.
-  for instance if you set the command to
+- Click or press Return to apply to apply the current tool to the selected object
+
+- By default, SHIFT+TAB starts a new terminal emulator.
+
+- You can set a custom SHIFT+TAB command in the configuration file.
+  If you put one or more "%s" in the custom command, they are replaced by the currently selected object (= directory or selected file).
+  For instance if you set the command to
     xmms "%s" &
-  and press tab from a directory, xmms will be started with the directory
-  given as argument. 
-  if you select an audio file and press the tab key xmms will play the file.
-  the default command is
-    cd "%s"; x-terminal-emulator&
-  it will open a xterm in the current directory.
-  this command is always present by pressing shift+tab!
-  so you have two commands: 
-  - one by configuring your custom command for the tab key
-  - one by pressing shift+tab, it will execute the built in xterm call  
-  but dont forget the quotation marks!
-  you are free to not add "%s" to your custom command if you just
-  want to launch any program. but if you do so, you can customize
-  3dfsb for your needs, choose a certain kind of files and than launch
-  emacs for editing text files, mplayer for playing avis or whatever...
-
-You may change the default settings (including keyboard configuration) by editing ~/.3dfsb
+  and press SHIFT+TAB from a directory, xmms will be started with the directory given as argument. 
+  If you select an audio file and press SHIFT-TAB, xmms will play the file.
 
 Dependencies
 ============
