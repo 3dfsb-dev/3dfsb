@@ -77,7 +77,7 @@ char *pdef[] = { "20", "/", "0", "1024", "768", "1024", "768",
 	"yes", "X", "yes", "no", "no", "yes",
 	"0", "2.0", "1.3",	// FPS, mousespeed, headspeed
 	"1.0", "1.0", "1.0",	// TDFSB_FB_R/G/B
-	"1", "cd \"%s\"; xterm&"
+	"1", "cd \"%s\"; x-terminal-emulator&"
 };
 int param_type[] = { 1, 2, 1, 1, 1, 1, 1, 1, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 5, 4, 4, 4, 4, 1, 3, 3, 3, 3, 3, 1, 2 };	/* 1=int 2=string 3=float 4=boolean 5=keyboard */
 
@@ -208,7 +208,7 @@ int read_or_create_config_file(void)
 			printf("WARNING: no %%s found in custom execute string. will not insert current path or file.\n");
 		} else if (strstr(&(strstr(TDFSB_CUSTOM_EXECUTE_STRING, "%s"))[2], "%s")) {
 			printf("WARNING: more than one %%s found in the custom execute string! falling back to default string.\n");
-			sprintf(TDFSB_CUSTOM_EXECUTE_STRING, "cd \"%%s\"; xterm&");
+			sprintf(TDFSB_CUSTOM_EXECUTE_STRING, "cd \"%%s\"; x-terminal-emulator&");
 			TDFSB_CSE_FLAG = 1;
 		} else {
 			TDFSB_CSE_FLAG = 1;

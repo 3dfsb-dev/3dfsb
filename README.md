@@ -86,7 +86,7 @@ USAGE
   given as argument. 
   if you select an audio file and press the tab key xmms will play the file.
   the default command is
-    cd "%s"; xterm&
+    cd "%s"; x-terminal-emulator&
   it will open a xterm in the current directory.
   this command is always present by pressing shift+tab!
   so you have two commands: 

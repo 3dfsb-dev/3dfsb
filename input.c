@@ -203,7 +203,7 @@ int speckey(int key)
 			} else {
 				char TDFSB_CES_TEMP[4096];
 				if (SDL_GetModState() & 0x0003)
-					snprintf(TDFSB_CES_TEMP, 4096, "cd \"%s\"; xterm&", TDFSB_CURRENTPATH);
+					snprintf(TDFSB_CES_TEMP, 4096, "cd \"%s\"; x-terminal-emulator&", TDFSB_CURRENTPATH);
 				else {
 					if (TDFSB_CSE_FLAG) {
 						// FIXME: str_replace() does not seem to have any effect here
