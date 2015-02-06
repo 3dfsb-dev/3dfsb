@@ -108,7 +108,7 @@ Dependencies
 
 Compilation libraries:
 ----------------------
-You need imagemagick's "mogrify" tool to convert the built-in image files to pnm files.
+You need imagemagick's "mogrify" tool to convert the built-in image files to pnm files and also the xxd tool.
 
 Hint: sudo apt-get install imagemagick
 
