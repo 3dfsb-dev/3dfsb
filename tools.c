@@ -23,6 +23,7 @@
 
 #define XDG_QUERY_DEFAULT	"xdg-mime query default "
 
+// TODO: if we open a .desktop file and it contains a URL= entry, then do xdg-open of this URL
 static void xdg_open(char *fullpath, int display_number)
 {
 	char command[4096];
