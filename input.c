@@ -195,20 +195,14 @@ int speckey(int key)
 		switch (key) {
 
 		case SDLK_TAB:
-			if (TDFSB_MEDIA_FILE && TDFSB_MEDIA_FILE->regtype == PROCESS) {
-				printf("tab pressed while focussed on a PROCESS, sending TAB to the process...\n");
-				system("DISPLAY=:0 xdotool key --window 37748743 Tab");
+			if (SDL_GetModState() & 0x0003) {
+				char *TDFSB_CES_TEMP = str_replace(TDFSB_CUSTOM_EXECUTE_STRING, 4096, "%s", fullpath);
+				if (!TDFSB_CES_TEMP)
+					printf("WARNING: can't replace %%s with %s in %s\n", fullpath, TDFSB_CUSTOM_EXECUTE_STRING);
+				system(TDFSB_CES_TEMP);
+				printf("EXECUTING COMMAND: %s\n", TDFSB_CES_TEMP);
 			} else {
-				char *TDFSB_CES_TEMP = NULL;
-				if (SDL_GetModState() & 0x0003) {
-					TDFSB_CES_TEMP = str_replace(TDFSB_CUSTOM_EXECUTE_STRING, 4096, "%s", fullpath);
-					if (!TDFSB_CES_TEMP)
-						printf("WARNING: can't replace %%s with %s in %s\n", fullpath, TDFSB_CUSTOM_EXECUTE_STRING);
-					system(TDFSB_CES_TEMP);
-					printf("EXECUTING COMMAND: %s\n", TDFSB_CES_TEMP);
-				} else {
-					printf("TAB pressed but not executing any command because you have to press SHIFT-TAB\n");
-				}
+				printf("TAB pressed but not executing any command because you have to press SHIFT-TAB\n");
 			}
 			break;
 		case SDLK_F1:
