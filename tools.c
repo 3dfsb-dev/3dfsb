@@ -23,9 +23,16 @@
 
 #define XDG_QUERY_DEFAULT	"xdg-mime query default "
 
-// TODO: if we open a .desktop file and it contains a URL= entry, then do xdg-open of this URL
 static void xdg_open(char *fullpath, int display_number)
 {
+	// Ugly hack to check if it is a .desktop file that contains a URL= entry
+	// This should be made into a pure C implementation, instead of this shell logic
+	char checkurl[4096];
+	snprintf(checkurl, 4096, "filename=%s; if [ $(echo \"$filename\" | tail -c -9) = \".desktop\" ]; then grep URL= \"$filename\" | cut -c 5-; fi", fullpath);
+	char *url = execute_binary(checkurl);
+	if (url)
+		fullpath = url;
+
 	char command[4096];
 	snprintf(command, 40, OPEN_COMMAND, display_number);
 	strcat(command, "\"");
