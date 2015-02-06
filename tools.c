@@ -30,7 +30,7 @@ static void xdg_open(char *fullpath, int display_number)
 	char checkurl[4096];
 	snprintf(checkurl, 4096, "filename=%s; if [ $(echo \"$filename\" | tail -c -9) = \".desktop\" ]; then grep URL= \"$filename\" | cut -c 5-; fi", fullpath);
 	char *url = execute_binary(checkurl);
-	if (url)
+	if (strlen(url)>0)
 		fullpath = url;
 
 	char command[4096];
