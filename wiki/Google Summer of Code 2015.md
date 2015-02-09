@@ -64,8 +64,7 @@ These are great for getting familiar with the code during the "warming up" phase
 - Add a more clear "press h to hide this help text" and "edit the file ~/.3dfsb to change your settings"
 - Create (and release) debian packages
 - Create (and release) readme as a man page
-- improve approach: move exactly close enough to the video so that it fills the whole screen perfectly => can be reused for other objects,
-just depends on the width of the image, actually... but test it at different resolutions!
+- Improve the approach action for textured objects (video, images, /dev/video*, files opened in the 3D world,...); move exactly to the position and orientation where the texture fills the entire screen perfectly. Test for different texture sizes and screen resolutions.
 - Add a CMake install target with a .desktop file like this one: https://aur.archlinux.org/packages/3dfsb/
 - Don't reset the key (repeat?) upon entering a new directory - I couldn't get this to work right away...
 
