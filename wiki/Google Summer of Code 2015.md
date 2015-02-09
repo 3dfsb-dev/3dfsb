@@ -18,6 +18,7 @@ Project: move to open source 3D Engine
 
 **Expected results:** a new major version of 3DFSB that uses a free open source 3D engine for all its drawing operations and imports a few externally modelled 3D objects from a 3D modelling tool such as Blender.
 
+
 Project: add virtual reality headset support
 --------------------------------------------
 **Brief explanation:** to enhance the experience of interacting with your files in the 3D world, we will support several virtual reality headsets so that you can truly "walk" between your files and interact with them. Preferably, most details of the headset will be handled transparently by the 3D engine, so that most of the work that needs to be done will be tweaking and testing.
@@ -28,21 +29,34 @@ Project: add virtual reality headset support
 
 **Expected results:** a new version of 3DFSB that supports the Oculus Rift, Samsung VR and Cardboard VR
 
-Faster search for files/folders
--------------------------------
-- With slash / to start searching
-- You'll fly a path between the objects to the first match
+
+Project: add cool and fast navigation
+-------------------------------------
+**Brief explanation:** in a folder with more than 10 files and folders, it becomes difficult to quickly find files and folders, even when they are sorted alphabetically. To make this easier for the users, we will add "flying, incremental search" functionality that allows you to quickly filter out files and fly to the first match that is found.
+
+**Details:**
+- The user will type slash ('/') to start searching
+- The user will fly to the first match
 - The matches will become bigger and the non-matches smaller, until the non-matches are gone
 
-Smaller, independent tasks, great for getting familiar with the code
+**Mentor:** Tom Van Braeckel
+
+**Used technologies:** C
+
+**Expected results:** a new version of 3DFSB that has the new cool and fast navigation feature implemented.
+
+
+Small, independent tasks
 --------------------------------------------------------------------
+These are great for getting familiar with the code during the "warming up" phase of Google's Summer of Code.
+
 - Faster search for files/folders
 - Upgrade to SDL 2.0 with FULLSCREEN_DESKTOP so we don't have to change resolution when going to fullscreen anymore
 - do away with classic mode
 - Show default program icons instead of hard-coded icons if no preview texture is available:
-	The .desktop files have Icon=<name> and this refers to ~/.local/share/icons/ and /usr/share/icons/
-	Example: /usr/share/icons/hicolor/256x256/apps/evince.png
-	More info: http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
+    - The .desktop files have Icon=<name> and this refers to ~/.local/share/icons/ and /usr/share/icons/
+    - Example: /usr/share/icons/hicolor/256x256/apps/evince.png
+    - More info: http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
 - Cleanup the code by removing the global variables and replacing them with simple programming patterns that keep variables local
 - Add a nice slashscreen
 - Add screen-capture-to-videofile capability
