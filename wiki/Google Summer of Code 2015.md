@@ -6,14 +6,27 @@ Idea list for GSoC 2015
 =======================
 The list of ideas below is to be used for Google Summer of Code 2015.
 
-Open source 3D Engine
----------------------
-Goal: Switching to an open source 3D engine for faster development and better graphics (+ Blender integration?)
+Project: move to open source 3D Engine
+--------------------------------------
+**Brief explanation:** currently, 3DFSB does not rely on any existing 3D Engine, and uses raw OpenGL calls for all its drawing operations. This project will entail integrating 3DFSB with an existing, powerful, free open source 3D engine for all its visual operations.
 
-Virtual Reality headset support
--------------------------------
-- Goal: supporting Oculus Rift, Samsung VR and Cardboard VR
-- Preferably handled by the 3D engine quite transparently, so this becomes more testing
+**Full explanation:** currently, 3DFSB does not rely on any existing 3D Engine. It uses raw OpenGL calls to do all drawing. While this has its benefits (such as small binary size and few external dependencies), it also has a big downside because it means that adding a new visualization, tool, or other visual effect takes a lot of time. Doing a good "laser beam" effect, for instance, is hard without an engine. Adding smoke, water, and reflection effects are also time consuming to implement. Perhaps most importantly, having a 3D object for 3DFSB created by a 3D modelling artist with a 3D modelling tool (such as blender) is currently impossible. So in short, everything we do will take a lot more time and will probably be inferior to how it would be done in a real, specialized 3D engine.
+
+**Mentor:** Tom Van Braeckel
+
+**Used technologies:** C, Blender, an open source 3D engine
+
+**Expected results:** a new major version of 3DFSB that uses a free open source 3D engine for all its drawing operations and imports a few externally modelled 3D objects from a 3D modelling tool such as Blender.
+
+Project: add virtual reality headset support
+--------------------------------------------
+**Brief explanation:** to enhance the experience of interacting with your files in the 3D world, we will support several virtual reality headsets so that you can truly "walk" between your files and interact with them. Preferably, most details of the headset will be handled transparently by the 3D engine, so that most of the work that needs to be done will be tweaking and testing.
+
+**Mentor:** Tom Van Braeckel
+
+**Used technologies:** C, various virtual reality headsets
+
+**Expected results:** a new version of 3DFSB that supports the Oculus Rift, Samsung VR and Cardboard VR
 
 Faster search for files/folders
 -------------------------------
