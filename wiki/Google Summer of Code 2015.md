@@ -47,7 +47,7 @@ Project: add cool and fast navigation
 
 
 Small, independent tasks
---------------------------------------------------------------------
+------------------------
 These are great for getting familiar with the code during the "warming up" phase of Google's Summer of Code.
 
 - Faster search for files/folders
@@ -66,6 +66,5 @@ These are great for getting familiar with the code during the "warming up" phase
 - Create (and release) readme as a man page
 - Improve the approach action for textured objects (video, images, /dev/video*, files opened in the 3D world,...); move exactly to the position and orientation where the texture fills the entire screen perfectly. Test for different texture sizes and screen resolutions.
 - Add a CMake install target with a .desktop file like this one: https://aur.archlinux.org/packages/3dfsb/
-- Don't reset the key (repeat?) upon entering a new directory - I couldn't get this to work right away...
-
+- Don't reset the key repeat state upon entering a new directory so that, if you were pressing the forward key and entered a directory, you keep moving forward, even after entering the new directory.
 
