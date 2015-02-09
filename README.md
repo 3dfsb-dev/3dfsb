@@ -5,9 +5,7 @@
 
 Project homepage: https://github.com/tomvanbraeckel/3dfsb
 
-Mailing list: 3dfsb-dev@googlegroups.com
-
-Archive: https://groups.google.com/forum/#!forum/3dfsb-dev
+Mailing list: 3dfsb-dev@googlegroups.com and https://groups.google.com/forum/#!forum/3dfsb-dev
 
 News
 ----
