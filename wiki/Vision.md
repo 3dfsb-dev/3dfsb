@@ -3,7 +3,6 @@ Vision for 3DFSB
 - 3DFSB provides an immersive virtual 3D world where you can browse through, organize and interact with your digital objects.
 - This means you can read books, look at pictures, listen to a CD, handle all kinds of things in-world so that you can have experiences with your digital objects instead of just being a tool that you use to start up other programs.
 - In the 3D world, you can start a computer and use it to run "classic" programs, if you want.
-
 - Your objects have a persistent visualization state in the 3D world, so you always find them where you left them, and how you left them when you exited 3DFSB. The visualization state of the object *follows* the physical state, not the other way around. Reason: the fact that things have a place, is really handy. Objects should be movable and the location kept in the visualization state.
 
 Plans for *after* we've moved to a powerful, free open source 3D engine:
