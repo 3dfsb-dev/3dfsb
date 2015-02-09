@@ -1,7 +1,7 @@
 3dfsb
 =====
 
-3D File System Browser - cleaned up and improved fork of the old tdfsb which runs on GNU/Linux and should also run on BeOS/Haiku and FreeBSD.
+3D File System Browser - cleaned up and improved fork of the old tdfsb which runs on GNU/Linux and should also run on BeOS/Haiku and FreeBSD. Forked, cleaned up and improved by Tom Van Braeckel, originally written by Leander Seige.
 
 Project homepage: https://github.com/tomvanbraeckel/3dfsb
 
@@ -9,10 +9,13 @@ Mailing list: 3dfsb-dev@googlegroups.com
 
 Archive: https://groups.google.com/forum/#!forum/3dfsb-dev
 
-Forked, cleaned up and improved by Tom Van Braeckel, originally written by Leander Seige.
+News
+----
+- We're getting ready for [Google's Summer of Code 2015](/wiki/Google%20Summer%20of%20Code%202015.md)
+- 3DFSB version 1.2 has been [released](https://github.com/tomvanbraeckel/3dfsb/releases/tag/v1.2)
 
 Biggest improvements
-********************
+--------------------
 - Open any file, either in the 3D world or on your 2D desktop
 - Extended audio and video support: more than 100 additional container formats and decoders are now supported through the latest GStreamer 1.4.3
 - Better file identification: filetype is now determined by the contents of the file (with libmagic) with the extension of the file as a fallback
