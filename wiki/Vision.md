@@ -4,6 +4,15 @@ Organisation description
 Name: 3D Fun Foundation
 URL: https://github.com/3dfsb-dev/3dfsb
 Mailing list: 3dfsb-dev@googlegroups.com and https://groups.google.com/forum/#!forum/3dfsb-dev
+Tags: 3D, computer graphics, multimedia, rendering, linux, ray tracing, animation, c, git, github
+
+The 3D File System Browser provides an immersive virtual 3D world where you can browse through, organize and interact with your files. Created in 2001, it has been part of all major Linux repositories for a long time, but had been low on maintenance since 2007. Now this project has been forked, improved and cleaned up and many new features have been added.
+
+Our goal is to focus on cool and useful ways to interact with your digital assets, be it files, folders, processes, devices and whatever you can imagine. You can already walk around between your pictures, watch a movie, run a program or simply blast away at yours files with a laser gun.
+
+But we want to do more. Imagine a virtual reality experience where you feel *part of* your machine, inside a 3D world. You can go look at your running processes, see which ones are big, which are small. You can fly between your movies. You can look into a zip files, grab something and drag it somewhere else. And what about seeing other users...?
+
+We are welcoming enthousistic students that like to do cool things with 3D and multimedia in our team. Creativity is appreciated!
 
 
 Vision for 3DFSB
