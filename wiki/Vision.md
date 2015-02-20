@@ -1,3 +1,11 @@
+Organisation description
+========================
+
+Name: 3D Fun Foundation
+URL: https://github.com/3dfsb-dev/3dfsb
+Mailing list: 3dfsb-dev@googlegroups.com and https://groups.google.com/forum/#!forum/3dfsb-dev
+
+
 Vision for 3DFSB
 ================
 - 3DFSB provides an immersive virtual 3D world where you can browse through, organize and interact with your digital objects.

@@ -3,14 +3,14 @@
 
 3D File System Browser - cleaned up and improved fork of the old tdfsb which runs on GNU/Linux and should also run on BeOS/Haiku and FreeBSD. Forked, cleaned up and improved by Tom Van Braeckel, originally written by Leander Seige.
 
-Project homepage: https://github.com/tomvanbraeckel/3dfsb
+Project homepage: https://github.com/3dfsb-dev/3dfsb
 
 Mailing list: 3dfsb-dev@googlegroups.com and https://groups.google.com/forum/#!forum/3dfsb-dev
 
 News
 ----
 - We're getting ready for [Google's Summer of Code 2015](/wiki/Google%20Summer%20of%20Code%202015.md)
-- 3DFSB version 1.2 has been [released](https://github.com/tomvanbraeckel/3dfsb/releases/tag/v1.2)
+- 3DFSB version 1.2 has been [released](https://github.com/3dfsb-dev/3dfsb/releases/tag/v1.2)
 
 Biggest improvements
 --------------------
