@@ -220,6 +220,12 @@ void ende(int code)
 {
 	struct tree_entry *help;
 
+	// Stop the texture rendering thread *before* the GStreamer cleanups because the texture rendering thread *uses* the GStreamer data
+	if (async_load_textures_thread_id) {
+		pthread_cancel(async_load_textures_thread_id);
+		async_load_textures_thread_id = (pthread_t) NULL;
+	}
+
 	cleanup_media_player();
 	gst_deinit();
 
