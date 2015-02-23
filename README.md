@@ -9,9 +9,10 @@ Mailing list: 3dfsb-dev@googlegroups.com and https://groups.google.com/forum/#!f
 
 News
 ----
-- There's a new [IRC Channel for 3DFSB](https://github.com/3dfsb-dev/3dfsb/blob/master/wiki/IRC.md), #3dfsb on [Freenode](http://freenode.net/).
-- We're getting ready for [Google's Summer of Code 2015](/wiki/GoogleSummerOfCode2015.md)
-- 3DFSB version 1.2 has been [released](https://github.com/3dfsb-dev/3dfsb/releases/tag/v1.2)
+- 2015-02-22: We've purchased the 3dfsb.com domain!
+- 2015-02-20: There's a new [IRC Channel for 3DFSB](https://github.com/3dfsb-dev/3dfsb/blob/master/wiki/IRC.md), #3dfsb on [Freenode](http://freenode.net/).
+- 2015-02-13: We're getting ready for [Google's Summer of Code 2015](/wiki/GoogleSummerOfCode2015.md)
+- 2015-02-09: 3DFSB version 1.2 has been [released](https://github.com/3dfsb-dev/3dfsb/releases/tag/v1.2)
 
 Biggest improvements
 --------------------
