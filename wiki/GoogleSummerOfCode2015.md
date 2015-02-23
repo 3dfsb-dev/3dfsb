@@ -6,7 +6,7 @@ Idea list for GSoC 2015
 =======================
 The list of ideas below is to be used for Google Summer of Code 2015.
 
-Project: move to open source 3D Engine
+Project idea: move to open source 3D Engine
 --------------------------------------
 **Brief explanation:** currently, 3DFSB does not rely on any existing 3D Engine, and uses raw OpenGL calls for all its drawing operations. This project will entail integrating 3DFSB with an existing, powerful, free open source 3D engine for all its visual operations.
 
@@ -19,7 +19,7 @@ Project: move to open source 3D Engine
 **Expected results:** a new major version of 3DFSB that uses a free open source 3D engine for all its drawing operations and imports a few externally modelled 3D objects from a 3D modelling tool such as Blender.
 
 
-Project: add virtual reality headset support
+Project idea: add virtual reality headset support
 --------------------------------------------
 **Brief explanation:** to enhance the experience of interacting with your files in the 3D world, we will support several virtual reality headsets so that you can truly "walk" between your files and interact with them. Preferably, most details of the headset will be handled transparently by the 3D engine, so that most of the work that needs to be done will be tweaking and testing.
 
@@ -32,7 +32,7 @@ Project: add virtual reality headset support
 **Bonus:** a press release article that announces the VR headset support, to be submitted to a major virtual reality news magazine.
 
 
-Project: add cool and fast navigation
+Project idea: add cool and fast navigation
 -------------------------------------
 **Brief explanation:** in a folder with more than 10 files and folders, it becomes difficult to quickly find files and folders, even when they are sorted alphabetically. To make this easier for the users, we will add "flying, incremental search" functionality that allows you to quickly filter out files and fly to the first match that is found.
 
@@ -47,7 +47,7 @@ Project: add cool and fast navigation
 
 **Expected results:** a new version of 3DFSB that has the new cool and fast navigation feature implemented.
 
-Project: add support for the Windows operating system
+Project idea: add support for the Windows operating system
 -----------------------------------------------------
 **Brief explanation:** A Windows-compatible version of the 3D File System Browser would make it available to a lot more users. All technologies used by 3DFSB are compatible with Microsoft Windows already or have Windows alternatives that can be used in place.
 
@@ -59,7 +59,7 @@ Project: add support for the Windows operating system
 
 **Bonus:** a press release article that announces the Windows support, to be submitted to a major news magazine, targeted at Windows users.
 
-Project: plugin system for more tools
+Project idea: plugin system for more tools
 -------------------------------------
 **Brief explanation:** Currently, there is a limited set of tools that we support for the users to operate on files and folders. We would like to encourage the creation of new tools by making a plugin-like system. This system will make the code more modular and will make it easier for developers to create additional tools to be used in 3DFSB.
 
