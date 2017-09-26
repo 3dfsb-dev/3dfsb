@@ -133,7 +133,7 @@ and the sdl-config script.
 
 On Ubuntu, you can install all build-time dependencies with:
 
-sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2-dev libxi-dev libxmu-dev libmagic-dev imagemagick
+sudo apt-get install build-essential freeglut3-dev libsdl-image1.2-dev libsdl1.2-dev libxi-dev libxmu-dev libmagic-dev imagemagick libxtst-dev
 
 For GStreamer, you need:
 sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev
