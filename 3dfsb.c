@@ -213,7 +213,7 @@ int specupkey(int key);
 magic_t magic;
 
 // Asynchronous texture loading
-pthread_t async_load_textures_thread_id = NULL;
+pthread_t async_load_textures_thread_id = (pthread_t) NULL;
 GAsyncQueue *loaded_textures_queue = NULL;
 
 void ende(int code)
