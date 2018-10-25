@@ -1053,7 +1053,7 @@ static char **leoscan(char *ls_path)
 	}
 
 	/* Bubblesort the files
-	 * When we move to a library datastructure for the files, we'll chose a datastructure that has a .sort() function :-)
+	 * When we move to a library datastructure for the files, we'll choose a datastructure that has a .sort() function :-)
 	 */
 	if (TDFSB_DIR_ALPHASORT) {
 		printf("Sorting...\n");
@@ -1170,9 +1170,9 @@ static void leodir(void)
 			printf("Loading: %s ", entry);
 			lstat(fullpath, &buf);
 
-/* What ist it? */
-			// LSB 5 of "mode" contains a flag that says whether the file is a symlinkk or not
-			// LSB 4-1 of "mode" contain an enum; 0 for regular file, 1 for directory, 2 for char, 3 for block, 4 for fifo
+/* What is it? */
+			// LSB 5 of "mode" contains a flag that says whether the file is a symlink or not
+			// LSB 4-1 of "mode" contains an enum; 0 for regular file, 1 for directory, 2 for char, 3 for block, 4 for fifo
 			if (S_ISREG(buf.st_mode) != 0)
 				mode = 0;
 			else if (S_ISDIR(buf.st_mode) != 0)
